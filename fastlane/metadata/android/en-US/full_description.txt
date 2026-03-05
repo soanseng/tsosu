@@ -1,0 +1,37 @@
+Tsosu (tsò-sū, Taiwanese for "doing things") is a task manager designed by a psychiatrist with ADHD for people whose brains work differently.
+
+FOCUS 3
+Pick just 3 tasks for today. Everything else is bonus. No guilt, no overwhelm.
+
+HABITS WITHOUT SHAME
+Track daily habits with flexible streaks. Missed a day? No "streak broken" messages. Just "5 out of 7 days" — because progress isn't perfection.
+
+ENERGY MATCHING
+Tag tasks by energy level (high/medium/low). When you're running low, Tsosu suggests tasks that match your current capacity.
+
+PICK ONE
+Can't decide what to do? Tap the dice. Tsosu picks a task based on your energy level and available time.
+
+TINY VERSIONS
+Every habit has a 2-minute version. "Meditate" becomes "sit and take 3 breaths." Starting is the hardest part.
+
+GENTLE NUDGES
+Morning routine reminders that respect your pace. No guilt trips. No anxiety-inducing badge counts.
+
+SYNC WITH VIKUNJA
+Self-hosted task sync via Vikunja. Your data stays on your server. Tasks, habits, routines — all synced.
+
+CALENDAR INTEGRATION
+Sync tasks to Google Calendar or any CalDAV calendar (Fastmail, Nextcloud, etc.). See your tasks alongside your schedule.
+
+WEEKLY REVIEW
+Celebrate what you accomplished. Focus on progress, not what's left undone.
+
+TODOIST IMPORT
+Switching from Todoist? Import your tasks from CSV.
+
+BILINGUAL
+Full English and Traditional Chinese (zh-TW) support.
+
+PRIVACY FIRST
+No analytics. No ads. No tracking. Optional self-hosted sync only.

@@ -1,0 +1,24 @@
+package app.tsosu.domain.model
+
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+data class Habit(
+    val id: String = generateId(),
+    val serverId: Long? = null,
+    val title: String,
+    val tinyVersion: String? = null,
+    val frequency: HabitFrequency = HabitFrequency.DAILY,
+    val targetDaysPerWeek: Int = 7,
+    val energyLevel: EnergyLevel = EnergyLevel.LOW,
+    val routineId: String? = null,
+    val position: Double = 0.0,
+    val color: String = "#4CAF50",
+    val isArchived: Boolean = false,
+    val createdAt: Instant = Clock.System.now(),
+)
+
+@OptIn(ExperimentalUuidApi::class)
+private fun generateId(): String = Uuid.random().toString()

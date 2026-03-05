@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tsosu</string>
+
+    <!-- Navigation -->
+    <string name="nav_inbox">Inbox</string>
+    <string name="nav_focus">Focus</string>
+    <string name="nav_habits">Habits</string>
+    <string name="nav_upcoming">Upcoming</string>
+    <string name="nav_pick_one">Pick One</string>
+
+    <!-- Focus Screen -->
+    <string name="focus_title">Focus 3</string>
+    <string name="focus_today">Today\'s Focus</string>
+    <string name="focus_other_tasks">Other tasks</string>
+    <string name="focus_empty">Nothing for today. Enjoy your day!</string>
+    <string name="focus_minutes">%d min today</string>
+    <string name="focus_complete">Focus 3 complete! Everything else is bonus.</string>
+
+    <!-- Habits Screen -->
+    <string name="habits_title">Daily Habits</string>
+    <string name="habits_done_count">%1$d/%2$d done</string>
+    <string name="habits_empty">No habits yet. Start small!</string>
+    <string name="habits_morning">Morning</string>
+    <string name="habits_anytime">Anytime</string>
+    <string name="habits_evening">Evening</string>
+    <string name="habits_other">Other</string>
+    <string name="habits_streak">%1$d out of the last %2$d days</string>
+    <string name="habits_month_count">%d times this month!</string>
+
+    <!-- Inbox -->
+    <string name="inbox_title">Inbox</string>
+    <string name="inbox_empty">Inbox zero! Nice work.</string>
+
+    <!-- Upcoming -->
+    <string name="upcoming_title">Upcoming</string>
+    <string name="upcoming_empty">Nothing coming up. Enjoy the calm!</string>
+
+    <!-- Pick One -->
+    <string name="pick_one_title">Pick One</string>
+    <string name="pick_one_energy_prompt">How\'s your energy right now?</string>
+    <string name="pick_one_empty">No tasks at this energy level. Try another!</string>
+    <string name="pick_one_another">Pick another</string>
+    <string name="pick_one_minutes">%d min</string>
+
+    <!-- Quick Add -->
+    <string name="quick_add_task_title">New Task</string>
+    <string name="quick_add_task_hint">What needs doing?</string>
+    <string name="quick_add_energy">Energy</string>
+    <string name="quick_add_time">Time estimate</string>
+    <string name="quick_add_submit_task">Add Task</string>
+    <string name="quick_add_habit_title">New Habit</string>
+    <string name="quick_add_habit_hint">Habit name</string>
+    <string name="quick_add_tiny_version">What\'s the 2-minute version?</string>
+    <string name="quick_add_tiny_hint">The smallest step to get started</string>
+    <string name="quick_add_submit_habit">Add Habit</string>
+
+    <!-- Search -->
+    <string name="search_hint">Search tasks</string>
+
+    <!-- Notifications -->
+    <string name="notif_morning_routine">Your morning routine is ready. Start with just one.</string>
+    <string name="notif_focus_complete">Focus 3 complete! Everything else is bonus.</string>
+
+    <!-- Notification Channels -->
+    <string name="notif_channel_morning">Morning Routine</string>
+    <string name="notif_channel_focus">Focus Updates</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_vikunja_server">Vikunja Server</string>
+    <string name="settings_connected">Connected</string>
+    <string name="settings_sync_now">Sync Now</string>
+    <string name="settings_syncing">Syncing...</string>
+    <string name="settings_disconnect">Disconnect</string>
+    <string name="settings_server_url">Server URL</string>
+    <string name="settings_username">Username</string>
+    <string name="settings_password">Password</string>
+    <string name="settings_connect">Connect</string>
+    <string name="settings_calendar">Calendar</string>
+    <string name="settings_calendar_none">No calendar connected</string>
+    <string name="settings_calendar_disconnect">Disconnect Calendar</string>
+    <string name="settings_google_connect">Connect Google Calendar</string>
+    <string name="settings_google_connected">Google Calendar connected</string>
+    <string name="settings_caldav_title">CalDAV (Fastmail, etc.)</string>
+    <string name="settings_caldav_connected">CalDAV connected</string>
+    <string name="settings_caldav_email">Email</string>
+    <string name="settings_caldav_password">App Password</string>
+    <string name="settings_caldav_connect">Connect Calendar</string>
+    <string name="settings_cleanup">Stale Task Cleanup</string>
+    <string name="settings_cleanup_desc">Archive tasks untouched for 14+ days</string>
+    <string name="settings_cleanup_btn">Clean Up</string>
+    <string name="settings_cleanup_result">Archived %d stale tasks</string>
+
+    <!-- Weekly Review -->
+    <string name="review_title">Weekly Review</string>
+    <string name="review_tasks_completed">Tasks completed</string>
+    <string name="review_habits_completed">Habits completed</string>
+    <string name="review_focus_days">Focus days</string>
+    <string name="review_time_invested">Time invested</string>
+    <string name="review_top_project">Top project</string>
+    <string name="review_best_streak">Best streak</string>
+    <string name="review_celebration">Great work this week! Every step counts.</string>
+    <string name="review_no_data">No data yet for this week.</string>
+
+    <!-- Sync -->
+    <string name="sync_pulled">Synced: %1$d pulled, %2$d pushed</string>
+    <string name="sync_error">Sync error: %s</string>
+
+    <!-- Energy Levels -->
+    <string name="energy_low">low</string>
+    <string name="energy_medium">medium</string>
+    <string name="energy_high">high</string>
+</resources>

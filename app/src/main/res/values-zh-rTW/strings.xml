@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">做事</string>
+
+    <!-- Navigation -->
+    <string name="nav_inbox">收件匣</string>
+    <string name="nav_focus">專注</string>
+    <string name="nav_habits">習慣</string>
+    <string name="nav_upcoming">即將到來</string>
+    <string name="nav_pick_one">選一個</string>
+
+    <!-- Focus Screen -->
+    <string name="focus_title">專注 3</string>
+    <string name="focus_today">今日專注</string>
+    <string name="focus_other_tasks">其他任務</string>
+    <string name="focus_empty">今天沒事了，好好享受！</string>
+    <string name="focus_minutes">今天 %d 分鐘</string>
+    <string name="focus_complete">專注 3 全部完成！剩下的都是加分。</string>
+
+    <!-- Habits Screen -->
+    <string name="habits_title">每日習慣</string>
+    <string name="habits_done_count">%1$d/%2$d 完成</string>
+    <string name="habits_empty">還沒有習慣，從小的開始！</string>
+    <string name="habits_morning">早晨</string>
+    <string name="habits_anytime">隨時</string>
+    <string name="habits_evening">晚間</string>
+    <string name="habits_other">其他</string>
+    <string name="habits_streak">過去 %2$d 天完成 %1$d 天</string>
+    <string name="habits_month_count">這個月做了 %d 次！</string>
+
+    <!-- Inbox -->
+    <string name="inbox_title">收件匣</string>
+    <string name="inbox_empty">收件匣清空了！做得好。</string>
+
+    <!-- Upcoming -->
+    <string name="upcoming_title">即將到來</string>
+    <string name="upcoming_empty">接下來沒有任務，享受平靜！</string>
+
+    <!-- Pick One -->
+    <string name="pick_one_title">選一個</string>
+    <string name="pick_one_energy_prompt">你現在精力如何？</string>
+    <string name="pick_one_empty">這個精力等級沒有任務，試試其他的！</string>
+    <string name="pick_one_another">再選一個</string>
+    <string name="pick_one_minutes">%d 分鐘</string>
+
+    <!-- Quick Add -->
+    <string name="quick_add_task_title">新任務</string>
+    <string name="quick_add_task_hint">需要做什麼？</string>
+    <string name="quick_add_energy">精力</string>
+    <string name="quick_add_time">預計時間</string>
+    <string name="quick_add_submit_task">新增任務</string>
+    <string name="quick_add_habit_title">新習慣</string>
+    <string name="quick_add_habit_hint">習慣名稱</string>
+    <string name="quick_add_tiny_version">兩分鐘版本是什麼？</string>
+    <string name="quick_add_tiny_hint">最小的一步就好</string>
+    <string name="quick_add_submit_habit">新增習慣</string>
+
+    <!-- Search -->
+    <string name="search_hint">搜尋任務</string>
+
+    <!-- Notifications -->
+    <string name="notif_morning_routine">早安！晨間習慣準備好了，先做一個就好。</string>
+    <string name="notif_focus_complete">專注 3 全部完成！剩下的都是加分。</string>
+
+    <!-- Notification Channels -->
+    <string name="notif_channel_morning">晨間習慣</string>
+    <string name="notif_channel_focus">專注更新</string>
+
+    <!-- Settings -->
+    <string name="settings_title">設定</string>
+    <string name="settings_vikunja_server">Vikunja 伺服器</string>
+    <string name="settings_connected">已連線</string>
+    <string name="settings_sync_now">立即同步</string>
+    <string name="settings_syncing">同步中...</string>
+    <string name="settings_disconnect">中斷連線</string>
+    <string name="settings_server_url">伺服器網址</string>
+    <string name="settings_username">使用者名稱</string>
+    <string name="settings_password">密碼</string>
+    <string name="settings_connect">連線</string>
+    <string name="settings_calendar">行事曆</string>
+    <string name="settings_calendar_none">尚未連接行事曆</string>
+    <string name="settings_calendar_disconnect">中斷行事曆</string>
+    <string name="settings_google_connect">連接 Google 日曆</string>
+    <string name="settings_google_connected">已連接 Google 日曆</string>
+    <string name="settings_caldav_title">CalDAV (Fastmail 等)</string>
+    <string name="settings_caldav_connected">已連接 CalDAV</string>
+    <string name="settings_caldav_email">電子郵件</string>
+    <string name="settings_caldav_password">應用程式密碼</string>
+    <string name="settings_caldav_connect">連接行事曆</string>
+    <string name="settings_cleanup">過期任務清理</string>
+    <string name="settings_cleanup_desc">封存超過 14 天未動的任務</string>
+    <string name="settings_cleanup_btn">清理</string>
+    <string name="settings_cleanup_result">已封存 %d 個過期任務</string>
+
+    <!-- Weekly Review -->
+    <string name="review_title">每週回顧</string>
+    <string name="review_tasks_completed">完成任務</string>
+    <string name="review_habits_completed">完成習慣</string>
+    <string name="review_focus_days">專注天數</string>
+    <string name="review_time_invested">投入時間</string>
+    <string name="review_top_project">最多專案</string>
+    <string name="review_best_streak">最佳連續</string>
+    <string name="review_celebration">這週做得很好！每一步都算數。</string>
+    <string name="review_no_data">這週還沒有資料。</string>
+
+    <!-- Sync -->
+    <string name="sync_pulled">同步完成：拉取 %1$d，推送 %2$d</string>
+    <string name="sync_error">同步錯誤：%s</string>
+
+    <!-- Energy Levels -->
+    <string name="energy_low">低</string>
+    <string name="energy_medium">中</string>
+    <string name="energy_high">高</string>
+</resources>
