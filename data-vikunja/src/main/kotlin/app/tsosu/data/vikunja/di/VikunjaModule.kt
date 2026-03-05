@@ -5,10 +5,13 @@ import app.tsosu.data.local.dao.LabelDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.vikunja.auth.VikunjaCredentialStore
+import app.tsosu.data.vikunja.importer.TodoistImporter
 import app.tsosu.data.vikunja.mapper.VikunjaTaskMapper
+import app.tsosu.data.vikunja.repository.ImportRepositoryImpl
 import app.tsosu.data.vikunja.repository.SyncRepositoryImpl
 import app.tsosu.data.vikunja.sync.EnergyLabelManager
 import app.tsosu.data.vikunja.sync.SyncManager
+import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.SyncRepository
 import dagger.Module
 import dagger.Provides
@@ -46,6 +49,17 @@ object VikunjaModule {
                 SyncManager(api, taskDao, projectDao, labelDao, EnergyLabelManager(api), taskMapper)
             },
             energyLabelManagerFactory = { api -> EnergyLabelManager(api) },
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideImportRepository(
+        taskDao: TaskDao,
+    ): ImportRepository {
+        return ImportRepositoryImpl(
+            taskDao = taskDao,
+            importer = TodoistImporter(),
         )
     }
 }

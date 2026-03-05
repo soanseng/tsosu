@@ -1,10 +1,12 @@
 package app.tsosu.ui.screens.settings
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.tsosu.data.vikunja.repository.SyncRepositoryImpl
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.CalendarRepository
+import app.tsosu.domain.repository.ImportFormat
+import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +32,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val syncRepository: SyncRepository,
     private val calendarRepository: CalendarRepository,
+    private val importRepository: ImportRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -80,14 +83,14 @@ class SettingsViewModel @Inject constructor(
     fun connect() {
         viewModelScope.launch {
             val state = _uiState.value
-            val repo = syncRepository as? SyncRepositoryImpl ?: return@launch
-            val result = repo.login(state.serverUrl, state.username, state.password)
+            val result = syncRepository.login(state.serverUrl, state.username, state.password)
             result.fold(
                 onSuccess = { info ->
                     _uiState.value = _uiState.value.copy(
                         isConnected = true,
                         message = "Connected to ${info.version}",
                     )
+                    sync()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
@@ -125,6 +128,24 @@ class SettingsViewModel @Inject constructor(
                 username = "",
                 password = "",
                 message = null,
+            )
+        }
+    }
+
+    fun importTodoist(data: ByteArray) {
+        viewModelScope.launch {
+            val result = importRepository.importFromTodoist(data, ImportFormat.TODOIST_CSV)
+            result.fold(
+                onSuccess = { r ->
+                    _uiState.value = _uiState.value.copy(
+                        message = "Imported ${r.tasksImported} tasks from Todoist",
+                    )
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        message = "Import error: ${e.message}",
+                    )
+                },
             )
         }
     }

@@ -11,6 +11,7 @@ enum class SyncState { IDLE, SYNCING, ERROR }
 interface SyncRepository {
     fun syncState(): Flow<SyncState>
     suspend fun configureServer(url: String, token: String): Result<ServerInfo>
+    suspend fun login(url: String, username: String, password: String): Result<ServerInfo>
     suspend fun disconnect()
     suspend fun sync(): Result<SyncResult>
     fun isRemoteConfigured(): Flow<Boolean>

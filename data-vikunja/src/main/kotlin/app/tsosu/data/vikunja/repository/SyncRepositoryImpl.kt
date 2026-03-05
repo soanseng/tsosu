@@ -36,7 +36,7 @@ class SyncRepositoryImpl(
         }
     }
 
-    suspend fun login(url: String, username: String, password: String): Result<ServerInfo> {
+    override suspend fun login(url: String, username: String, password: String): Result<ServerInfo> {
         return try {
             val tempApi = VikunjaApiProvider.create(url) { null }
             val loginResponse = tempApi.login(VikunjaLoginRequest(username, password))

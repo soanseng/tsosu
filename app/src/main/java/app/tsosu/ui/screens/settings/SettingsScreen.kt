@@ -1,5 +1,8 @@
 package app.tsosu.ui.screens.settings
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -35,6 +39,17 @@ import app.tsosu.domain.repository.SyncState
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val todoistFilePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri ?: return@rememberLauncherForActivityResult
+        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        if (bytes != null) {
+            viewModel.importTodoist(bytes)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -114,6 +129,27 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
         HorizontalDivider()
 
+        // Todoist Import Section
+        Text(
+            stringResource(R.string.settings_import),
+            style = MaterialTheme.typography.titleMedium,
+        )
+
+        Text(
+            stringResource(R.string.settings_import_todoist_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        OutlinedButton(
+            onClick = { todoistFilePicker.launch("text/*") },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.settings_import_todoist))
+        }
+
+        HorizontalDivider()
+
         // Calendar Section
         Text(
             stringResource(R.string.settings_calendar),
@@ -160,8 +196,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
                 Button(
                     onClick = {
-                        // Google Sign-In requires Activity context — trigger from ViewModel
-                        // For now shows as placeholder; actual flow needs CredentialManager in Activity
                         viewModel.connectGoogle("", null, "")
                     },
                     modifier = Modifier.fillMaxWidth(),

@@ -87,6 +87,9 @@
     <string name="settings_caldav_email">Email</string>
     <string name="settings_caldav_password">App Password</string>
     <string name="settings_caldav_connect">Connect Calendar</string>
+    <string name="settings_import">Import</string>
+    <string name="settings_import_todoist">Import from Todoist (CSV)</string>
+    <string name="settings_import_todoist_desc">Export your tasks from Todoist as CSV, then import here.</string>
     <string name="settings_cleanup">Stale Task Cleanup</string>
     <string name="settings_cleanup_desc">Archive tasks untouched for 14+ days</string>
     <string name="settings_cleanup_btn">Clean Up</string>

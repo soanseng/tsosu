@@ -87,6 +87,9 @@
     <string name="settings_caldav_email">電子郵件</string>
     <string name="settings_caldav_password">應用程式密碼</string>
     <string name="settings_caldav_connect">連接行事曆</string>
+    <string name="settings_import">匯入</string>
+    <string name="settings_import_todoist">從 Todoist 匯入 (CSV)</string>
+    <string name="settings_import_todoist_desc">先從 Todoist 匯出 CSV 檔案，再從這裡匯入。</string>
     <string name="settings_cleanup">過期任務清理</string>
     <string name="settings_cleanup_desc">封存超過 14 天未動的任務</string>
     <string name="settings_cleanup_btn">清理</string>
