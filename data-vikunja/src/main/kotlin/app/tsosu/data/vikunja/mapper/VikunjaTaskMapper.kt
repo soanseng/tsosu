@@ -7,7 +7,7 @@ import app.tsosu.domain.model.Priority
 
 class VikunjaTaskMapper {
 
-    private val metadataRegex = Regex("\\s*<!-- tsosu:\\{.*?} -->\\s*")
+    private val metadataRegex = Regex("\\s*<!-- tsosu:\\{[^\\}]*\\} -->\\s*")
     private val energyLabelTitles = EnergyLevel.entries.associateBy { it.labelTitle }
 
     fun appendEstimate(description: String, minutes: Int?): String {
@@ -20,7 +20,7 @@ class VikunjaTaskMapper {
     }
 
     fun extractEstimate(description: String): Int? {
-        return Regex("<!-- tsosu:\\{\"est\":(\\d+)} -->")
+        return Regex("<!-- tsosu:\\{\"est\":(\\d+)\\} -->")
             .find(description)
             ?.groupValues?.get(1)?.toIntOrNull()
     }
