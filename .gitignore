@@ -23,6 +23,15 @@ keystore.properties
 # Kotlin
 *.class
 
+# Environment
+*.env*
+
+# Firebase / Google Services
+google-services.json
+
+# API specs (reference only, not runtime)
+vikunja-openapi.json
+
 # Misc
 captures/
 .externalNativeBuild/

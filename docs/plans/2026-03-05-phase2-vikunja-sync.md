@@ -8,7 +8,7 @@
 
 **Tech Stack:** Retrofit 2.11+, OkHttp 4.12+, Kotlin Serialization, ical4j 4.0+, WorkManager (periodic sync), DataStore (credentials), MockWebServer (tests)
 
-**Fastmail CalDAV:** `https://caldav.fastmail.com/dav/calendars/user/soanseng@anatomind.com/268d22a4-6fa0-4019-ba4c-a517ac503b2b` — requires app-specific password, SSL required.
+**Fastmail CalDAV:** `https://caldav.fastmail.com/dav/calendars/user/<your-email>/<calendar-uuid>` — requires app-specific password, SSL required.
 
 **Critical API behaviors (from Phase 0):**
 - POST /api/v1/tasks/{id} zeros fields not included — MUST send ALL fields

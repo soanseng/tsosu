@@ -4,7 +4,7 @@
 
 - **URL:** http://localhost:3456
 - **Version:** v2.1.0
-- **User:** scipio (id=2)
+- **User:** <your-username> (check Vikunja admin panel)
 - **Auth:** JWT via POST /api/v1/login
 
 ## Critical: Vikunja POST Update Behavior
