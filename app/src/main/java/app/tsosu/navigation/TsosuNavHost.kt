@@ -17,16 +17,17 @@ import app.tsosu.ui.screens.weeklyreview.WeeklyReviewScreen
 fun TsosuNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    onTaskClick: (String) -> Unit = {},
 ) {
     NavHost(
         navController = navController,
         startDestination = Screen.Focus.route,
         modifier = modifier,
     ) {
-        composable(Screen.Inbox.route) { InboxScreen() }
-        composable(Screen.Focus.route) { FocusScreen() }
+        composable(Screen.Inbox.route) { InboxScreen(onTaskClick = onTaskClick) }
+        composable(Screen.Focus.route) { FocusScreen(onTaskClick = onTaskClick) }
         composable(Screen.Habits.route) { HabitsScreen() }
-        composable(Screen.Upcoming.route) { UpcomingScreen() }
+        composable(Screen.Upcoming.route) { UpcomingScreen(onTaskClick = onTaskClick) }
         composable(Screen.PickOne.route) { PickOneScreen() }
         composable(Screen.Settings.route) { SettingsScreen() }
         composable(Screen.WeeklyReview.route) { WeeklyReviewScreen() }

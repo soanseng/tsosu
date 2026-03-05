@@ -7,6 +7,7 @@ import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.CompleteHabitUseCase
 import app.tsosu.domain.usecase.CreateHabitUseCase
 import app.tsosu.domain.usecase.CreateTaskUseCase
+import app.tsosu.domain.usecase.DeleteTaskUseCase
 import app.tsosu.domain.usecase.GetRoutineUseCase
 import app.tsosu.domain.usecase.GetStaleTaskIdsUseCase
 import app.tsosu.domain.usecase.GetTodayHabitsUseCase
@@ -15,6 +16,7 @@ import app.tsosu.domain.usecase.GetWeeklyReviewUseCase
 import app.tsosu.domain.usecase.PickOneTaskUseCase
 import app.tsosu.domain.usecase.SetDailyFocusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
+import app.tsosu.domain.usecase.UpdateTaskUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,4 +37,6 @@ object UseCaseModule {
     @Provides fun provideCompleteHabit(repo: HabitRepository) = CompleteHabitUseCase(repo)
     @Provides fun provideGetTodayHabits(repo: HabitRepository) = GetTodayHabitsUseCase(repo)
     @Provides fun provideGetRoutine(repo: RoutineRepository) = GetRoutineUseCase(repo)
+    @Provides fun provideUpdateTask(repo: TaskRepository) = UpdateTaskUseCase(repo)
+    @Provides fun provideDeleteTask(repo: TaskRepository) = DeleteTaskUseCase(repo)
 }

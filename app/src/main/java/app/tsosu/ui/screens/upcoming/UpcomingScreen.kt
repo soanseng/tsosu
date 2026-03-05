@@ -13,16 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tsosu.ui.components.TaskListItem
 
 @Composable
-fun UpcomingScreen(viewModel: UpcomingViewModel = hiltViewModel()) {
+fun UpcomingScreen(
+    viewModel: UpcomingViewModel = hiltViewModel(),
+    onTaskClick: (String) -> Unit = {},
+) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         item {
             Text("Upcoming", style = MaterialTheme.typography.headlineMedium)
@@ -37,7 +41,11 @@ fun UpcomingScreen(viewModel: UpcomingViewModel = hiltViewModel()) {
             }
         }
         items(tasks, key = { it.id }) { task ->
-            Text(task.title, style = MaterialTheme.typography.bodyLarge)
+            TaskListItem(
+                task = task,
+                onToggleDone = { viewModel.toggleDone(it) },
+                onClick = { onTaskClick(it.id) },
+            )
         }
     }
 }
