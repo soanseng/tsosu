@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import app.tsosu.navigation.BottomNavBar
 import app.tsosu.navigation.Screen
 import app.tsosu.navigation.TsosuNavHost
+import app.tsosu.ui.screens.pickone.PickOneSheet
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
 import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
@@ -59,6 +62,7 @@ class MainActivity : ComponentActivity() {
             TsosuTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
                 var showAddTask by remember { mutableStateOf(false) }
+                var showPickOne by remember { mutableStateOf(false) }
                 var editingTaskId by remember { mutableStateOf<String?>(null) }
 
                 Scaffold(
@@ -77,7 +81,14 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = { BottomNavBar(navController) },
                     floatingActionButton = {
-                        FloatingActionButton(onClick = { showAddTask = true }) {
+                        @OptIn(ExperimentalFoundationApi::class)
+                        FloatingActionButton(
+                            onClick = { showAddTask = true },
+                            modifier = Modifier.combinedClickable(
+                                onClick = { showAddTask = true },
+                                onLongClick = { showPickOne = true },
+                            ),
+                        ) {
                             Icon(Icons.Default.Add, contentDescription = "Add Task")
                         }
                     },
@@ -114,6 +125,15 @@ class MainActivity : ComponentActivity() {
                             taskId = taskId,
                             onDismiss = { editingTaskId = null },
                         )
+                    }
+                }
+
+                if (showPickOne) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showPickOne = false },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    ) {
+                        PickOneSheet(onDismiss = { showPickOne = false })
                     }
                 }
             }
