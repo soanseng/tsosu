@@ -8,9 +8,24 @@ import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
+
+data class DateGroup(
+    val label: String,
+    val tasks: List<Task>,
+)
+
+data class UpcomingUiState(
+    val groups: List<DateGroup> = emptyList(),
+)
 
 @HiltViewModel
 class UpcomingViewModel @Inject constructor(
@@ -18,8 +33,34 @@ class UpcomingViewModel @Inject constructor(
     private val toggleTaskDone: ToggleTaskDoneUseCase,
 ) : ViewModel() {
 
-    val tasks: StateFlow<List<Task>> = taskRepository.getUpcomingTasks()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val uiState: StateFlow<UpcomingUiState> = taskRepository.getUpcomingTasks()
+        .map { tasks ->
+            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val today = now.date
+            val tomorrow = today.plus(1, DateTimeUnit.DAY)
+            val weekEnd = today.plus(7, DateTimeUnit.DAY)
+
+            val todayTasks = tasks.filter { it.dueDate?.date == today }
+            val tomorrowTasks = tasks.filter { it.dueDate?.date == tomorrow }
+            val thisWeekTasks = tasks.filter { task ->
+                val d = task.dueDate?.date ?: return@filter false
+                d > tomorrow && d < weekEnd
+            }
+            val laterTasks = tasks.filter { task ->
+                val d = task.dueDate?.date ?: return@filter false
+                d >= weekEnd
+            }
+
+            val groups = buildList {
+                if (todayTasks.isNotEmpty()) add(DateGroup("Today", todayTasks))
+                if (tomorrowTasks.isNotEmpty()) add(DateGroup("Tomorrow", tomorrowTasks))
+                if (thisWeekTasks.isNotEmpty()) add(DateGroup("This Week", thisWeekTasks))
+                if (laterTasks.isNotEmpty()) add(DateGroup("Later", laterTasks))
+            }
+
+            UpcomingUiState(groups = groups)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UpcomingUiState())
 
     fun toggleDone(taskId: String) {
         viewModelScope.launch {
