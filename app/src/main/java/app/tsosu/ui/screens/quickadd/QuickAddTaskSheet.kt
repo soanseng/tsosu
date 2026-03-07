@@ -34,10 +34,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.ui.util.rememberHaptic
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +51,7 @@ fun QuickAddTaskSheet(
     onDismiss: () -> Unit,
     onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?) -> Unit,
 ) {
+    val haptic = rememberHaptic()
     var title by remember { mutableStateOf("") }
     var selectedPriority by remember { mutableStateOf(Priority.NONE) }
     var selectedEnergy by remember { mutableStateOf(EnergyLevel.MEDIUM) }
@@ -76,7 +82,10 @@ fun QuickAddTaskSheet(
             Priority.entries.forEach { p ->
                 FilterChip(
                     selected = selectedPriority == p,
-                    onClick = { selectedPriority = p },
+                    onClick = {
+                        haptic.tick()
+                        selectedPriority = p
+                    },
                     label = {
                         Text(
                             text = p.name.lowercase().replaceFirstChar { it.uppercase() },
@@ -94,7 +103,10 @@ fun QuickAddTaskSheet(
             EnergyLevel.entries.forEach { level ->
                 FilterChip(
                     selected = selectedEnergy == level,
-                    onClick = { selectedEnergy = level },
+                    onClick = {
+                        haptic.tick()
+                        selectedEnergy = level
+                    },
                     label = { Text("${level.emoji} ${level.name.lowercase()}") },
                 )
             }
@@ -107,7 +119,10 @@ fun QuickAddTaskSheet(
             listOf(5, 15, 30, 60).forEach { minutes ->
                 FilterChip(
                     selected = estimatedMinutes == minutes,
-                    onClick = { estimatedMinutes = minutes },
+                    onClick = {
+                        haptic.tick()
+                        estimatedMinutes = minutes
+                    },
                     label = { Text("${minutes}m") },
                 )
             }
@@ -116,6 +131,40 @@ fun QuickAddTaskSheet(
         Spacer(Modifier.height(12.dp))
 
         Text("Due date", style = MaterialTheme.typography.labelLarge)
+
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val todayDate = today.date
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = dueDate?.date == todayDate,
+                onClick = {
+                    haptic.tick()
+                    dueDate = LocalDateTime(todayDate, LocalTime(0, 0))
+                },
+                label = { Text("Today") },
+            )
+            FilterChip(
+                selected = dueDate?.date == todayDate.plus(1, DateTimeUnit.DAY),
+                onClick = {
+                    haptic.tick()
+                    val tomorrowDate = todayDate.plus(1, DateTimeUnit.DAY)
+                    dueDate = LocalDateTime(tomorrowDate, LocalTime(0, 0))
+                },
+                label = { Text("Tomorrow") },
+            )
+            FilterChip(
+                selected = dueDate?.date == todayDate.plus(7, DateTimeUnit.DAY),
+                onClick = {
+                    haptic.tick()
+                    val nextWeekDate = todayDate.plus(7, DateTimeUnit.DAY)
+                    dueDate = LocalDateTime(nextWeekDate, LocalTime(0, 0))
+                },
+                label = { Text("Next Week") },
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { showDatePicker = true }) {
                 Icon(Icons.Default.CalendarMonth, contentDescription = null)
@@ -137,6 +186,7 @@ fun QuickAddTaskSheet(
         Button(
             onClick = {
                 if (title.isNotBlank()) {
+                    haptic.confirm()
                     onAdd(title, selectedPriority, selectedEnergy, estimatedMinutes.takeIf { it > 0 }, dueDate)
                     onDismiss()
                 }
