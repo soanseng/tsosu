@@ -5,6 +5,7 @@ import app.tsosu.data.vikunja.api.VikunjaApiProvider
 import app.tsosu.data.vikunja.auth.VikunjaCredentialStore
 import app.tsosu.data.vikunja.dto.VikunjaLoginRequest
 import app.tsosu.data.vikunja.sync.EnergyLabelManager
+import app.tsosu.data.vikunja.sync.SyncDispatcher
 import app.tsosu.data.vikunja.sync.SyncManager
 import app.tsosu.domain.repository.ServerInfo
 import app.tsosu.domain.repository.SyncRepository
@@ -17,6 +18,7 @@ class SyncRepositoryImpl(
     private val credentialStore: VikunjaCredentialStore,
     private val syncManagerFactory: (VikunjaApi) -> SyncManager,
     private val energyLabelManagerFactory: (VikunjaApi) -> EnergyLabelManager,
+    private val syncDispatcher: SyncDispatcher,
 ) : SyncRepository {
 
     private val _syncState = MutableStateFlow(SyncState.IDLE)
@@ -62,6 +64,9 @@ class SyncRepositoryImpl(
 
         _syncState.value = SyncState.SYNCING
         return try {
+            // Push local changes first
+            syncDispatcher.drainQueue()
+
             val energyManager = energyLabelManagerFactory(api)
             energyManager.ensureLabelsExist()
 
