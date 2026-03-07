@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -38,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.ui.util.rememberHaptic
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -52,6 +54,7 @@ fun TaskDetailSheet(
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val haptic = rememberHaptic()
 
     LaunchedEffect(taskId) {
         viewModel.loadTask(taskId)
@@ -64,6 +67,7 @@ fun TaskDetailSheet(
     if (state.task == null) return
 
     var showDatePicker by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -99,7 +103,10 @@ fun TaskDetailSheet(
             Priority.entries.forEach { p ->
                 FilterChip(
                     selected = state.priority == p,
-                    onClick = { viewModel.onPriorityChange(p) },
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onPriorityChange(p)
+                    },
                     label = {
                         Text(
                             text = p.name.lowercase().replaceFirstChar { it.uppercase() },
@@ -117,7 +124,10 @@ fun TaskDetailSheet(
             EnergyLevel.entries.forEach { level ->
                 FilterChip(
                     selected = state.energyLevel == level,
-                    onClick = { viewModel.onEnergyChange(level) },
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onEnergyChange(level)
+                    },
                     label = { Text("${level.emoji} ${level.name.lowercase()}") },
                 )
             }
@@ -130,7 +140,10 @@ fun TaskDetailSheet(
             listOf(0, 5, 15, 30, 60).forEach { minutes ->
                 FilterChip(
                     selected = state.estimatedMinutes == minutes,
-                    onClick = { viewModel.onEstimatedMinutesChange(minutes) },
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onEstimatedMinutesChange(minutes)
+                    },
                     label = { Text(if (minutes == 0) "None" else "${minutes}m") },
                 )
             }
@@ -158,7 +171,10 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(16.dp))
 
         Button(
-            onClick = { viewModel.save() },
+            onClick = {
+                haptic.confirm()
+                viewModel.save()
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = state.title.isNotBlank(),
         ) {
@@ -168,7 +184,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(8.dp))
 
         OutlinedButton(
-            onClick = { viewModel.delete() },
+            onClick = { showDeleteConfirm = true },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.error,
@@ -180,6 +196,28 @@ fun TaskDetailSheet(
         }
 
         Spacer(Modifier.height(16.dp))
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete task?") },
+            text = { Text("This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    haptic.reject()
+                    viewModel.delete()
+                    showDeleteConfirm = false
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 
     if (showDatePicker) {
