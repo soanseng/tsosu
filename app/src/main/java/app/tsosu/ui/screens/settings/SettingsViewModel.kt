@@ -10,8 +10,12 @@ import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import app.tsosu.ui.theme.DarkModeOption
+import app.tsosu.ui.theme.ThemePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,10 +37,17 @@ class SettingsViewModel @Inject constructor(
     private val syncRepository: SyncRepository,
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
+    private val themePreferences: ThemePreferences,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState
+
+    val dynamicColor: StateFlow<Boolean> = themePreferences.dynamicColor
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val darkMode: StateFlow<DarkModeOption> = themePreferences.darkMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DarkModeOption.SYSTEM)
 
     init {
         viewModelScope.launch {
@@ -202,5 +213,13 @@ class SettingsViewModel @Inject constructor(
                 message = "Calendar disconnected",
             )
         }
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { themePreferences.setDynamicColor(enabled) }
+    }
+
+    fun setDarkMode(option: DarkModeOption) {
+        viewModelScope.launch { themePreferences.setDarkMode(option) }
     }
 }

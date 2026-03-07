@@ -15,16 +15,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -35,10 +38,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.SyncState
+import app.tsosu.ui.theme.DarkModeOption
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
+    val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val todoistFilePicker = rememberLauncherForActivityResult(
@@ -62,6 +68,41 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             stringResource(R.string.settings_title),
             style = MaterialTheme.typography.headlineMedium,
         )
+
+        // Appearance Section
+        Text("Appearance", style = MaterialTheme.typography.titleMedium)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text("Dynamic Colors", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "Adapts to your wallpaper",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = dynamicColor,
+                onCheckedChange = { viewModel.setDynamicColor(it) },
+            )
+        }
+
+        Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DarkModeOption.entries.forEach { option ->
+                FilterChip(
+                    selected = darkMode == option,
+                    onClick = { viewModel.setDarkMode(option) },
+                    label = { Text(option.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                )
+            }
+        }
+
+        HorizontalDivider()
 
         // Vikunja Server Section
         Text(
