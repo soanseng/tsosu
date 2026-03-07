@@ -18,6 +18,7 @@ import kotlin.time.Duration.Companion.days
 
 class TaskRepositoryImpl(
     private val taskDao: TaskDao,
+    private val onTaskChanged: (suspend (entityId: String, operation: String, serverId: Long?) -> Unit)? = null,
 ) : TaskRepository {
 
     override fun getInboxTasks(): Flow<List<Task>> =
@@ -59,17 +60,21 @@ class TaskRepositoryImpl(
 
     override suspend fun createTask(task: Task): Result<Task> = runCatching {
         taskDao.insert(task.toEntity())
+        onTaskChanged?.invoke(task.id, "CREATE", null)
         task
     }
 
     override suspend fun updateTask(task: Task): Result<Task> = runCatching {
         val updated = task.copy(updatedAt = Clock.System.now())
         taskDao.update(updated.toEntity())
+        onTaskChanged?.invoke(updated.id, "UPDATE", null)
         updated
     }
 
     override suspend fun deleteTask(taskId: String): Result<Unit> = runCatching {
+        val serverId = taskDao.getByIdSync(taskId)?.serverId
         taskDao.delete(taskId)
+        onTaskChanged?.invoke(taskId, "DELETE", serverId)
     }
 
     override suspend fun toggleDone(taskId: String): Result<Task> = runCatching {
@@ -78,6 +83,7 @@ class TaskRepositoryImpl(
         val now = Clock.System.now().toEpochMilliseconds()
         val newDone = !task.done
         taskDao.setDone(taskId, newDone, if (newDone) now else null, now)
+        onTaskChanged?.invoke(taskId, "UPDATE", null)
         task.copy(done = newDone, doneAt = if (newDone) now else null, updatedAt = now).toDomain()
     }
 
@@ -86,11 +92,13 @@ class TaskRepositoryImpl(
             ?: throw NoSuchElementException("Task $taskId not found")
         val now = Clock.System.now().toEpochMilliseconds()
         taskDao.update(task.copy(position = newPosition, updatedAt = now))
+        onTaskChanged?.invoke(taskId, "UPDATE", null)
     }
 
     override suspend fun setFocus(taskId: String, isFocus: Boolean): Result<Task> = runCatching {
         val now = Clock.System.now().toEpochMilliseconds()
         taskDao.setFocus(taskId, isFocus, now)
+        onTaskChanged?.invoke(taskId, "UPDATE", null)
         val task = taskDao.getById(taskId).first()
             ?: throw NoSuchElementException("Task $taskId not found")
         task.toDomain()
