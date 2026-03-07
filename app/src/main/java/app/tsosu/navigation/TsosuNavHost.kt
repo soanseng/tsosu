@@ -7,8 +7,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.tsosu.ui.screens.focus.FocusScreen
 import app.tsosu.ui.screens.habits.HabitsScreen
-import app.tsosu.ui.screens.inbox.InboxScreen
-import app.tsosu.ui.screens.pickone.PickOneScreen
 import app.tsosu.ui.screens.settings.SettingsScreen
 import app.tsosu.ui.screens.upcoming.UpcomingScreen
 import app.tsosu.ui.screens.weeklyreview.WeeklyReviewScreen
@@ -24,11 +22,9 @@ fun TsosuNavHost(
         startDestination = Screen.Focus.route,
         modifier = modifier,
     ) {
-        composable(Screen.Inbox.route) { InboxScreen(onTaskClick = onTaskClick) }
         composable(Screen.Focus.route) { FocusScreen(onTaskClick = onTaskClick) }
         composable(Screen.Habits.route) { HabitsScreen() }
         composable(Screen.Upcoming.route) { UpcomingScreen(onTaskClick = onTaskClick) }
-        composable(Screen.PickOne.route) { PickOneScreen() }
         composable(Screen.Settings.route) { SettingsScreen() }
         composable(Screen.WeeklyReview.route) { WeeklyReviewScreen() }
     }

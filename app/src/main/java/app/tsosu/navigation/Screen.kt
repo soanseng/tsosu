@@ -21,6 +21,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     data object WeeklyReview : Screen("weekly_review", "Weekly Review", Icons.Default.TaskAlt)
 
     companion object {
-        val bottomNavItems = listOf(Inbox, Focus, Habits, Upcoming, PickOne)
+        val bottomNavItems = listOf(Focus, Habits, Upcoming)
     }
 }
