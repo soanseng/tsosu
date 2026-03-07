@@ -39,17 +39,36 @@ import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.ThemePreferences
 import app.tsosu.ui.theme.TsosuTheme
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import app.tsosu.data.vikunja.sync.SyncWorker
+import app.tsosu.domain.repository.SyncRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var themePreferences: ThemePreferences
+    @Inject lateinit var syncRepository: SyncRepository
+
+    private var lastSyncTime = 0L
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        scheduleSyncWorker()
+        setupResumePull()
         setContent {
             val dynamicColor by themePreferences.dynamicColor.collectAsState(initial = false)
             val darkModeOption by themePreferences.darkMode.collectAsState(initial = DarkModeOption.SYSTEM)
@@ -138,5 +157,36 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun scheduleSyncWorker() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            SyncWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request,
+        )
+    }
+
+    private fun setupResumePull() {
+        lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val now = System.currentTimeMillis()
+                if (now - lastSyncTime > 30_000) {
+                    lastSyncTime = now
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val isConfigured = syncRepository.isRemoteConfigured().first()
+                        if (isConfigured) {
+                            syncRepository.sync()
+                        }
+                    }
+                }
+            }
+        })
     }
 }
