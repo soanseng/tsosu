@@ -108,6 +108,9 @@ dependencies {
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
 
+    implementation(libs.konfetti.compose)
+    implementation(libs.datastore.preferences)
+
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.android)
 
