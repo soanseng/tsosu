@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,12 +14,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,16 +33,30 @@ import app.tsosu.navigation.TsosuNavHost
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
 import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
+import app.tsosu.ui.theme.DarkModeOption
+import app.tsosu.ui.theme.ThemePreferences
+import app.tsosu.ui.theme.TsosuTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var themePreferences: ThemePreferences
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
+            val dynamicColor by themePreferences.dynamicColor.collectAsState(initial = false)
+            val darkModeOption by themePreferences.darkMode.collectAsState(initial = DarkModeOption.SYSTEM)
+            val darkTheme = when (darkModeOption) {
+                DarkModeOption.SYSTEM -> isSystemInDarkTheme()
+                DarkModeOption.LIGHT -> false
+                DarkModeOption.DARK -> true
+            }
+
+            TsosuTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
                 var showAddTask by remember { mutableStateOf(false) }
                 var editingTaskId by remember { mutableStateOf<String?>(null) }
