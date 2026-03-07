@@ -55,7 +55,7 @@ class SyncManager(
             title = dto.title,
             description = fields.cleanDescription,
             done = dto.done,
-            dueDate = null, // TODO: parse ISO date from dto.dueDate
+            dueDate = taskMapper.parseDueDate(dto.dueDate),
             priority = fields.priority.value,
             projectId = existing?.projectId,
             position = dto.position,
@@ -132,7 +132,7 @@ class SyncManager(
             title = entity.title,
             description = entity.description,
             done = entity.done,
-            dueDate = null, // TODO: format ISO date from entity.dueDate
+            dueDate = taskMapper.formatDueDate(entity.dueDate),
             priority = entity.priority,
             projectId = projectServerId,
             position = entity.position,
@@ -156,5 +156,9 @@ class SyncManager(
                 api.attachLabel(created.id, VikunjaLabelTaskDto(labelId))
             }
         }
+    }
+
+    suspend fun deleteTask(serverId: Long) {
+        api.deleteTask(serverId)
     }
 }

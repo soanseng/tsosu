@@ -7,6 +7,7 @@ import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.LabelDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.RoutineDao
+import app.tsosu.data.local.dao.SyncQueueDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.entity.DailyFocusEntity
 import app.tsosu.data.local.entity.HabitCompletionEntity
@@ -38,4 +39,5 @@ abstract class TsosuDatabase : RoomDatabase() {
     abstract fun focusDao(): FocusDao
     abstract fun projectDao(): ProjectDao
     abstract fun labelDao(): LabelDao
+    abstract fun syncQueueDao(): SyncQueueDao
 }

@@ -4,6 +4,7 @@ import app.tsosu.data.vikunja.dto.VikunjaLabelDto
 import app.tsosu.data.vikunja.dto.VikunjaTaskDto
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import kotlinx.datetime.Instant
 
 class VikunjaTaskMapper {
 
@@ -37,6 +38,20 @@ class VikunjaTaskMapper {
 
     fun getNonEnergyLabels(labels: List<VikunjaLabelDto>): List<VikunjaLabelDto> {
         return labels.filter { label -> label.title !in energyLabelTitles }
+    }
+
+    fun parseDueDate(iso: String?): Long? {
+        if (iso.isNullOrBlank() || iso == "0001-01-01T00:00:00Z") return null
+        return try {
+            Instant.parse(iso).toEpochMilliseconds()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun formatDueDate(millis: Long?): String? {
+        if (millis == null) return null
+        return Instant.fromEpochMilliseconds(millis).toString()
     }
 
     fun domainToDto(

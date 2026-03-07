@@ -8,6 +8,7 @@ import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.LabelDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.RoutineDao
+import app.tsosu.data.local.dao.SyncQueueDao
 import app.tsosu.data.local.dao.TaskDao
 import dagger.Module
 import dagger.Provides
@@ -32,4 +33,5 @@ object DatabaseModule {
     @Provides fun provideFocusDao(db: TsosuDatabase): FocusDao = db.focusDao()
     @Provides fun provideProjectDao(db: TsosuDatabase): ProjectDao = db.projectDao()
     @Provides fun provideLabelDao(db: TsosuDatabase): LabelDao = db.labelDao()
+    @Provides fun provideSyncQueueDao(db: TsosuDatabase): SyncQueueDao = db.syncQueueDao()
 }

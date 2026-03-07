@@ -6,8 +6,10 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.datetime.Instant
 
 class VikunjaTaskMapperTest {
 
@@ -117,6 +119,42 @@ class VikunjaTaskMapperTest {
         val fields = mapper.dtoToDomainFields(dto)
         assertNull(fields.estimatedMinutes)
         assertEquals("Plain notes", fields.cleanDescription)
+    }
+
+    @Test
+    fun `parseDueDate converts ISO 8601 to epoch millis`() {
+        val mapper = VikunjaTaskMapper()
+        val millis = mapper.parseDueDate("2026-03-10T00:00:00Z")
+        assertNotNull(millis)
+        // Just verify it parsed to a reasonable value (not null)
+        assertTrue(millis!! > 0)
+    }
+
+    @Test
+    fun `parseDueDate returns null for Vikunja zero date`() {
+        val mapper = VikunjaTaskMapper()
+        assertNull(mapper.parseDueDate("0001-01-01T00:00:00Z"))
+    }
+
+    @Test
+    fun `parseDueDate returns null for null or blank`() {
+        val mapper = VikunjaTaskMapper()
+        assertNull(mapper.parseDueDate(null))
+        assertNull(mapper.parseDueDate(""))
+    }
+
+    @Test
+    fun `formatDueDate converts epoch millis to ISO 8601`() {
+        val mapper = VikunjaTaskMapper()
+        val millis = Instant.parse("2026-03-10T00:00:00Z").toEpochMilliseconds()
+        val iso = mapper.formatDueDate(millis)
+        assertEquals("2026-03-10T00:00:00Z", iso)
+    }
+
+    @Test
+    fun `formatDueDate returns null for null input`() {
+        val mapper = VikunjaTaskMapper()
+        assertNull(mapper.formatDueDate(null))
     }
 
     @Test

@@ -65,6 +65,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE serverId = :serverId LIMIT 1")
     suspend fun getByServerId(serverId: Long): TaskEntity?
 
+    @Query("SELECT * FROM tasks WHERE id = :taskId")
+    suspend fun getByIdSync(taskId: String): TaskEntity?
+
     @Query("UPDATE tasks SET serverId = :serverId WHERE id = :id")
     suspend fun updateServerId(id: String, serverId: Long)
 }
