@@ -1,5 +1,12 @@
 package app.tsosu.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -22,10 +29,30 @@ fun TsosuNavHost(
         startDestination = Screen.Focus.route,
         modifier = modifier,
     ) {
-        composable(Screen.Focus.route) { FocusScreen(onTaskClick = onTaskClick) }
-        composable(Screen.Habits.route) { HabitsScreen() }
-        composable(Screen.Upcoming.route) { UpcomingScreen(onTaskClick = onTaskClick) }
-        composable(Screen.Settings.route) { SettingsScreen() }
-        composable(Screen.WeeklyReview.route) { WeeklyReviewScreen() }
+        composable(
+            Screen.Focus.route,
+            enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
+        ) { FocusScreen(onTaskClick = onTaskClick) }
+        composable(
+            Screen.Habits.route,
+            enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
+        ) { HabitsScreen() }
+        composable(
+            Screen.Upcoming.route,
+            enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
+        ) { UpcomingScreen(onTaskClick = onTaskClick) }
+        composable(
+            Screen.Settings.route,
+            enterTransition = { slideInHorizontally(tween(300)) { it } },
+            exitTransition = { slideOutHorizontally(tween(300)) { it } },
+        ) { SettingsScreen() }
+        composable(
+            Screen.WeeklyReview.route,
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) },
+        ) { WeeklyReviewScreen() }
     }
 }
