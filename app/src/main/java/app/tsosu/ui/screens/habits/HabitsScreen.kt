@@ -1,5 +1,6 @@
 package app.tsosu.ui.screens.habits
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,10 +28,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.usecase.HabitWithStatus
+import app.tsosu.ui.components.KonfettiOverlay
+import app.tsosu.ui.util.rememberHaptic
 
 @Composable
 fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val showKonfetti = remember { mutableStateOf(false) }
+    val haptic = rememberHaptic()
+
+    KonfettiOverlay(showKonfetti)
 
     LazyColumn(
         modifier = Modifier
@@ -72,7 +81,14 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                 items(habitsInGroup, key = { it.habit.id }) { habitWithStatus ->
                     HabitRow(
                         habitWithStatus = habitWithStatus,
-                        onToggle = { viewModel.onToggleHabit(habitWithStatus.habit.id) },
+                        onToggle = {
+                            haptic.confirm()
+                            if (!habitWithStatus.isCompletedToday) {
+                                showKonfetti.value = true
+                            }
+                            viewModel.onToggleHabit(habitWithStatus.habit.id)
+                        },
+                        modifier = Modifier.animateItem(),
                     )
                 }
             }
@@ -89,7 +105,14 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
             items(unroutinedHabits, key = { it.habit.id }) { habitWithStatus ->
                 HabitRow(
                     habitWithStatus = habitWithStatus,
-                    onToggle = { viewModel.onToggleHabit(habitWithStatus.habit.id) },
+                    onToggle = {
+                        haptic.confirm()
+                        if (!habitWithStatus.isCompletedToday) {
+                            showKonfetti.value = true
+                        }
+                        viewModel.onToggleHabit(habitWithStatus.habit.id)
+                    },
+                    modifier = Modifier.animateItem(),
                 )
             }
         }
@@ -103,19 +126,28 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                 )
             }
         }
+
+        item { Spacer(Modifier.height(80.dp)) }
     }
 }
 
 @Composable
-private fun HabitRow(habitWithStatus: HabitWithStatus, onToggle: () -> Unit) {
+private fun HabitRow(
+    habitWithStatus: HabitWithStatus,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val containerColor by animateColorAsState(
+        targetValue = if (habitWithStatus.isCompletedToday)
+            MaterialTheme.colorScheme.secondaryContainer
+        else
+            MaterialTheme.colorScheme.surface,
+        label = "habitCardColor",
+    )
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (habitWithStatus.isCompletedToday)
-                MaterialTheme.colorScheme.secondaryContainer
-            else
-                MaterialTheme.colorScheme.surface,
-        ),
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
         Row(
             modifier = Modifier
