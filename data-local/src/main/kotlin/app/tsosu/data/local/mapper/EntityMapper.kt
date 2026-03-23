@@ -18,6 +18,7 @@ import app.tsosu.domain.model.Project
 import app.tsosu.domain.model.Routine
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -25,21 +26,20 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Duration.Companion.seconds
 
 fun TaskEntity.toDomain(): Task = Task(
     id = id,
     serverId = serverId,
     title = title,
     description = description,
-    done = done,
+    status = if (done) TaskStatus.DONE else TaskStatus.TODO,
     dueDate = dueDate?.let {
         Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault())
     },
     priority = Priority.fromValue(priority),
     projectId = projectId,
     position = position,
-    repeatAfter = repeatAfterSeconds?.seconds,
+    recurrenceRule = null, // entity still uses repeatAfterSeconds; format migration pending
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     energyLevel = EnergyLevel.fromOrdinal(energyLevel),
@@ -53,12 +53,12 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     serverId = serverId,
     title = title,
     description = description,
-    done = done,
+    done = status.isDone,
     dueDate = dueDate?.toInstant(TimeZone.currentSystemDefault())?.toEpochMilliseconds(),
     priority = priority.value,
     projectId = projectId,
     position = position,
-    repeatAfterSeconds = repeatAfter?.inWholeSeconds,
+    repeatAfterSeconds = null, // recurrenceRule uses RRULE string; entity migration pending
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     energyLevel = energyLevel.ordinal,

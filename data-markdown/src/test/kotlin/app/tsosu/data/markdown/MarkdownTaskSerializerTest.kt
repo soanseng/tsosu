@@ -3,6 +3,7 @@ package app.tsosu.data.markdown
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -31,7 +32,7 @@ class MarkdownTaskSerializerTest {
     ) = Task(
         id = id,
         title = title,
-        done = done,
+        status = if (done) TaskStatus.DONE else TaskStatus.TODO,
         dueDate = dueDate,
         priority = priority,
         energyLevel = energyLevel,

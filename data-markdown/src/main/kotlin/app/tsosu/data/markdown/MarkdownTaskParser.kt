@@ -3,6 +3,7 @@ package app.tsosu.data.markdown
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -127,7 +128,7 @@ class MarkdownTaskParser {
                 val task = Task(
                     id = id,
                     title = title,
-                    done = isDone,
+                    status = if (isDone) TaskStatus.DONE else TaskStatus.TODO,
                     dueDate = dueDate,
                     priority = priority,
                     energyLevel = energyLevel,

@@ -1,6 +1,7 @@
 package app.tsosu.domain.usecase
 
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -15,7 +16,7 @@ class ToggleTaskDoneUseCaseTest {
 
     @Test
     fun `delegates to repository`() = runTest {
-        val task = Task(title = "Test", done = true)
+        val task = Task(title = "Test", status = TaskStatus.DONE)
         coEvery { taskRepository.toggleDone("task-1") } returns Result.success(task)
 
         val result = useCase("task-1")

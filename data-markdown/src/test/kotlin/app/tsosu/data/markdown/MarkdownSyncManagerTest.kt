@@ -5,6 +5,7 @@ import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -41,7 +42,7 @@ class MarkdownSyncManagerTest {
     ) = Task(
         id = id,
         title = title,
-        done = done,
+        status = if (done) TaskStatus.DONE else TaskStatus.TODO,
         createdAt = fixedCreatedAt,
         updatedAt = fixedUpdatedAt,
     )

@@ -3,6 +3,7 @@ package app.tsosu.data.markdown
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -190,7 +191,7 @@ class MarkdownTaskParserTest {
         val original = Task(
             id = "round-trip-1",
             title = "Plan vacation",
-            done = false,
+            status = TaskStatus.TODO,
             dueDate = LocalDateTime.parse("2026-06-15T09:00:00"),
             priority = Priority.HIGH,
             energyLevel = EnergyLevel.LOW,
