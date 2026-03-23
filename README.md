@@ -2,7 +2,7 @@
 
 > 台語「做事」(tsò-sū) — A task manager designed by a psychiatrist with ADHD.
 
-**Tsosu** is a native Android task manager built for minds that work differently. It connects to [Vikunja](https://vikunja.io/) for self-hosted sync, auto-syncs tasks to your calendar, and treats you like a human — not a productivity machine.
+**Tsosu** is a native Android task manager built for minds that work differently. It stores everything as plain markdown files — sync to your desktop with Obsidian, nvim, or any text editor via Syncthing. No server needed.
 
 ## Why Tsosu?
 
@@ -29,7 +29,6 @@ Inspired by Atomic Habits: start with something so small you can't say no. Tsosu
 - **Flexible streaks**: Missed a day? Your streak pauses, not resets. "4 out of the last 7 days" not "Day 0 again."
 - **Morning & Evening routines**: Group habits into routines you can check off in order.
 - **Gentle accountability**: "You've done your morning routine 5 of the last 7 days — that's great!" not "You missed 2 days."
-- **Syncs via Vikunja**: Habits are stored as repeating tasks, routines as projects — visible in Vikunja web UI and synced across devices.
 
 ### 😌 No Shame UI — "Still on your list."
 
@@ -57,7 +56,6 @@ Not all hours are equal. Tag tasks by the energy they need, then match them to h
 - 🔋 High energy — for deep work, hard conversations, complex tasks
 - 😐 Medium — for routine work, emails, errands
 - 🪫 Low energy — for tidying, simple admin, easy wins
-- Syncs to Vikunja as labels — visible in web UI too
 
 ### 🎲 "Pick One For Me" — "Just start somewhere."
 
@@ -76,7 +74,6 @@ Notifications that feel like a supportive friend, not a disappointed boss.
 - Afternoon: "1/3 done — want to tackle another? 💪"
 - All done: "🎉 Focus 3 complete! You did it!"
 - Welcome back (after days away): "No pressure — pick just one thing?"
-- Habit reminder: "🌅 Your morning routine is ready. Start with just one."
 - All nudges are configurable — turn on/off, set times
 
 ### 🎉 Weekly Review — "Look what you did!"
@@ -100,38 +97,64 @@ Tasks sitting untouched for 2+ weeks get a gentle prompt:
 
 ### 📅 Calendar Auto-Sync — "Set a date, see it everywhere."
 
-The feature most todo apps get wrong. In Tsosu, tasks with dates automatically appear on your calendar. No double entry. No third-party integration needed.
+Tasks with dates automatically appear on your calendar. No double entry.
 
 - Set a due date → event auto-created on your calendar
 - Change the date → event moves
 - Complete the task → event removed
 - Time estimate → calendar event duration
-- Works with **CalDAV** (Fastmail, Nextcloud) now, **Google Calendar** coming soon
+- Works with **CalDAV** (Fastmail, Nextcloud) and **Google Calendar**
 
 ## How It Syncs
 
-Tsosu is **local-first** — it works 100% offline with no account. When you're ready, connect your self-hosted Vikunja server for cross-device sync.
+Tsosu is **local-first** — it works 100% offline with no account. Your data lives as plain markdown files that you own.
 
-| Tsosu Feature | Vikunja Mapping |
-|---------------|-----------------|
-| Tasks | Direct API sync (title, done, dueDate, priority, labels...) |
-| Habits | Repeating tasks (`repeatAfter`) |
-| Routines | Projects (with metadata marker) |
-| Energy Level | Labels (`⚡high` / `😐medium` / `🪫low`) |
-| Time Estimate | Description metadata (`<!-- tsosu:{"est":30} -->`) |
-| Focus 3 | Local only (resets daily) |
-| Streak tracking | Local only (completion history) |
-| Calendar events | Local only (per-device) |
+### Markdown Files
+
+Point Tsosu at any folder on your phone. It writes two files:
+
+**`tasks.md`** — your tasks, grouped by project:
+```markdown
+## Inbox
+
+- [ ] Buy groceries ⚡medium 🍅15m <!-- id:abc-123 -->
+- [x] Call dentist ✅ 2026-03-22 ⚡low <!-- id:def-456 -->
+
+## Work
+
+- [ ] Prepare presentation 📅 2026-03-25 ⚡high 🍅60m ‼️urgent <!-- id:ghi-789 -->
+```
+
+**`habits.md`** — your habits with completion history:
+```markdown
+## Daily
+
+- [ ] Exercise (tiny: do 1 pushup) 🔁daily ⚡medium <!-- id:h1 -->
+  - ✅ 2026-03-23
+  - ✅ 2026-03-22
+  - ✅ 2026-03-21
+```
+
+### Cross-Device Sync
+
+Sync the folder with [Syncthing](https://syncthing.net/) or Obsidian Sync — your tasks appear on every device.
+
+| Where | How |
+|-------|-----|
+| **Phone** | Tsosu app (rich UI, habit tracking, Focus 3) |
+| **Desktop** | Obsidian with [Tasks plugin](https://publish.obsidian.md/tasks/) — checkbox tasks, due dates, filters |
+| **Terminal** | nvim / any text editor — it's just markdown |
+
+Inspired by [org-mode](https://doc.norang.ca/org-mode.html): text files as the universal interface.
 
 ## Technical Details
 
 - **Android native** — Kotlin, Jetpack Compose, Material 3
 - **Local-first** — works 100% offline, no account needed
-- **Vikunja sync** — optional, connect your self-hosted Vikunja server
-- **Calendar sync** — CalDAV (Fastmail, Nextcloud), Google Calendar (planned)
-- **Todoist import** — bring your existing tasks via CSV/JSON
-- **Privacy** — no analytics, no tracking, no data collection
-- **Languages** — English, 繁體中文
+- **Markdown sync** — plain `.md` files, compatible with Obsidian Tasks
+- **Calendar sync** — CalDAV (Fastmail, Nextcloud), Google Calendar
+- **Todoist import** — bring your existing tasks
+- **Privacy** — no analytics, no tracking, no data collection, no server
 - **Architecture** — MVVM, Clean Architecture, TDD
 
 ## Who Made This?
@@ -142,7 +165,7 @@ This isn't a productivity app that happens to have some ADHD features. ADHD-frie
 
 ## License
 
-Tsosu is a proprietary application. It communicates with Vikunja (AGPL-3.0) via HTTP REST API only — no Vikunja source code is embedded.
+Tsosu is a proprietary application.
 
 ---
 
