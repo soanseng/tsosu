@@ -65,6 +65,19 @@
     <!-- Notification Channels -->
     <string name="notif_channel_morning">Morning Routine</string>
     <string name="notif_channel_focus">Focus Updates</string>
+    <string name="notif_channel_reminders">Task Reminders</string>
+    <string name="notif_channel_reminders_desc">Reminders for scheduled tasks</string>
+    <string name="notif_channel_overdue">Overdue Tasks</string>
+    <string name="notif_channel_overdue_desc">Notifications about overdue tasks</string>
+
+    <!-- Reminder Notifications -->
+    <string name="notif_reminder_title">Task Reminder</string>
+    <string name="notif_action_complete">Complete</string>
+
+    <plurals name="notif_overdue_count">
+        <item quantity="one">%d overdue task</item>
+        <item quantity="other">%d overdue tasks</item>
+    </plurals>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
