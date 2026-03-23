@@ -84,4 +84,67 @@ class VEventBuilderTest {
         )
         assertTrue(!ical.contains("DESCRIPTION:"))
     }
+
+    @Test
+    fun `includes VALARM when reminderMinutesBefore is set`() {
+        val ical = builder.buildVEvent(
+            uid = "task-uuid-7",
+            title = "Dentist appointment",
+            description = "",
+            dueDate = "2026-03-10T14:00:00",
+            estimatedMinutes = 30,
+            reminderMinutesBefore = 15,
+        )
+        assertTrue(ical.contains("BEGIN:VALARM"))
+        assertTrue(ical.contains("TRIGGER:-PT15M"))
+        assertTrue(ical.contains("ACTION:DISPLAY"))
+        assertTrue(ical.contains("DESCRIPTION:Dentist appointment"))
+        assertTrue(ical.contains("END:VALARM"))
+    }
+
+    @Test
+    fun `VALARM is inside VEVENT`() {
+        val ical = builder.buildVEvent(
+            uid = "task-uuid-8",
+            title = "Review",
+            description = "",
+            dueDate = "2026-03-10T10:00:00",
+            estimatedMinutes = null,
+            reminderMinutesBefore = 30,
+        )
+        val veventStart = ical.indexOf("BEGIN:VEVENT")
+        val veventEnd = ical.indexOf("END:VEVENT")
+        val valarmStart = ical.indexOf("BEGIN:VALARM")
+        val valarmEnd = ical.indexOf("END:VALARM")
+        assertTrue(valarmStart > veventStart)
+        assertTrue(valarmEnd < veventEnd)
+    }
+
+    @Test
+    fun `omits VALARM when reminderMinutesBefore is null`() {
+        val ical = builder.buildVEvent(
+            uid = "task-uuid-9",
+            title = "Task",
+            description = "",
+            dueDate = "2026-03-10T10:00:00",
+            estimatedMinutes = null,
+            reminderMinutesBefore = null,
+        )
+        assertTrue(!ical.contains("BEGIN:VALARM"))
+        assertTrue(!ical.contains("TRIGGER:"))
+        assertTrue(!ical.contains("END:VALARM"))
+    }
+
+    @Test
+    fun `VALARM escapes special characters in title`() {
+        val ical = builder.buildVEvent(
+            uid = "task-uuid-10",
+            title = "Call, Dr; Smith",
+            description = "",
+            dueDate = "2026-03-10T10:00:00",
+            estimatedMinutes = null,
+            reminderMinutesBefore = 10,
+        )
+        assertTrue(ical.contains("DESCRIPTION:Call\\, Dr\\; Smith"))
+    }
 }
