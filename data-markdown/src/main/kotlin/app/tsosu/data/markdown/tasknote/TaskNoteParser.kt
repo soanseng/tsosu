@@ -5,23 +5,19 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.atTime
 
-/**
- * Parses a TaskNote markdown file into a [ParsedTaskNote].
- *
- * Stub implementation — will be completed in Task 3.
- */
-class TaskNoteParser {
+data class ParsedTaskNote(
+    val task: Task,
+    val projectName: String?,
+)
 
-    data class ParsedTaskNote(
-        val task: Task,
-        val projectName: String?,
-    )
+class TaskNoteParser {
 
     private val yamlHelper = YamlFrontmatterParser()
 
@@ -29,59 +25,72 @@ class TaskNoteParser {
         val doc = yamlHelper.parse(content)
         val fm = doc.frontmatter
 
+        val id = fm["id"] ?: error("TaskNote missing id")
+        val status = fm["status"]?.let { parseStatus(it) } ?: TaskStatus.TODO
+        val priority = fm["priority"]?.let { parsePriority(it) } ?: Priority.NONE
+        val energy = fm["energy"]?.let { parseEnergy(it) } ?: EnergyLevel.MEDIUM
+
+        // Extract title from first H1 heading in body
         val bodyLines = doc.body.trim().lines()
-        val title = bodyLines.firstOrNull()?.removePrefix("# ")?.trim() ?: ""
-        val description = bodyLines.drop(1).joinToString("\n").trim()
-
-        val status = fm["status"]?.let { s ->
-            TaskStatus.entries.firstOrNull { it.name.equals(s, ignoreCase = true) }
-        } ?: TaskStatus.TODO
-
-        val priority = fm["priority"]?.let { p ->
-            Priority.entries.firstOrNull { it.name.equals(p, ignoreCase = true) }
-        } ?: Priority.NONE
-
-        val energy = fm["energy"]?.let { e ->
-            EnergyLevel.entries.firstOrNull { it.name.equals(e, ignoreCase = true) }
-        } ?: EnergyLevel.MEDIUM
-
-        val dueDate = fm["due"]?.let { LocalDate.parse(it).atTime(0, 0) }
-        val scheduledDate = fm["scheduled"]?.let { LocalDate.parse(it).atTime(0, 0) }
-        val startDate = fm["start"]?.let { LocalDate.parse(it).atTime(0, 0) }
-        val completedDate = fm["completed"]?.let { LocalDate.parse(it).atTime(0, 0) }
-        val cancelledDate = fm["cancelled"]?.let { LocalDate.parse(it).atTime(0, 0) }
-        val reminderTime = fm["reminder"]?.let { r ->
-            val parts = r.split(":")
-            if (parts.size == 2) LocalTime(parts[0].toInt(), parts[1].toInt()) else null
+        val h1Idx = bodyLines.indexOfFirst { it.startsWith("# ") }
+        val title = if (h1Idx >= 0) bodyLines[h1Idx].removePrefix("# ").trim() else "Untitled"
+        val description = if (h1Idx >= 0) {
+            bodyLines.drop(h1Idx + 1).joinToString("\n").trim()
+        } else {
+            doc.body.trim()
         }
 
-        val estimatedMinutes = fm["estimate"]?.removeSuffix("m")?.toIntOrNull()
-        val createdDate = fm["created"]?.let { LocalDate.parse(it) }
-        val createdAt = createdDate?.atStartOfDayIn(TimeZone.UTC)
-            ?: kotlinx.datetime.Clock.System.now()
-
         val task = Task(
-            id = fm["id"] ?: "",
+            id = id,
             title = title,
             description = description,
             status = status,
             priority = priority,
-            dueDate = dueDate,
-            scheduledDate = scheduledDate,
-            startDate = startDate,
-            reminderTime = reminderTime,
-            completedDate = completedDate,
-            cancelledDate = cancelledDate,
+            dueDate = fm["due"]?.let { LocalDate.parse(it).atTime(0, 0) },
+            scheduledDate = fm["scheduled"]?.let { LocalDate.parse(it).atTime(0, 0) },
+            startDate = fm["start"]?.let { LocalDate.parse(it).atTime(0, 0) },
+            reminderTime = fm["reminder"]?.let { parseTime(it) },
+            completedDate = fm["completed"]?.let { LocalDate.parse(it).atTime(0, 0) },
+            cancelledDate = fm["cancelled"]?.let { LocalDate.parse(it).atTime(0, 0) },
             energyLevel = energy,
-            estimatedMinutes = estimatedMinutes,
+            estimatedMinutes = fm["estimate"]?.removeSuffix("m")?.toIntOrNull(),
             recurrenceRule = fm["recurrence"],
-            createdAt = createdAt,
-            updatedAt = createdAt,
+            createdAt = fm["created"]?.let {
+                LocalDate.parse(it).atStartOfDayIn(TimeZone.UTC)
+            } ?: Clock.System.now(),
+            updatedAt = Clock.System.now(),
         )
 
-        return ParsedTaskNote(
-            task = task,
-            projectName = fm["project"],
-        )
+        return ParsedTaskNote(task, fm["project"])
+    }
+
+    private fun parseStatus(s: String): TaskStatus = when (s.lowercase()) {
+        "todo" -> TaskStatus.TODO
+        "in_progress", "in-progress" -> TaskStatus.IN_PROGRESS
+        "on_hold", "on-hold" -> TaskStatus.ON_HOLD
+        "planned" -> TaskStatus.PLANNED
+        "done" -> TaskStatus.DONE
+        "cancelled" -> TaskStatus.CANCELLED
+        else -> TaskStatus.TODO
+    }
+
+    private fun parsePriority(s: String): Priority = when (s.lowercase()) {
+        "urgent", "highest" -> Priority.URGENT
+        "high" -> Priority.HIGH
+        "medium" -> Priority.MEDIUM
+        "low" -> Priority.LOW
+        else -> Priority.NONE
+    }
+
+    private fun parseEnergy(s: String): EnergyLevel = when (s.lowercase()) {
+        "high" -> EnergyLevel.HIGH
+        "medium" -> EnergyLevel.MEDIUM
+        "low" -> EnergyLevel.LOW
+        else -> EnergyLevel.MEDIUM
+    }
+
+    private fun parseTime(s: String): LocalTime {
+        val parts = s.split(":")
+        return LocalTime(parts[0].toInt(), parts[1].toInt())
     }
 }

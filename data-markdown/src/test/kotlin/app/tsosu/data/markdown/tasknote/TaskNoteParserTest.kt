@@ -1,14 +1,11 @@
 package app.tsosu.data.markdown.tasknote
 
-import app.tsosu.data.markdown.YamlFrontmatterParser
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -143,6 +140,7 @@ class TaskNoteParserTest {
 
     @Test
     fun `round-trip serialize then parse preserves fields`() {
+        val serializer = TaskNoteSerializer()
         val original = Task(
             id = "rt-1",
             title = "Round Trip",
@@ -156,8 +154,7 @@ class TaskNoteParserTest {
             updatedAt = Instant.parse("2026-03-22T10:00:00Z"),
         )
 
-        val projectName = "Work"
-        val markdown = serializeForTest(original, projectName)
+        val markdown = serializer.serialize(original, projectName = "Work")
         val parsed = parser.parse(markdown)
 
         assertEquals(original.id, parsed.task.id)
@@ -168,57 +165,5 @@ class TaskNoteParserTest {
         assertEquals(original.energyLevel, parsed.task.energyLevel)
         assertEquals(original.estimatedMinutes, parsed.task.estimatedMinutes)
         assertEquals("Work", parsed.projectName)
-    }
-
-    /**
-     * Minimal serializer for round-trip testing until TaskNoteSerializer is available.
-     */
-    private fun serializeForTest(task: Task, projectName: String?): String {
-        val yamlHelper = YamlFrontmatterParser()
-        val fm = linkedMapOf<String, String>()
-
-        fm["id"] = task.id
-        fm["status"] = when (task.status) {
-            TaskStatus.TODO -> "todo"
-            TaskStatus.IN_PROGRESS -> "in_progress"
-            TaskStatus.ON_HOLD -> "on_hold"
-            TaskStatus.PLANNED -> "planned"
-            TaskStatus.DONE -> "done"
-            TaskStatus.CANCELLED -> "cancelled"
-        }
-        when (task.priority) {
-            Priority.NONE -> {}
-            Priority.LOW -> fm["priority"] = "low"
-            Priority.MEDIUM -> fm["priority"] = "medium"
-            Priority.HIGH -> fm["priority"] = "high"
-            Priority.URGENT -> fm["priority"] = "urgent"
-        }
-        task.dueDate?.let { fm["due"] = it.date.toString() }
-        task.scheduledDate?.let { fm["scheduled"] = it.date.toString() }
-        task.startDate?.let { fm["start"] = it.date.toString() }
-        task.reminderTime?.let {
-            fm["reminder"] = "%02d:%02d".format(it.hour, it.minute)
-        }
-        task.completedDate?.let { fm["completed"] = it.date.toString() }
-        task.cancelledDate?.let { fm["cancelled"] = it.date.toString() }
-        fm["energy"] = when (task.energyLevel) {
-            EnergyLevel.LOW -> "low"
-            EnergyLevel.MEDIUM -> "medium"
-            EnergyLevel.HIGH -> "high"
-        }
-        task.estimatedMinutes?.let { fm["estimate"] = "${it}m" }
-        task.recurrenceRule?.let { fm["recurrence"] = it }
-        projectName?.let { fm["project"] = it }
-        fm["created"] = task.createdAt.toLocalDateTime(TimeZone.UTC).date.toString()
-
-        val body = buildString {
-            appendLine("# ${task.title}")
-            if (task.description.isNotBlank()) {
-                appendLine()
-                append(task.description)
-            }
-        }
-
-        return yamlHelper.serialize(fm, body)
     }
 }
