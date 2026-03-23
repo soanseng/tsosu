@@ -18,6 +18,5 @@ rootProject.name = "tsosu"
 include(":app")
 include(":domain")
 include(":data-local")
-include(":data-vikunja")
 include(":data-calendar")
 include(":data-markdown")
