@@ -12,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import app.tsosu.ui.screens.calendar.CalendarScreen
 import app.tsosu.ui.screens.focus.FocusScreen
 import app.tsosu.ui.screens.habits.HabitsScreen
+import app.tsosu.ui.screens.kanban.KanbanScreen
 import app.tsosu.ui.screens.settings.SettingsScreen
 import app.tsosu.ui.screens.upcoming.UpcomingScreen
 import app.tsosu.ui.screens.weeklyreview.WeeklyReviewScreen
@@ -40,6 +42,11 @@ fun TsosuNavHost(
             exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
         ) { HabitsScreen() }
         composable(
+            Screen.Calendar.route,
+            enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
+        ) { CalendarScreen(onTaskClick = onTaskClick) }
+        composable(
             Screen.Upcoming.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
             exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
@@ -54,5 +61,10 @@ fun TsosuNavHost(
             enterTransition = { fadeIn(tween(300)) },
             exitTransition = { fadeOut(tween(300)) },
         ) { WeeklyReviewScreen() }
+        composable(
+            Screen.Kanban.route,
+            enterTransition = { slideInHorizontally(tween(300)) { it } },
+            exitTransition = { slideOutHorizontally(tween(300)) { it } },
+        ) { KanbanScreen(onTaskClick = onTaskClick) }
     }
 }
