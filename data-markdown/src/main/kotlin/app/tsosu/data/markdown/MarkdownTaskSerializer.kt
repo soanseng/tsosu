@@ -77,12 +77,8 @@ class MarkdownTaskSerializer {
         }
 
         // Priority (NONE is omitted)
-        when (task.priority) {
-            Priority.URGENT -> append(" \u203C\uFE0Furgent")
-            Priority.HIGH -> append(" \u2757high")
-            Priority.MEDIUM -> append(" \u2755medium")
-            Priority.LOW -> append(" \uD83D\uDD3Dlow")
-            Priority.NONE -> { /* omit */ }
+        if (task.priority != Priority.NONE) {
+            append(" ${task.priority.emoji}")
         }
 
         // Hidden ID

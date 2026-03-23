@@ -114,7 +114,7 @@ class MarkdownTaskSerializerTest {
             taskLine.contains("\uD83C\uDF45 30m"),
             "Estimate present"
         )
-        assertTrue(taskLine.contains("\u203C\uFE0Furgent"), "Priority present")
+        assertTrue(taskLine.contains("\u23EB"), "Priority present")
         assertTrue(
             taskLine.contains("<!-- id:test-id-1 -->"),
             "ID comment present"
@@ -194,27 +194,25 @@ class MarkdownTaskSerializerTest {
         )
         val taskLine = result.lines().first { it.startsWith("- [") }
         // None of the priority markers should appear
-        assertTrue(!taskLine.contains("\u203C\uFE0F"), "No URGENT marker")
-        assertTrue(!taskLine.contains("\u2757"), "No HIGH marker")
-        assertTrue(!taskLine.contains("\u2755"), "No MEDIUM marker")
+        assertTrue(!taskLine.contains("\u23EB"), "No URGENT marker")
+        assertTrue(!taskLine.contains("\uD83D\uDD3A"), "No HIGH marker")
+        assertTrue(!taskLine.contains("\uD83D\uDD3C"), "No MEDIUM marker")
         assertTrue(!taskLine.contains("\uD83D\uDD3D"), "No LOW marker")
     }
 
     @Test
-    fun `each priority level maps to correct marker`() {
+    fun `priority uses Obsidian Tasks standard emoji`() {
         for ((priority, expectedMarker) in listOf(
-            Priority.LOW to "\uD83D\uDD3Dlow",
-            Priority.MEDIUM to "\u2755medium",
-            Priority.HIGH to "\u2757high",
-            Priority.URGENT to "\u203C\uFE0Furgent",
+            Priority.LOW to "\uD83D\uDD3D",
+            Priority.MEDIUM to "\uD83D\uDD3C",
+            Priority.HIGH to "\uD83D\uDD3A",
+            Priority.URGENT to "\u23EB",
         )) {
-            val result = serializer.serialize(
-                listOf(task(priority = priority))
-            )
+            val result = serializer.serialize(listOf(task(priority = priority)))
             val taskLine = result.lines().first { it.startsWith("- [") }
             assertTrue(
                 taskLine.contains(expectedMarker),
-                "Priority $priority should produce marker '$expectedMarker'"
+                "Priority $priority should produce marker '$expectedMarker', got: $taskLine"
             )
         }
     }

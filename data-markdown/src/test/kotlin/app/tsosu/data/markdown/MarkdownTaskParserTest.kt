@@ -109,7 +109,7 @@ class MarkdownTaskParserTest {
             ---
 
             ## Inbox
-            - [ ] Deep work session 📅 2026-04-01 ⚡high 🍅 30m ‼️urgent <!-- id:task-42 -->
+            - [ ] Deep work session 📅 2026-04-01 ⚡high 🍅 30m ⏫ <!-- id:task-42 -->
         """.trimIndent()
 
         val result = parser.parse(markdown)
@@ -267,10 +267,10 @@ class MarkdownTaskParserTest {
             ---
 
             ## Inbox
-            - [ ] Urgent task ‼️urgent <!-- id:p-1 -->
-            - [ ] High task ❗high <!-- id:p-2 -->
-            - [ ] Medium task ❕medium <!-- id:p-3 -->
-            - [ ] Low task 🔽low <!-- id:p-4 -->
+            - [ ] Highest task ⏫ <!-- id:p-1 -->
+            - [ ] High task 🔺 <!-- id:p-2 -->
+            - [ ] Medium task 🔼 <!-- id:p-3 -->
+            - [ ] Low task 🔽 <!-- id:p-4 -->
             - [ ] No priority task <!-- id:p-5 -->
         """.trimIndent()
 
@@ -282,5 +282,31 @@ class MarkdownTaskParserTest {
         assertEquals(Priority.MEDIUM, result.tasks[2].priority)
         assertEquals(Priority.LOW, result.tasks[3].priority)
         assertEquals(Priority.NONE, result.tasks[4].priority)
+    }
+
+    @Test
+    fun `Obsidian Tasks standard priority emoji parsed correctly`() {
+        val markdown = """
+            ---
+            tsosu: v1
+            updated: 2026-03-23T12:00:00
+            ---
+
+            ## Inbox
+            - [ ] Highest ⏫ <!-- id:p-1 -->
+            - [ ] High 🔺 <!-- id:p-2 -->
+            - [ ] Medium 🔼 <!-- id:p-3 -->
+            - [ ] Low 🔽 <!-- id:p-4 -->
+            - [ ] Lowest ⏬ <!-- id:p-5 -->
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(5, result.tasks.size)
+        assertEquals(Priority.URGENT, result.tasks[0].priority)
+        assertEquals(Priority.HIGH, result.tasks[1].priority)
+        assertEquals(Priority.MEDIUM, result.tasks[2].priority)
+        assertEquals(Priority.LOW, result.tasks[3].priority)
+        assertEquals(Priority.NONE, result.tasks[4].priority)  // LOWEST maps to NONE
     }
 }

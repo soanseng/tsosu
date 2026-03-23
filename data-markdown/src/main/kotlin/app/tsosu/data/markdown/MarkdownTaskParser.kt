@@ -24,10 +24,11 @@ class MarkdownTaskParser {
     private val energyMediumRegex = Regex("""\uD83D\uDE10medium""")
     private val energyLowRegex = Regex("""\uD83E\uDEABlow""")
     private val estimateRegex = Regex("""\uD83C\uDF45 (\d+)m""")
-    private val priorityUrgentRegex = Regex("""\u203C\uFE0Furgent""")
-    private val priorityHighRegex = Regex("""\u2757high""")
-    private val priorityMediumRegex = Regex("""\u2755medium""")
-    private val priorityLowRegex = Regex("""\uD83D\uDD3Dlow""")
+    private val priorityHighestRegex = Regex("""\u23EB""")
+    private val priorityHighRegex = Regex("""\uD83D\uDD3A""")
+    private val priorityMediumRegex = Regex("""\uD83D\uDD3C""")
+    private val priorityLowRegex = Regex("""\uD83D\uDD3D""")
+    private val priorityLowestRegex = Regex("""\u23EC""")
     private val sectionRegex = Regex("""^## (.+)$""")
 
     @OptIn(ExperimentalUuidApi::class)
@@ -97,10 +98,11 @@ class MarkdownTaskParser {
 
                 // Extract priority
                 val priority = when {
-                    priorityUrgentRegex.containsMatchIn(rawContent) -> Priority.URGENT
+                    priorityHighestRegex.containsMatchIn(rawContent) -> Priority.URGENT
                     priorityHighRegex.containsMatchIn(rawContent) -> Priority.HIGH
                     priorityMediumRegex.containsMatchIn(rawContent) -> Priority.MEDIUM
                     priorityLowRegex.containsMatchIn(rawContent) -> Priority.LOW
+                    priorityLowestRegex.containsMatchIn(rawContent) -> Priority.NONE
                     else -> Priority.NONE
                 }
 
@@ -113,10 +115,11 @@ class MarkdownTaskParser {
                     .replace(energyMediumRegex, "")
                     .replace(energyLowRegex, "")
                     .replace(estimateRegex, "")
-                    .replace(priorityUrgentRegex, "")
+                    .replace(priorityHighestRegex, "")
                     .replace(priorityHighRegex, "")
                     .replace(priorityMediumRegex, "")
                     .replace(priorityLowRegex, "")
+                    .replace(priorityLowestRegex, "")
                     .trim()
 
                 val isInbox = currentSection == null || currentSection == "Inbox"
