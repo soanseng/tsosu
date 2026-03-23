@@ -62,6 +62,9 @@ interface TaskDao {
     @Upsert
     suspend fun upsert(task: TaskEntity)
 
+    @Query("SELECT * FROM tasks ORDER BY position")
+    fun getAllTasks(): Flow<List<TaskEntity>>
+
     @Query("SELECT * FROM tasks WHERE serverId = :serverId LIMIT 1")
     suspend fun getByServerId(serverId: Long): TaskEntity?
 

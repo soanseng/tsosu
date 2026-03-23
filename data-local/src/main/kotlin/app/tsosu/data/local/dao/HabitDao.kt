@@ -43,4 +43,7 @@ interface HabitDao {
 
     @Query("SELECT COUNT(*) FROM habit_completions WHERE habitId = :habitId AND date BETWEEN :startDate AND :endDate")
     fun getCompletionCount(habitId: String, startDate: Long, endDate: Long): Flow<Int>
+
+    @Query("SELECT * FROM habit_completions WHERE habitId = :habitId ORDER BY date DESC")
+    fun getAllCompletionsForHabit(habitId: String): Flow<List<HabitCompletionEntity>>
 }

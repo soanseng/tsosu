@@ -2,17 +2,13 @@ package app.tsosu.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 
-data class ServerInfo(val url: String, val version: String)
-
-data class SyncResult(val pushed: Int, val pulled: Int, val conflicts: Int)
+data class SyncResult(val exported: Int, val imported: Int)
 
 enum class SyncState { IDLE, SYNCING, ERROR }
 
 interface SyncRepository {
     fun syncState(): Flow<SyncState>
-    suspend fun configureServer(url: String, token: String): Result<ServerInfo>
-    suspend fun login(url: String, username: String, password: String): Result<ServerInfo>
-    suspend fun disconnect()
+    fun isConfigured(): Flow<Boolean>
     suspend fun sync(): Result<SyncResult>
-    fun isRemoteConfigured(): Flow<Boolean>
+    suspend fun disconnect()
 }

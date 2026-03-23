@@ -1,0 +1,71 @@
+package app.tsosu.data.markdown
+
+import app.tsosu.data.local.dao.HabitDao
+import app.tsosu.data.local.dao.ProjectDao
+import app.tsosu.data.local.dao.TaskDao
+import app.tsosu.data.local.mapper.toDomain
+import app.tsosu.data.local.mapper.toEntity
+import app.tsosu.domain.model.HabitCompletion
+import app.tsosu.domain.repository.SyncRepository
+import app.tsosu.domain.repository.SyncResult
+import app.tsosu.domain.repository.SyncState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+
+class MarkdownSyncRepository(
+    private val preferences: MarkdownPreferences,
+    private val syncManager: MarkdownSyncManager,
+    private val taskDao: TaskDao,
+    private val habitDao: HabitDao,
+    private val projectDao: ProjectDao,
+) : SyncRepository {
+
+    private val _syncState = MutableStateFlow(SyncState.IDLE)
+
+    override fun syncState(): Flow<SyncState> = _syncState
+
+    override fun isConfigured(): Flow<Boolean> = preferences.isConfigured()
+
+    override suspend fun sync(): Result<SyncResult> = runCatching {
+        _syncState.value = SyncState.SYNCING
+
+        // 1. Export current Room state to markdown
+        val tasks = taskDao.getAllTasks().first().map { it.toDomain() }
+        val projects = projectDao.getAll().first()
+        val projectNames = projects.associate { it.id to it.title }
+        syncManager.exportTasks(tasks, projectNames)
+
+        val habits = habitDao.getActiveHabits().first().map { it.toDomain() }
+        val completions = mutableListOf<HabitCompletion>()
+        for (habit in habits) {
+            val hc = habitDao.getAllCompletionsForHabit(habit.id).first()
+            completions.addAll(hc.map { it.toDomain() })
+        }
+        syncManager.exportHabits(habits, completions)
+
+        // 2. Import from markdown (picks up external edits)
+        val importedTasks = syncManager.importTasks()
+        val importedHabits = syncManager.importHabits()
+
+        // 3. Merge: upsert imported tasks (external edits win for conflicts)
+        for (task in importedTasks.tasks) {
+            taskDao.upsert(task.toEntity())
+        }
+
+        preferences.setLastSync(System.currentTimeMillis())
+        _syncState.value = SyncState.IDLE
+
+        SyncResult(
+            exported = tasks.size + habits.size,
+            imported = importedTasks.tasks.size + importedHabits.habits.size,
+        )
+    }.onFailure {
+        _syncState.value = SyncState.ERROR
+    }
+
+    override suspend fun disconnect() {
+        preferences.clear()
+        _syncState.value = SyncState.IDLE
+    }
+}
