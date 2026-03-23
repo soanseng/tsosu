@@ -7,6 +7,9 @@ import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -17,10 +20,16 @@ data class ParsedTasks(
 
 class MarkdownTaskParser {
 
-    private val taskLineRegex = Regex("""^- \[([ xX])] (.+)$""")
+    private val taskLineRegex = Regex("""^- \[([ xX/!>\-])] (.+)$""")
     private val idRegex = Regex("""<!-- id:(\S+) -->""")
     private val dueDateRegex = Regex("""\uD83D\uDCC5 (\d{4}-\d{2}-\d{2})""")
     private val completionRegex = Regex("""\u2705 (\d{4}-\d{2}-\d{2})""")
+    private val cancelledDateRegex = Regex("""\u274C (\d{4}-\d{2}-\d{2})""")
+    private val scheduledDateRegex = Regex("""\u23F3 (\d{4}-\d{2}-\d{2})""")
+    private val startDateRegex = Regex("""\uD83D\uDEEB (\d{4}-\d{2}-\d{2})""")
+    private val createdDateRegex = Regex("""\u2795 (\d{4}-\d{2}-\d{2})""")
+    private val reminderTimeRegex = Regex("""\u23F0 (\d{2}):(\d{2})""")
+    private val recurrenceRegex = Regex("""\uD83D\uDD01 ([^⚡😐🪫🍅⏫🔺🔼🔽⏬<]+)""")
     private val energyHighRegex = Regex("""\u26A1high""")
     private val energyMediumRegex = Regex("""\uD83D\uDE10medium""")
     private val energyLowRegex = Regex("""\uD83E\uDEABlow""")
@@ -71,7 +80,8 @@ class MarkdownTaskParser {
             // Check for task line
             val taskMatch = taskLineRegex.find(trimmed)
             if (taskMatch != null) {
-                val isDone = taskMatch.groupValues[1] != " "
+                val checkboxChar = taskMatch.groupValues[1].first()
+                val status = TaskStatus.fromCheckboxChar(checkboxChar)
                 val rawContent = taskMatch.groupValues[2]
 
                 // Extract id
@@ -84,6 +94,58 @@ class MarkdownTaskParser {
                     val date = LocalDate.parse(it.groupValues[1])
                     LocalDateTime(date, LocalTime(0, 0))
                 }
+
+                // Extract completion date
+                val completionDateMatch = completionRegex.find(rawContent)
+                val completedDate = if (status == TaskStatus.DONE && completionDateMatch != null) {
+                    val date = LocalDate.parse(completionDateMatch.groupValues[1])
+                    LocalDateTime(date, LocalTime(0, 0))
+                } else {
+                    null
+                }
+
+                // Extract cancelled date
+                val cancelledDateMatch = cancelledDateRegex.find(rawContent)
+                val cancelledDate = if (status == TaskStatus.CANCELLED && cancelledDateMatch != null) {
+                    val date = LocalDate.parse(cancelledDateMatch.groupValues[1])
+                    LocalDateTime(date, LocalTime(0, 0))
+                } else {
+                    null
+                }
+
+                // Extract scheduled date
+                val scheduledDateMatch = scheduledDateRegex.find(rawContent)
+                val scheduledDate = scheduledDateMatch?.let {
+                    val date = LocalDate.parse(it.groupValues[1])
+                    LocalDateTime(date, LocalTime(0, 0))
+                }
+
+                // Extract start date
+                val startDateMatch = startDateRegex.find(rawContent)
+                val startDate = startDateMatch?.let {
+                    val date = LocalDate.parse(it.groupValues[1])
+                    LocalDateTime(date, LocalTime(0, 0))
+                }
+
+                // Extract created date (informational, mapped to createdAt via Instant)
+                val createdDateMatch = createdDateRegex.find(rawContent)
+                val createdAt = createdDateMatch?.let {
+                    val date = LocalDate.parse(it.groupValues[1])
+                    val ldt = LocalDateTime(date, LocalTime(0, 0))
+                    ldt.toInstant(TimeZone.UTC)
+                }
+
+                // Extract reminder time
+                val reminderTimeMatch = reminderTimeRegex.find(rawContent)
+                val reminderTime = reminderTimeMatch?.let {
+                    val hour = it.groupValues[1].toInt()
+                    val minute = it.groupValues[2].toInt()
+                    LocalTime(hour, minute)
+                }
+
+                // Extract recurrence rule
+                val recurrenceMatch = recurrenceRegex.find(rawContent)
+                val recurrenceRule = recurrenceMatch?.groupValues?.get(1)?.trim()
 
                 // Extract energy level
                 val energyLevel = when {
@@ -112,6 +174,12 @@ class MarkdownTaskParser {
                     .replace(idRegex, "")
                     .replace(dueDateRegex, "")
                     .replace(completionRegex, "")
+                    .replace(cancelledDateRegex, "")
+                    .replace(scheduledDateRegex, "")
+                    .replace(startDateRegex, "")
+                    .replace(createdDateRegex, "")
+                    .replace(reminderTimeRegex, "")
+                    .replace(recurrenceRegex, "")
                     .replace(energyHighRegex, "")
                     .replace(energyMediumRegex, "")
                     .replace(energyLowRegex, "")
@@ -128,12 +196,19 @@ class MarkdownTaskParser {
                 val task = Task(
                     id = id,
                     title = title,
-                    status = if (isDone) TaskStatus.DONE else TaskStatus.TODO,
+                    status = status,
                     dueDate = dueDate,
+                    completedDate = completedDate,
+                    cancelledDate = cancelledDate,
+                    scheduledDate = scheduledDate,
+                    startDate = startDate,
+                    reminderTime = reminderTime,
+                    recurrenceRule = recurrenceRule,
                     priority = priority,
                     energyLevel = energyLevel,
                     estimatedMinutes = estimatedMinutes,
                     position = positionCounter,
+                    createdAt = createdAt ?: Clock.System.now(),
                 )
 
                 tasks.add(task)

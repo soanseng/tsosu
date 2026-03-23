@@ -6,7 +6,9 @@ import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -20,8 +22,14 @@ class MarkdownTaskSerializerTest {
     private fun task(
         id: String = "test-id-1",
         title: String = "Buy groceries",
-        done: Boolean = false,
+        status: TaskStatus = TaskStatus.TODO,
         dueDate: LocalDateTime? = null,
+        scheduledDate: LocalDateTime? = null,
+        startDate: LocalDateTime? = null,
+        completedDate: LocalDateTime? = null,
+        cancelledDate: LocalDateTime? = null,
+        reminderTime: LocalTime? = null,
+        recurrenceRule: String? = null,
         priority: Priority = Priority.NONE,
         energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
         estimatedMinutes: Int? = null,
@@ -32,8 +40,14 @@ class MarkdownTaskSerializerTest {
     ) = Task(
         id = id,
         title = title,
-        status = if (done) TaskStatus.DONE else TaskStatus.TODO,
+        status = status,
         dueDate = dueDate,
+        scheduledDate = scheduledDate,
+        startDate = startDate,
+        completedDate = completedDate,
+        cancelledDate = cancelledDate,
+        reminderTime = reminderTime,
+        recurrenceRule = recurrenceRule,
         priority = priority,
         energyLevel = energyLevel,
         estimatedMinutes = estimatedMinutes,
@@ -65,13 +79,27 @@ class MarkdownTaskSerializerTest {
     @Test
     fun `done task has checked box and completion date`() {
         val result = serializer.serialize(
-            listOf(task(done = true))
+            listOf(task(status = TaskStatus.DONE))
         )
 
         assertTrue(result.contains("- [x] Buy groceries"), "Should have checked checkbox")
         assertTrue(
             result.contains("\u2705 2026-03-22"),
             "Should have completion date from updatedAt"
+        )
+    }
+
+    @Test
+    fun `done task with explicit completedDate uses it`() {
+        val completed = LocalDateTime.parse("2026-03-21T09:00:00")
+        val result = serializer.serialize(
+            listOf(task(status = TaskStatus.DONE, completedDate = completed))
+        )
+
+        assertTrue(result.contains("- [x] Buy groceries"), "Should have checked checkbox")
+        assertTrue(
+            result.contains("\u2705 2026-03-21"),
+            "Should use completedDate instead of updatedAt"
         )
     }
 
@@ -95,7 +123,7 @@ class MarkdownTaskSerializerTest {
             listOf(
                 task(
                     title = "Deep work session",
-                    done = false,
+                    status = TaskStatus.TODO,
                     dueDate = due,
                     priority = Priority.URGENT,
                     energyLevel = EnergyLevel.HIGH,
@@ -120,6 +148,7 @@ class MarkdownTaskSerializerTest {
             taskLine.contains("<!-- id:test-id-1 -->"),
             "ID comment present"
         )
+        assertTrue(taskLine.contains("\u2795 2026-03-20"), "Created date present")
     }
 
     @Test
@@ -230,6 +259,130 @@ class MarkdownTaskSerializerTest {
             result.contains("## unknown-id"),
             "Unknown project should use ID as fallback section name"
         )
+    }
+
+    // --- Extended status tests ---
+
+    @Test
+    fun `in-progress task uses forward slash checkbox`() {
+        val result = serializer.serialize(listOf(task(status = TaskStatus.IN_PROGRESS)))
+        assertTrue(result.contains("- [/] Buy groceries"), "Should have [/] checkbox")
+    }
+
+    @Test
+    fun `on-hold task uses exclamation checkbox`() {
+        val result = serializer.serialize(listOf(task(status = TaskStatus.ON_HOLD)))
+        assertTrue(result.contains("- [!] Buy groceries"), "Should have [!] checkbox")
+    }
+
+    @Test
+    fun `planned task uses greater-than checkbox`() {
+        val result = serializer.serialize(listOf(task(status = TaskStatus.PLANNED)))
+        assertTrue(result.contains("- [>] Buy groceries"), "Should have [>] checkbox")
+    }
+
+    @Test
+    fun `cancelled task uses dash checkbox`() {
+        val result = serializer.serialize(listOf(task(status = TaskStatus.CANCELLED)))
+        assertTrue(result.contains("- [-] Buy groceries"), "Should have [-] checkbox")
+    }
+
+    @Test
+    fun `cancelled task with cancelledDate emits cancelled date`() {
+        val cancelled = LocalDateTime.parse("2026-03-21T15:00:00")
+        val result = serializer.serialize(
+            listOf(task(status = TaskStatus.CANCELLED, cancelledDate = cancelled))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(taskLine.contains("- [-] Buy groceries"), "Should have [-] checkbox")
+        assertTrue(taskLine.contains("\u274C 2026-03-21"), "Should have cancelled date")
+    }
+
+    @Test
+    fun `cancelled task without cancelledDate omits cancelled date`() {
+        val result = serializer.serialize(
+            listOf(task(status = TaskStatus.CANCELLED))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertFalse(taskLine.contains("\u274C"), "Should not have cancelled date emoji")
+    }
+
+    @Test
+    fun `non-done task does not emit completion date`() {
+        val result = serializer.serialize(listOf(task(status = TaskStatus.IN_PROGRESS)))
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertFalse(taskLine.contains("\u2705"), "Non-DONE task should not have completion date")
+    }
+
+    // --- New date field tests ---
+
+    @Test
+    fun `scheduled date emits hourglass emoji`() {
+        val scheduled = LocalDateTime.parse("2026-04-05T09:00:00")
+        val result = serializer.serialize(
+            listOf(task(scheduledDate = scheduled))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(taskLine.contains("\u23F3 2026-04-05"), "Should have scheduled date")
+    }
+
+    @Test
+    fun `start date emits airplane emoji`() {
+        val start = LocalDateTime.parse("2026-04-10T08:00:00")
+        val result = serializer.serialize(
+            listOf(task(startDate = start))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(taskLine.contains("\uD83D\uDEEB 2026-04-10"), "Should have start date")
+    }
+
+    @Test
+    fun `created date always emitted from createdAt`() {
+        val result = serializer.serialize(listOf(task()))
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(taskLine.contains("\u2795 2026-03-20"), "Should have created date")
+    }
+
+    @Test
+    fun `reminder time emits alarm clock emoji`() {
+        val result = serializer.serialize(
+            listOf(task(reminderTime = LocalTime(14, 30)))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(taskLine.contains("\u23F0 14:30"), "Should have reminder time")
+    }
+
+    @Test
+    fun `reminder time pads single digit hours and minutes`() {
+        val result = serializer.serialize(
+            listOf(task(reminderTime = LocalTime(9, 5)))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(taskLine.contains("\u23F0 09:05"), "Should have zero-padded reminder time")
+    }
+
+    @Test
+    fun `recurrence rule emits repeat emoji`() {
+        val result = serializer.serialize(
+            listOf(task(recurrenceRule = "every week"))
+        )
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertTrue(
+            taskLine.contains("\uD83D\uDD01 every week"),
+            "Should have recurrence rule"
+        )
+    }
+
+    @Test
+    fun `null optional dates are omitted`() {
+        val result = serializer.serialize(listOf(task()))
+        val taskLine = result.lines().first { it.startsWith("- [") }
+        assertFalse(taskLine.contains("\u23F3"), "No scheduled date")
+        assertFalse(taskLine.contains("\uD83D\uDEEB"), "No start date")
+        assertFalse(taskLine.contains("\u23F0"), "No reminder time")
+        assertFalse(taskLine.contains("\uD83D\uDD01"), "No recurrence")
+        assertFalse(taskLine.contains("\u274C"), "No cancelled date")
+        assertFalse(taskLine.contains("\u2705"), "No completion date for TODO")
     }
 
     /** Extract the content between a `## Name` heading and the next heading (or EOF). */
