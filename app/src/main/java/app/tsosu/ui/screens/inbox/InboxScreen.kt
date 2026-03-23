@@ -44,6 +44,7 @@ fun InboxScreen(
             TaskListItem(
                 task = task,
                 onToggleDone = { viewModel.toggleDone(it) },
+                onStatusChange = { id, status -> viewModel.setStatus(id, status) },
                 onClick = { onTaskClick(it.id) },
             )
         }

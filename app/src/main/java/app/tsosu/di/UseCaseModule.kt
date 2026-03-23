@@ -15,6 +15,7 @@ import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.GetWeeklyReviewUseCase
 import app.tsosu.domain.usecase.PickOneTaskUseCase
 import app.tsosu.domain.usecase.SetDailyFocusUseCase
+import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
 import app.tsosu.domain.usecase.UpdateTaskUseCase
 import dagger.Module
@@ -28,6 +29,7 @@ object UseCaseModule {
 
     @Provides fun provideCreateTask(repo: TaskRepository) = CreateTaskUseCase(repo)
     @Provides fun provideToggleTaskDone(repo: TaskRepository) = ToggleTaskDoneUseCase(repo)
+    @Provides fun provideSetTaskStatus(repo: TaskRepository) = SetTaskStatusUseCase(repo)
     @Provides fun provideGetTodayOverview(repo: TaskRepository) = GetTodayOverviewUseCase(repo)
     @Provides fun providePickOneTask(repo: TaskRepository) = PickOneTaskUseCase(repo)
     @Provides fun provideSetDailyFocus(focus: FocusRepository, task: TaskRepository) = SetDailyFocusUseCase(focus, task)

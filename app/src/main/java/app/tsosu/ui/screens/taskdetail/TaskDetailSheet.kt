@@ -2,15 +2,24 @@ package app.tsosu.ui.screens.taskdetail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,13 +34,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -39,14 +51,22 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.TaskStatus
+import app.tsosu.ui.components.displayName
+import app.tsosu.ui.components.icon
+import app.tsosu.ui.components.iconTint
 import app.tsosu.ui.util.rememberHaptic
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 
-@OptIn(ExperimentalMaterial3Api::class)
+private enum class DatePickerTarget {
+    DUE, SCHEDULED, START
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TaskDetailSheet(
     taskId: String,
@@ -66,12 +86,14 @@ fun TaskDetailSheet(
 
     if (state.task == null) return
 
-    var showDatePicker by remember { mutableStateOf(false) }
+    var datePickerTarget by remember { mutableStateOf<DatePickerTarget?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
         Text("Edit Task", style = MaterialTheme.typography.titleLarge)
@@ -95,6 +117,41 @@ fun TaskDetailSheet(
             minLines = 2,
             maxLines = 4,
         )
+
+        Spacer(Modifier.height(12.dp))
+
+        // Status chips
+        Text("Status", style = MaterialTheme.typography.labelLarge)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            TaskStatus.entries.forEach { status ->
+                FilterChip(
+                    selected = state.status == status,
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onStatusChange(status)
+                    },
+                    label = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = status.icon(),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (state.status == status) {
+                                    status.iconTint()
+                                } else {
+                                    Color.Unspecified
+                                },
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(status.displayName())
+                        }
+                    },
+                )
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -151,9 +208,13 @@ fun TaskDetailSheet(
 
         Spacer(Modifier.height(12.dp))
 
+        // Due date
         Text("Due date", style = MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { showDatePicker = true }) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.DUE }) {
                 Icon(Icons.Default.CalendarMonth, contentDescription = null)
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
@@ -164,6 +225,76 @@ fun TaskDetailSheet(
             if (state.dueDate != null) {
                 IconButton(onClick = { viewModel.onDueDateChange(null) }) {
                     Icon(Icons.Default.Close, contentDescription = "Clear date")
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Scheduled date
+        Text("Scheduled date", style = MaterialTheme.typography.labelLarge)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.SCHEDULED }) {
+                Icon(Icons.Default.EventAvailable, contentDescription = null)
+                Spacer(Modifier.padding(start = 4.dp))
+                Text(
+                    state.scheduledDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
+                        ?: "No date",
+                )
+            }
+            if (state.scheduledDate != null) {
+                IconButton(onClick = { viewModel.onScheduledDateChange(null) }) {
+                    Icon(Icons.Default.Close, contentDescription = "Clear date")
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Start date
+        Text("Start date", style = MaterialTheme.typography.labelLarge)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.START }) {
+                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                Spacer(Modifier.padding(start = 4.dp))
+                Text(
+                    state.startDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
+                        ?: "No date",
+                )
+            }
+            if (state.startDate != null) {
+                IconButton(onClick = { viewModel.onStartDateChange(null) }) {
+                    Icon(Icons.Default.Close, contentDescription = "Clear date")
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Reminder time
+        Text("Reminder time", style = MaterialTheme.typography.labelLarge)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedButton(onClick = { showTimePicker = true }) {
+                Icon(Icons.Default.AccessTime, contentDescription = null)
+                Spacer(Modifier.padding(start = 4.dp))
+                Text(
+                    state.reminderTime?.let {
+                        "%02d:%02d".format(it.hour, it.minute)
+                    } ?: "No reminder",
+                )
+            }
+            if (state.reminderTime != null) {
+                IconButton(onClick = { viewModel.onReminderTimeChange(null) }) {
+                    Icon(Icons.Default.Close, contentDescription = "Clear time")
                 }
             }
         }
@@ -220,33 +351,76 @@ fun TaskDetailSheet(
         )
     }
 
-    if (showDatePicker) {
+    // Date picker dialog (shared for due/scheduled/start)
+    if (datePickerTarget != null) {
+        val initialMillis = when (datePickerTarget) {
+            DatePickerTarget.DUE -> state.dueDate
+            DatePickerTarget.SCHEDULED -> state.scheduledDate
+            DatePickerTarget.START -> state.startDate
+            null -> null
+        }?.let {
+            it.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        }
+
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = state.dueDate?.let {
-                it.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-            },
+            initialSelectedDateMillis = initialMillis,
         )
         DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
+            onDismissRequest = { datePickerTarget = null },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val ldt = Instant.fromEpochMilliseconds(millis)
                             .toLocalDateTime(TimeZone.currentSystemDefault())
-                        viewModel.onDueDateChange(ldt)
+                        when (datePickerTarget) {
+                            DatePickerTarget.DUE -> viewModel.onDueDateChange(ldt)
+                            DatePickerTarget.SCHEDULED -> viewModel.onScheduledDateChange(ldt)
+                            DatePickerTarget.START -> viewModel.onStartDateChange(ldt)
+                            null -> {}
+                        }
                     }
-                    showDatePicker = false
+                    datePickerTarget = null
                 }) {
                     Text("OK")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
+                TextButton(onClick = { datePickerTarget = null }) {
                     Text("Cancel")
                 }
             },
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    // Time picker dialog for reminder
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = state.reminderTime?.hour ?: 9,
+            initialMinute = state.reminderTime?.minute ?: 0,
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("Reminder time") },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onReminderTimeChange(
+                        LocalTime(timePickerState.hour, timePickerState.minute),
+                    )
+                    showTimePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }

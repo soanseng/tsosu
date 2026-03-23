@@ -59,6 +59,9 @@ fun FocusScreen(
                         viewModel.onToggleDone(id)
                         showKonfetti.value = true
                     },
+                    onStatusChange = { id, status ->
+                        viewModel.setStatus(id, status)
+                    },
                     onClick = { onTaskClick(it.id) },
                     modifier = Modifier.animateItem(),
                 )
@@ -81,6 +84,9 @@ fun FocusScreen(
                     onToggleDone = { id ->
                         viewModel.onToggleDone(id)
                         showKonfetti.value = true
+                    },
+                    onStatusChange = { id, status ->
+                        viewModel.setStatus(id, status)
                     },
                     onClick = { onTaskClick(it.id) },
                     modifier = Modifier.animateItem(),

@@ -2,6 +2,7 @@ package app.tsosu.domain.repository
 
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
@@ -19,6 +20,7 @@ interface TaskRepository {
     suspend fun updateTask(task: Task): Result<Task>
     suspend fun deleteTask(taskId: String): Result<Unit>
     suspend fun toggleDone(taskId: String): Result<Task>
+    suspend fun setStatus(taskId: String, status: TaskStatus): Result<Task>
     suspend fun reorder(taskId: String, newPosition: Double): Result<Unit>
     suspend fun setFocus(taskId: String, isFocus: Boolean): Result<Task>
     suspend fun clearFocus(date: LocalDate): Result<Unit>

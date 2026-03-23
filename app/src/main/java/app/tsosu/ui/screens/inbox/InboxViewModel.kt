@@ -3,7 +3,9 @@ package app.tsosu.ui.screens.inbox
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
+import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +18,7 @@ import javax.inject.Inject
 class InboxViewModel @Inject constructor(
     taskRepository: TaskRepository,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
+    private val setTaskStatus: SetTaskStatusUseCase,
 ) : ViewModel() {
 
     val tasks: StateFlow<List<Task>> = taskRepository.getInboxTasks()
@@ -24,6 +27,12 @@ class InboxViewModel @Inject constructor(
     fun toggleDone(taskId: String) {
         viewModelScope.launch {
             toggleTaskDone(taskId)
+        }
+    }
+
+    fun setStatus(taskId: String, status: TaskStatus) {
+        viewModelScope.launch {
+            setTaskStatus(taskId, status)
         }
     }
 }

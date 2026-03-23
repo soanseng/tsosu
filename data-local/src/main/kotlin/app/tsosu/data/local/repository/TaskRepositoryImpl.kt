@@ -95,6 +95,21 @@ class TaskRepositoryImpl(
         ).toDomain()
     }
 
+    override suspend fun setStatus(taskId: String, status: TaskStatus): Result<Task> = runCatching {
+        val entity = taskDao.getById(taskId).first()
+            ?: throw NoSuchElementException("Task $taskId not found")
+        val now = Clock.System.now().toEpochMilliseconds()
+        val completedDate = if (status.isDone) now else null
+        taskDao.setStatus(taskId, status.ordinal, completedDate, now)
+        onTaskChanged?.invoke(taskId, "UPDATE", null)
+        entity.copy(
+            status = status.ordinal,
+            done = status.isDone,
+            completedDate = completedDate,
+            updatedAt = now,
+        ).toDomain()
+    }
+
     override suspend fun reorder(taskId: String, newPosition: Double): Result<Unit> = runCatching {
         val task = taskDao.getById(taskId).first()
             ?: throw NoSuchElementException("Task $taskId not found")
