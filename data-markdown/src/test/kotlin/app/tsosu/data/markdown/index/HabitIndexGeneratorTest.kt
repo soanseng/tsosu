@@ -235,7 +235,11 @@ class HabitIndexGeneratorTest {
 
         val line = result.lines().first { it.contains("<!-- id:h1 -->") }
         assertTrue(
-            line.contains("\uD83D\uDD012/3"),
+            line.contains("\uD83D\uDD013x/week"),
+            "Should show frequency label, got: $line",
+        )
+        assertTrue(
+            line.contains("2/3"),
             "Should show 2/3 ratio for custom frequency, got: $line",
         )
     }
@@ -252,7 +256,11 @@ class HabitIndexGeneratorTest {
 
         val line = result.lines().first { it.contains("<!-- id:h1 -->") }
         assertTrue(
-            line.contains("\uD83D\uDD010/5"),
+            line.contains("\uD83D\uDD015x/week"),
+            "Should show frequency label, got: $line",
+        )
+        assertTrue(
+            line.contains("0/5"),
             "Should show 0/5 ratio for custom frequency, got: $line",
         )
     }
@@ -321,9 +329,12 @@ class HabitIndexGeneratorTest {
         val weekdaysSection = extractSection(result, "Weekdays")
         assertTrue(weekdaysSection.contains("Standup \u26A1low [[habits/standup]] <!-- id:h5 -->"))
 
-        // Custom section
+        // Custom section: 🔁3x/week + ⚡low + ratio 2/3 + wikilink
         val customSection = extractSection(result, "Custom")
-        assertTrue(customSection.contains("Read tech blog \uD83D\uDD012/3 \u26A1low [[habits/reading]] <!-- id:h3 -->"))
+        assertTrue(
+            customSection.contains("Read tech blog \uD83D\uDD013x/week \u26A1low 2/3 [[habits/reading]] <!-- id:h3 -->"),
+            "Custom section format mismatch.\nActual custom section:\n$customSection",
+        )
     }
 
     private fun extractSection(markdown: String, sectionName: String): String {

@@ -53,11 +53,11 @@ class HabitIndexGenerator {
         if (habit.frequency == HabitFrequency.CUSTOM) {
             val count = countCompletionsInLastWeek(completions)
             append(" $count/${habit.targetDaysPerWeek}")
-        }
-
-        val streak = calculateStreak(completions)
-        if (streak > 0) {
-            append(" \uD83D\uDD25$streak")
+        } else {
+            val streak = calculateStreak(completions)
+            if (streak > 0) {
+                append(" \uD83D\uDD25$streak")
+            }
         }
 
         val slug = noteFilenames[habit.id] ?: slugify(habit.title)
