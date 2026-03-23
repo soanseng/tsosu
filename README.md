@@ -1,5 +1,7 @@
 # Tsosu 做事
 
+[繁體中文](README.zh-TW.md)
+
 > 台語「做事」(tsò-sū) — A task manager designed by a psychiatrist with ADHD.
 
 **Tsosu** is a native Android task manager built for minds that work differently. It stores everything as plain markdown files — sync to your desktop with Obsidian, nvim, or any text editor via Syncthing. No server needed.
