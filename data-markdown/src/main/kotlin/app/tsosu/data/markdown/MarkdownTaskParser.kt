@@ -39,6 +39,7 @@ class MarkdownTaskParser {
     private val priorityMediumRegex = Regex("""\uD83D\uDD3C""")
     private val priorityLowRegex = Regex("""\uD83D\uDD3D""")
     private val priorityLowestRegex = Regex("""\u23EC""")
+    private val wikilinkRegex = Regex("""\[\[[^\]]+]]""")
     private val sectionRegex = Regex("""^## (.+)$""")
 
     @OptIn(ExperimentalUuidApi::class)
@@ -169,9 +170,10 @@ class MarkdownTaskParser {
                     else -> Priority.NONE
                 }
 
-                // Clean title: strip all metadata markers and id comment
+                // Clean title: strip all metadata markers, wikilinks, and id comment
                 val title = rawContent
                     .replace(idRegex, "")
+                    .replace(wikilinkRegex, "")
                     .replace(dueDateRegex, "")
                     .replace(completionRegex, "")
                     .replace(cancelledDateRegex, "")

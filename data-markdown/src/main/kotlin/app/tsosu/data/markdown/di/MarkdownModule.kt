@@ -14,6 +14,13 @@ import app.tsosu.data.markdown.MarkdownTaskParser
 import app.tsosu.data.markdown.MarkdownTaskSerializer
 import app.tsosu.data.markdown.NoOpImportRepository
 import app.tsosu.data.markdown.SafMarkdownFileAccess
+import app.tsosu.data.markdown.dailynote.DailyNoteWriter
+import app.tsosu.data.markdown.habitnote.HabitNoteParser
+import app.tsosu.data.markdown.habitnote.HabitNoteSerializer
+import app.tsosu.data.markdown.index.HabitIndexGenerator
+import app.tsosu.data.markdown.index.TaskIndexGenerator
+import app.tsosu.data.markdown.tasknote.TaskNoteParser
+import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
 import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.SyncRepository
 import dagger.Module
@@ -49,6 +56,13 @@ object MarkdownModule {
         taskParser = MarkdownTaskParser(),
         habitSerializer = MarkdownHabitSerializer(),
         habitParser = MarkdownHabitParser(),
+        taskNoteSerializer = TaskNoteSerializer(),
+        taskNoteParser = TaskNoteParser(),
+        habitNoteSerializer = HabitNoteSerializer(),
+        habitNoteParser = HabitNoteParser(),
+        dailyNoteWriter = DailyNoteWriter(),
+        taskIndexGenerator = TaskIndexGenerator(),
+        habitIndexGenerator = HabitIndexGenerator(),
     )
 
     @Provides

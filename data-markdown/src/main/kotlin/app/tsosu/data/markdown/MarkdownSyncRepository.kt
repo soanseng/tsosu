@@ -12,6 +12,9 @@ import app.tsosu.domain.repository.SyncState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 class MarkdownSyncRepository(
     private val preferences: MarkdownPreferences,
@@ -43,6 +46,12 @@ class MarkdownSyncRepository(
             completions.addAll(hc.map { it.toDomain() })
         }
         syncManager.exportHabits(habits, completions)
+
+        // Export today's daily note
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val todayCompletions = completions.filter { it.date == today }
+            .map { it.habitId }.toSet()
+        syncManager.exportDailyNote(today, habits, todayCompletions)
 
         // 2. Import from markdown (picks up external edits)
         val importedTasks = syncManager.importTasks()

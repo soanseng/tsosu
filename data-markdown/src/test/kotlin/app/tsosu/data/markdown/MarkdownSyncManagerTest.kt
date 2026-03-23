@@ -1,5 +1,12 @@
 package app.tsosu.data.markdown
 
+import app.tsosu.data.markdown.dailynote.DailyNoteWriter
+import app.tsosu.data.markdown.habitnote.HabitNoteParser
+import app.tsosu.data.markdown.habitnote.HabitNoteSerializer
+import app.tsosu.data.markdown.index.HabitIndexGenerator
+import app.tsosu.data.markdown.index.TaskIndexGenerator
+import app.tsosu.data.markdown.tasknote.TaskNoteParser
+import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
@@ -23,6 +30,13 @@ class MarkdownSyncManagerTest {
     private val taskParser = MarkdownTaskParser()
     private val habitSerializer = MarkdownHabitSerializer()
     private val habitParser = MarkdownHabitParser()
+    private val taskNoteSerializer = TaskNoteSerializer()
+    private val taskNoteParser = TaskNoteParser()
+    private val habitNoteSerializer = HabitNoteSerializer()
+    private val habitNoteParser = HabitNoteParser()
+    private val dailyNoteWriter = DailyNoteWriter()
+    private val taskIndexGenerator = TaskIndexGenerator()
+    private val habitIndexGenerator = HabitIndexGenerator()
 
     private val manager = MarkdownSyncManager(
         fileAccess = fileAccess,
@@ -30,6 +44,13 @@ class MarkdownSyncManagerTest {
         taskParser = taskParser,
         habitSerializer = habitSerializer,
         habitParser = habitParser,
+        taskNoteSerializer = taskNoteSerializer,
+        taskNoteParser = taskNoteParser,
+        habitNoteSerializer = habitNoteSerializer,
+        habitNoteParser = habitNoteParser,
+        dailyNoteWriter = dailyNoteWriter,
+        taskIndexGenerator = taskIndexGenerator,
+        habitIndexGenerator = habitIndexGenerator,
     )
 
     private val fixedCreatedAt = Instant.parse("2026-03-20T10:00:00Z")
@@ -39,10 +60,14 @@ class MarkdownSyncManagerTest {
         id: String = "task-1",
         title: String = "Buy groceries",
         done: Boolean = false,
+        description: String = "",
+        subtasks: List<Task> = emptyList(),
     ) = Task(
         id = id,
         title = title,
+        description = description,
         status = if (done) TaskStatus.DONE else TaskStatus.TODO,
+        subtasks = subtasks,
         createdAt = fixedCreatedAt,
         updatedAt = fixedUpdatedAt,
     )
@@ -60,12 +85,13 @@ class MarkdownSyncManagerTest {
     )
 
     @Test
-    fun `exportTasks writes serialized markdown containing task title and id`() = runTest {
+    fun `exportTasks writes index file with task title and id`() = runTest {
         val tasks = listOf(task(id = "abc-123", title = "Write tests"))
 
         manager.exportTasks(tasks, emptyMap())
 
         coVerify {
+            fileAccess.ensureFolder("tasks")
             fileAccess.writeTasksFile(withArg { content ->
                 assertTrue(content.contains("Write tests"), "Should contain task title")
                 assertTrue(content.contains("<!-- id:abc-123 -->"), "Should contain task id")
@@ -74,27 +100,97 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
-    fun `importTasks reads and parses markdown returning correct tasks`() = runTest {
-        val markdown = buildString {
-            appendLine("---")
-            appendLine("tsosu: v1")
-            appendLine("updated: 2026-03-23T10:00:00")
-            appendLine("---")
-            appendLine()
-            appendLine("## Inbox")
-            appendLine("- [ ] Buy groceries \uD83D\uDE10medium <!-- id:task-1 -->")
+    fun `exportTasks creates note files for tasks with description`() = runTest {
+        val tasks = listOf(
+            task(id = "t1", title = "Complex task", description = "Some details"),
+        )
+
+        manager.exportTasks(tasks, emptyMap())
+
+        coVerify {
+            fileAccess.ensureFolder("tasks")
+            fileAccess.writeFileInFolder("tasks", "complex-task.md", withArg { content ->
+                assertTrue(content.contains("# Complex task"), "Note should contain H1 title")
+                assertTrue(content.contains("Some details"), "Note should contain description")
+                assertTrue(content.contains("id: t1"), "Note should contain id in frontmatter")
+            })
         }
-        coEvery { fileAccess.readTasksFile() } returns markdown
-
-        val result = manager.importTasks()
-
-        assertEquals(1, result.tasks.size)
-        assertEquals("task-1", result.tasks[0].id)
-        assertEquals("Buy groceries", result.tasks[0].title)
     }
 
     @Test
-    fun `importTasks returns empty when file does not exist`() = runTest {
+    fun `exportTasks does not create note files for simple tasks`() = runTest {
+        val tasks = listOf(task(id = "t1", title = "Simple task", description = ""))
+
+        manager.exportTasks(tasks, emptyMap())
+
+        coVerify(exactly = 0) {
+            fileAccess.writeFileInFolder("tasks", any(), any())
+        }
+    }
+
+    @Test
+    fun `exportTasks index includes wikilink for tasks with notes`() = runTest {
+        val tasks = listOf(
+            task(id = "t1", title = "Complex task", description = "Details here"),
+        )
+
+        manager.exportTasks(tasks, emptyMap())
+
+        coVerify {
+            fileAccess.writeTasksFile(withArg { content ->
+                assertTrue(
+                    content.contains("[[tasks/complex-task]]"),
+                    "Index should have wikilink for noted task",
+                )
+            })
+        }
+    }
+
+    @Test
+    fun `importTasks reads from note files and index, notes take priority`() = runTest {
+        // Task note file provides the task with description
+        val noteContent = buildString {
+            appendLine("---")
+            appendLine("id: t1")
+            appendLine("status: todo")
+            appendLine("energy: medium")
+            appendLine("created: 2026-03-20")
+            appendLine("---")
+            appendLine()
+            appendLine("# From note")
+            appendLine()
+            appendLine("Detailed description")
+        }
+        coEvery { fileAccess.listFolder("tasks") } returns listOf("from-note.md")
+        coEvery { fileAccess.readFileInFolder("tasks", "from-note.md") } returns noteContent
+
+        // Index also has t1 plus an inline-only task t2
+        val indexContent = buildString {
+            appendLine("---")
+            appendLine("tsosu: v1")
+            appendLine("updated: 2026-03-23T10:00:00")
+            appendLine("generated: true")
+            appendLine("---")
+            appendLine()
+            appendLine("## Inbox")
+            appendLine("- [ ] From note \uD83D\uDE10medium <!-- id:t1 -->")
+            appendLine("- [ ] Inline only \uD83D\uDE10medium <!-- id:t2 -->")
+        }
+        coEvery { fileAccess.readTasksFile() } returns indexContent
+
+        val result = manager.importTasks()
+
+        assertEquals(2, result.tasks.size)
+        val noteTask = result.tasks.find { it.id == "t1" }!!
+        assertEquals("From note", noteTask.title)
+        assertEquals("Detailed description", noteTask.description)
+        val inlineTask = result.tasks.find { it.id == "t2" }!!
+        assertEquals("Inline only", inlineTask.title)
+    }
+
+    @Test
+    fun `importTasks returns empty when no files exist`() = runTest {
+        coEvery { fileAccess.listFolder("tasks") } returns emptyList()
         coEvery { fileAccess.readTasksFile() } returns null
 
         val result = manager.importTasks()
@@ -104,7 +200,18 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
-    fun `exportHabits writes serialized habits markdown`() = runTest {
+    fun `importTasks skips malformed note files`() = runTest {
+        coEvery { fileAccess.listFolder("tasks") } returns listOf("bad.md")
+        coEvery { fileAccess.readFileInFolder("tasks", "bad.md") } returns "not valid yaml frontmatter"
+        coEvery { fileAccess.readTasksFile() } returns null
+
+        val result = manager.importTasks()
+
+        assertTrue(result.tasks.isEmpty(), "Should skip malformed files gracefully")
+    }
+
+    @Test
+    fun `exportHabits writes note files and index`() = runTest {
         val habits = listOf(habit(id = "h1", title = "Meditate"))
         val completions = listOf(
             HabitCompletion("h1", LocalDate.parse("2026-03-23"), Instant.parse("2026-03-23T08:00:00Z")),
@@ -113,28 +220,38 @@ class MarkdownSyncManagerTest {
         manager.exportHabits(habits, completions)
 
         coVerify {
+            fileAccess.ensureFolder("habits")
+            fileAccess.writeFileInFolder("habits", "meditate.md", withArg { content ->
+                assertTrue(content.contains("# Meditate"), "Note should contain title")
+                assertTrue(content.contains("id: h1"), "Note should contain id")
+                assertTrue(content.contains("2026-03-23"), "Note should contain completion date")
+            })
             fileAccess.writeHabitsFile(withArg { content ->
-                assertTrue(content.contains("Meditate"), "Should contain habit title")
-                assertTrue(content.contains("<!-- id:h1 -->"), "Should contain habit id")
-                assertTrue(content.contains("2026-03-23"), "Should contain completion date")
+                assertTrue(content.contains("Meditate"), "Index should contain habit title")
+                assertTrue(content.contains("<!-- id:h1 -->"), "Index should contain habit id")
             })
         }
     }
 
     @Test
-    fun `importHabits reads and parses habits returning correct data`() = runTest {
-        val markdown = buildString {
+    fun `importHabits reads from note files`() = runTest {
+        val noteContent = buildString {
             appendLine("---")
-            appendLine("tsosu: v1")
-            appendLine("updated: 2026-03-23T10:00:00")
+            appendLine("id: h1")
+            appendLine("frequency: daily")
+            appendLine("energy: medium")
+            appendLine("color: \"#4CAF50\"")
+            appendLine("archived: false")
+            appendLine("created: 2026-03-20")
             appendLine("---")
             appendLine()
-            appendLine("## Daily")
+            appendLine("# Meditate")
             appendLine()
-            appendLine("- [ ] Meditate \uD83D\uDD01daily \u26A1medium <!-- id:h1 -->")
-            appendLine("  - \u2705 2026-03-22")
+            appendLine("## Completions")
+            appendLine("- \u2705 2026-03-22")
         }
-        coEvery { fileAccess.readHabitsFile() } returns markdown
+        coEvery { fileAccess.listFolder("habits") } returns listOf("meditate.md")
+        coEvery { fileAccess.readFileInFolder("habits", "meditate.md") } returns noteContent
 
         val result = manager.importHabits()
 
@@ -147,12 +264,69 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
-    fun `importHabits returns empty when file does not exist`() = runTest {
+    fun `importHabits falls back to old habits file when no note files`() = runTest {
+        coEvery { fileAccess.listFolder("habits") } returns emptyList()
+        val oldContent = buildString {
+            appendLine("---")
+            appendLine("tsosu: v1")
+            appendLine("updated: 2026-03-23T10:00:00")
+            appendLine("---")
+            appendLine()
+            appendLine("## Daily")
+            appendLine()
+            appendLine("- [ ] Meditate \uD83D\uDD01daily \u26A1medium <!-- id:h1 -->")
+            appendLine("  - \u2705 2026-03-22")
+        }
+        coEvery { fileAccess.readHabitsFile() } returns oldContent
+
+        val result = manager.importHabits()
+
+        assertEquals(1, result.habits.size)
+        assertEquals("h1", result.habits[0].id)
+        assertEquals("Meditate", result.habits[0].title)
+        assertEquals(1, result.completions.size)
+    }
+
+    @Test
+    fun `importHabits returns empty when no files exist`() = runTest {
+        coEvery { fileAccess.listFolder("habits") } returns emptyList()
         coEvery { fileAccess.readHabitsFile() } returns null
 
         val result = manager.importHabits()
 
         assertTrue(result.habits.isEmpty(), "Should return empty habits list")
         assertTrue(result.completions.isEmpty(), "Should return empty completions list")
+    }
+
+    @Test
+    fun `exportDailyNote writes file in daily folder`() = runTest {
+        val date = LocalDate.parse("2026-03-23")
+        val habits = listOf(habit(id = "h1", title = "Exercise"))
+        val completedIds = setOf("h1")
+
+        manager.exportDailyNote(date, habits, completedIds)
+
+        coVerify {
+            fileAccess.ensureFolder("daily")
+            fileAccess.writeFileInFolder("daily", "2026-03-23.md", withArg { content ->
+                assertTrue(content.contains("date: 2026-03-23"), "Should contain date")
+                assertTrue(content.contains("[x] Exercise"), "Should mark completed habit")
+            })
+        }
+    }
+
+    @Test
+    fun `exportDailyNote marks uncompleted habits with empty checkbox`() = runTest {
+        val date = LocalDate.parse("2026-03-23")
+        val habits = listOf(habit(id = "h1", title = "Exercise"))
+        val completedIds = emptySet<String>()
+
+        manager.exportDailyNote(date, habits, completedIds)
+
+        coVerify {
+            fileAccess.writeFileInFolder("daily", "2026-03-23.md", withArg { content ->
+                assertTrue(content.contains("[ ] Exercise"), "Should mark uncompleted habit")
+            })
+        }
     }
 }
