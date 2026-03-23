@@ -11,7 +11,6 @@ import app.tsosu.data.local.repository.TaskRepositoryImpl
 import app.tsosu.domain.repository.FocusRepository
 import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.RoutineRepository
-import app.tsosu.data.vikunja.sync.SyncDispatcher
 import app.tsosu.domain.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
@@ -25,11 +24,8 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideTaskRepository(taskDao: TaskDao, syncDispatcher: SyncDispatcher): TaskRepository =
-        TaskRepositoryImpl(taskDao) { entityId, operation, serverId ->
-            val op = app.tsosu.data.vikunja.sync.SyncOperation.valueOf(operation)
-            syncDispatcher.dispatch(entityId, op, serverId)
-        }
+    fun provideTaskRepository(taskDao: TaskDao): TaskRepository =
+        TaskRepositoryImpl(taskDao)
 
     @Provides
     @Singleton

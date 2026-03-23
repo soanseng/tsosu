@@ -82,7 +82,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":data-local"))
-    implementation(project(":data-vikunja"))
+    implementation(project(":data-markdown"))
     implementation(project(":data-calendar"))
 
     implementation(libs.core.ktx)
@@ -102,9 +102,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    implementation(libs.hilt.work)
-    implementation(libs.work.runtime.ktx)
-
     implementation(libs.room.runtime)
 
     implementation(libs.glance.appwidget)
