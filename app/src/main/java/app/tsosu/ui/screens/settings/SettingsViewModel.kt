@@ -3,6 +3,7 @@ package app.tsosu.ui.screens.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.CalendarRepository
 import app.tsosu.domain.repository.ImportFormat
@@ -20,10 +21,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val serverUrl: String = "",
-    val username: String = "",
-    val password: String = "",
-    val isConnected: Boolean = false,
+    val folderUri: String? = null,
+    val isConfigured: Boolean = false,
     val syncState: SyncState = SyncState.IDLE,
     val calendarProvider: CalendarProvider = CalendarProvider.NONE,
     val caldavUrl: String = "",
@@ -35,6 +34,7 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val syncRepository: SyncRepository,
+    private val markdownPreferences: MarkdownPreferences,
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
     private val themePreferences: ThemePreferences,
@@ -51,8 +51,13 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            syncRepository.isRemoteConfigured().collect { configured ->
-                _uiState.value = _uiState.value.copy(isConnected = configured)
+            markdownPreferences.folderUri().collect { uri ->
+                _uiState.value = _uiState.value.copy(folderUri = uri?.toString())
+            }
+        }
+        viewModelScope.launch {
+            syncRepository.isConfigured().collect { configured ->
+                _uiState.value = _uiState.value.copy(isConfigured = configured)
             }
         }
         viewModelScope.launch {
@@ -67,48 +72,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateServerUrl(url: String) {
-        _uiState.value = _uiState.value.copy(serverUrl = url)
-    }
-
-    fun updateUsername(username: String) {
-        _uiState.value = _uiState.value.copy(username = username)
-    }
-
-    fun updatePassword(password: String) {
-        _uiState.value = _uiState.value.copy(password = password)
-    }
-
-    fun updateCaldavUrl(url: String) {
-        _uiState.value = _uiState.value.copy(caldavUrl = url)
-    }
-
-    fun updateCaldavEmail(email: String) {
-        _uiState.value = _uiState.value.copy(caldavEmail = email)
-    }
-
-    fun updateCaldavPassword(password: String) {
-        _uiState.value = _uiState.value.copy(caldavPassword = password)
-    }
-
-    fun connect() {
+    fun selectFolder(uri: Uri) {
         viewModelScope.launch {
-            val state = _uiState.value
-            val result = syncRepository.login(state.serverUrl, state.username, state.password)
-            result.fold(
-                onSuccess = { info ->
-                    _uiState.value = _uiState.value.copy(
-                        isConnected = true,
-                        message = "Connected to ${info.version}",
-                    )
-                    sync()
-                },
-                onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        message = "Error: ${e.message}",
-                    )
-                },
-            )
+            markdownPreferences.setFolderUri(uri)
+            sync()
         }
     }
 
@@ -118,7 +85,7 @@ class SettingsViewModel @Inject constructor(
             result.fold(
                 onSuccess = { r ->
                     _uiState.value = _uiState.value.copy(
-                        message = "Synced: ${r.pulled} pulled, ${r.pushed} pushed",
+                        message = "Synced: ${r.exported} exported, ${r.imported} imported",
                     )
                 },
                 onFailure = { e ->
@@ -134,13 +101,23 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             syncRepository.disconnect()
             _uiState.value = _uiState.value.copy(
-                isConnected = false,
-                serverUrl = "",
-                username = "",
-                password = "",
+                isConfigured = false,
+                folderUri = null,
                 message = null,
             )
         }
+    }
+
+    fun updateCaldavUrl(url: String) {
+        _uiState.value = _uiState.value.copy(caldavUrl = url)
+    }
+
+    fun updateCaldavEmail(email: String) {
+        _uiState.value = _uiState.value.copy(caldavEmail = email)
+    }
+
+    fun updateCaldavPassword(password: String) {
+        _uiState.value = _uiState.value.copy(caldavPassword = password)
     }
 
     fun importTodoist(data: ByteArray) {

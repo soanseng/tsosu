@@ -1,5 +1,6 @@
 package app.tsosu.ui.screens.settings
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -104,67 +105,58 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
         HorizontalDivider()
 
-        // Vikunja Server Section
-        Text(
-            stringResource(R.string.settings_vikunja_server),
-            style = MaterialTheme.typography.titleMedium,
-        )
+        // Markdown Sync Section
+        Text("Markdown Sync", style = MaterialTheme.typography.titleMedium)
 
-        if (state.isConnected) {
+        val folderPicker = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree()
+        ) { uri: Uri? ->
+            uri ?: return@rememberLauncherForActivityResult
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+            viewModel.selectFolder(uri)
+        }
+
+        if (state.isConfigured) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.settings_connected),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                    Text("Syncing to folder", style = MaterialTheme.typography.bodyLarge)
+                    state.folderUri?.let {
+                        Text(
+                            Uri.parse(it).lastPathSegment ?: it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = { viewModel.sync() },
                             enabled = state.syncState != SyncState.SYNCING,
                         ) {
-                            Text(
-                                if (state.syncState == SyncState.SYNCING)
-                                    stringResource(R.string.settings_syncing)
-                                else
-                                    stringResource(R.string.settings_sync_now)
-                            )
+                            Text(if (state.syncState == SyncState.SYNCING) "Syncing..." else "Sync Now")
                         }
                         OutlinedButton(onClick = { viewModel.disconnect() }) {
-                            Text(stringResource(R.string.settings_disconnect))
+                            Text("Disconnect")
                         }
                     }
                 }
             }
         } else {
-            OutlinedTextField(
-                value = state.serverUrl,
-                onValueChange = { viewModel.updateServerUrl(it) },
-                label = { Text(stringResource(R.string.settings_server_url)) },
-                placeholder = { Text("http://localhost:3456") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-            )
-            OutlinedTextField(
-                value = state.username,
-                onValueChange = { viewModel.updateUsername(it) },
-                label = { Text(stringResource(R.string.settings_username)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-            )
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = { viewModel.updatePassword(it) },
-                label = { Text(stringResource(R.string.settings_password)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
+            Text(
+                "Select a folder to sync tasks and habits as markdown files. " +
+                    "Use a Syncthing or Obsidian Sync folder for cross-device sync.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Button(
-                onClick = { viewModel.connect() },
+                onClick = { folderPicker.launch(null) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(stringResource(R.string.settings_connect))
+                Text("Select Folder")
             }
         }
 
