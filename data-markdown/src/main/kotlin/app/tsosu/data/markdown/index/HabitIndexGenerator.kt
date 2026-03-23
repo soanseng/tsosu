@@ -6,7 +6,6 @@ import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
