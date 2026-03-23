@@ -54,6 +54,11 @@ class TaskRepositoryImpl(
     override fun getTasksByEnergy(level: EnergyLevel): Flow<List<Task>> =
         taskDao.getByEnergyLevel(level.ordinal).map { it.map { e -> e.toDomain() } }
 
+    override fun getAllActiveTasks(): Flow<List<Task>> =
+        taskDao.getAllTasks().map { entities ->
+            entities.map { it.toDomain() }.filter { !it.status.isTerminal }
+        }
+
     override fun getStaleTaskIds(olderThanDays: Int): Flow<List<String>> {
         val threshold = (Clock.System.now() - olderThanDays.days).toEpochMilliseconds()
         return taskDao.getStaleTaskIds(threshold)

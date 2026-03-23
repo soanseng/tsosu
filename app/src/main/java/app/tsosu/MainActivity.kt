@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewKanban
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,6 +35,8 @@ import androidx.navigation.compose.rememberNavController
 import app.tsosu.navigation.BottomNavBar
 import app.tsosu.navigation.Screen
 import app.tsosu.navigation.TsosuNavHost
+import app.tsosu.ui.screens.filter.FilterSheet
+import app.tsosu.ui.screens.focus.FocusViewModel
 import app.tsosu.ui.screens.pickone.PickOneSheet
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
@@ -74,14 +79,32 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 var showAddTask by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
+                var showFilter by remember { mutableStateOf(false) }
                 var editingTaskId by remember { mutableStateOf<String?>(null) }
+                val focusViewModel: FocusViewModel = hiltViewModel()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
+                        val focusState by focusViewModel.uiState.collectAsState()
                         TopAppBar(
                             title = { Text("Tsosu") },
                             actions = {
+                                IconButton(onClick = { showFilter = true }) {
+                                    Icon(
+                                        imageVector = if (focusState.isFiltered) {
+                                            Icons.Default.FilterAltOff
+                                        } else {
+                                            Icons.Default.FilterAlt
+                                        },
+                                        contentDescription = "Filter",
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    navController.navigate(Screen.Kanban.route)
+                                }) {
+                                    Icon(Icons.Default.ViewKanban, contentDescription = "Kanban")
+                                }
                                 IconButton(onClick = {
                                     navController.navigate(Screen.Settings.route)
                                 }) {
@@ -107,6 +130,7 @@ class MainActivity : ComponentActivity() {
                     TsosuNavHost(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding),
+                        focusViewModel = focusViewModel,
                         onTaskClick = { taskId -> editingTaskId = taskId },
                     )
                 }
@@ -145,6 +169,25 @@ class MainActivity : ComponentActivity() {
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     ) {
                         PickOneSheet(onDismiss = { showPickOne = false })
+                    }
+                }
+
+                if (showFilter) {
+                    val currentFilter by focusViewModel.filterSpec.collectAsState()
+                    val currentSort by focusViewModel.sortSpec.collectAsState()
+                    ModalBottomSheet(
+                        onDismissRequest = { showFilter = false },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    ) {
+                        FilterSheet(
+                            currentFilter = currentFilter,
+                            currentSort = currentSort,
+                            onApply = { filter, sort ->
+                                focusViewModel.applyFilter(filter, sort)
+                            },
+                            onClear = { focusViewModel.clearFilter() },
+                            onDismiss = { showFilter = false },
+                        )
                     }
                 }
             }

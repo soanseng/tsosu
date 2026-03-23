@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.tsosu.ui.screens.calendar.CalendarScreen
 import app.tsosu.ui.screens.focus.FocusScreen
+import app.tsosu.ui.screens.focus.FocusViewModel
 import app.tsosu.ui.screens.habits.HabitsScreen
 import app.tsosu.ui.screens.kanban.KanbanScreen
 import app.tsosu.ui.screens.settings.SettingsScreen
@@ -24,6 +25,7 @@ import app.tsosu.ui.screens.weeklyreview.WeeklyReviewScreen
 fun TsosuNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    focusViewModel: FocusViewModel? = null,
     onTaskClick: (String) -> Unit = {},
 ) {
     NavHost(
@@ -35,7 +37,13 @@ fun TsosuNavHost(
             Screen.Focus.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
             exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
-        ) { FocusScreen(onTaskClick = onTaskClick) }
+        ) {
+            if (focusViewModel != null) {
+                FocusScreen(viewModel = focusViewModel, onTaskClick = onTaskClick)
+            } else {
+                FocusScreen(onTaskClick = onTaskClick)
+            }
+        }
         composable(
             Screen.Habits.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
