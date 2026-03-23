@@ -23,13 +23,13 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     fun getById(taskId: String): Flow<TaskEntity?>
 
-    @Query("SELECT * FROM tasks WHERE projectId IS NULL AND dueDate IS NULL AND done = 0 ORDER BY position")
+    @Query("SELECT * FROM tasks WHERE projectId IS NULL AND dueDate IS NULL AND status < 4 ORDER BY position")
     fun getInboxTasks(): Flow<List<TaskEntity>>
 
-    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :startOfDay AND :endOfDay AND done = 0 ORDER BY position")
+    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :startOfDay AND :endOfDay AND status < 4 ORDER BY position")
     fun getTodayTasks(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
 
-    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :start AND :end AND done = 0 ORDER BY dueDate, position")
+    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :start AND :end AND status < 4 ORDER BY dueDate, position")
     fun getUpcomingTasks(start: Long, end: Long): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE projectId = :projectId ORDER BY position")
@@ -41,11 +41,14 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE isFocus = 1 AND dueDate BETWEEN :startOfDay AND :endOfDay ORDER BY position")
     fun getFocusTasks(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
 
-    @Query("SELECT * FROM tasks WHERE energyLevel = :level AND done = 0 ORDER BY position")
+    @Query("SELECT * FROM tasks WHERE energyLevel = :level AND status < 4 ORDER BY position")
     fun getByEnergyLevel(level: Int): Flow<List<TaskEntity>>
 
-    @Query("SELECT id FROM tasks WHERE done = 0 AND updatedAt < :threshold ORDER BY updatedAt")
+    @Query("SELECT id FROM tasks WHERE status < 4 AND updatedAt < :threshold ORDER BY updatedAt")
     fun getStaleTaskIds(threshold: Long): Flow<List<String>>
+
+    @Query("SELECT * FROM tasks WHERE dueDate < :now AND status < 4 ORDER BY dueDate")
+    fun getOverdueTasks(now: Long): Flow<List<TaskEntity>>
 
     @Query("UPDATE tasks SET isFocus = :isFocus, updatedAt = :updatedAt WHERE id = :taskId")
     suspend fun setFocus(taskId: String, isFocus: Boolean, updatedAt: Long)
@@ -53,8 +56,8 @@ interface TaskDao {
     @Query("UPDATE tasks SET isFocus = 0, updatedAt = :updatedAt WHERE dueDate BETWEEN :startOfDay AND :endOfDay")
     suspend fun clearFocus(startOfDay: Long, endOfDay: Long, updatedAt: Long)
 
-    @Query("UPDATE tasks SET done = :done, doneAt = :doneAt, updatedAt = :updatedAt WHERE id = :taskId")
-    suspend fun setDone(taskId: String, done: Boolean, doneAt: Long?, updatedAt: Long)
+    @Query("UPDATE tasks SET status = :status, done = CASE WHEN :status = 4 THEN 1 ELSE 0 END, completedDate = :completedDate, updatedAt = :updatedAt WHERE id = :taskId")
+    suspend fun setStatus(taskId: String, status: Int, completedDate: Long?, updatedAt: Long)
 
     @Query("DELETE FROM tasks WHERE id IN (:taskIds)")
     suspend fun deleteAll(taskIds: List<String>): Int

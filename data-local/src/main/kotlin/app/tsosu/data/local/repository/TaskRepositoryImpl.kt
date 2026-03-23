@@ -5,6 +5,7 @@ import app.tsosu.data.local.mapper.toDomain
 import app.tsosu.data.local.mapper.toEntity
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -78,13 +79,20 @@ class TaskRepositoryImpl(
     }
 
     override suspend fun toggleDone(taskId: String): Result<Task> = runCatching {
-        val task = taskDao.getById(taskId).first()
+        val entity = taskDao.getById(taskId).first()
             ?: throw NoSuchElementException("Task $taskId not found")
         val now = Clock.System.now().toEpochMilliseconds()
-        val newDone = !task.done
-        taskDao.setDone(taskId, newDone, if (newDone) now else null, now)
+        val currentStatus = TaskStatus.fromOrdinal(entity.status)
+        val newStatus = if (currentStatus.isDone) TaskStatus.TODO else TaskStatus.DONE
+        val completedDate = if (newStatus.isDone) now else null
+        taskDao.setStatus(taskId, newStatus.ordinal, completedDate, now)
         onTaskChanged?.invoke(taskId, "UPDATE", null)
-        task.copy(done = newDone, doneAt = if (newDone) now else null, updatedAt = now).toDomain()
+        entity.copy(
+            status = newStatus.ordinal,
+            done = newStatus.isDone,
+            completedDate = completedDate,
+            updatedAt = now,
+        ).toDomain()
     }
 
     override suspend fun reorder(taskId: String, newPosition: Double): Result<Unit> = runCatching {

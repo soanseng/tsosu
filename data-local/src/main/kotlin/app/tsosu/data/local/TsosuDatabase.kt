@@ -24,6 +24,20 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE tasks ADD COLUMN status INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("UPDATE tasks SET status = 4 WHERE done = 1")
+        db.execSQL("ALTER TABLE tasks ADD COLUMN scheduledDate INTEGER")
+        db.execSQL("ALTER TABLE tasks ADD COLUMN startDate INTEGER")
+        db.execSQL("ALTER TABLE tasks ADD COLUMN reminderTimeMinutes INTEGER")
+        db.execSQL("ALTER TABLE tasks ADD COLUMN completedDate INTEGER")
+        db.execSQL("ALTER TABLE tasks ADD COLUMN cancelledDate INTEGER")
+        db.execSQL("ALTER TABLE tasks ADD COLUMN recurrenceRule TEXT")
+        db.execSQL("UPDATE tasks SET completedDate = doneAt WHERE done = 1")
+    }
+}
+
 @Database(
     entities = [
         TaskEntity::class,
@@ -34,7 +48,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         ProjectEntity::class,
         LabelEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class TsosuDatabase : RoomDatabase() {

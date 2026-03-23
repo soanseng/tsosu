@@ -22,6 +22,7 @@ import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
@@ -32,14 +33,27 @@ fun TaskEntity.toDomain(): Task = Task(
     serverId = serverId,
     title = title,
     description = description,
-    status = if (done) TaskStatus.DONE else TaskStatus.TODO,
+    status = TaskStatus.fromOrdinal(status),
     dueDate = dueDate?.let {
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault())
+    },
+    scheduledDate = scheduledDate?.let {
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault())
+    },
+    startDate = startDate?.let {
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault())
+    },
+    reminderTime = reminderTimeMinutes?.let { LocalTime(it / 60, it % 60) },
+    completedDate = completedDate?.let {
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault())
+    },
+    cancelledDate = cancelledDate?.let {
         Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault())
     },
     priority = Priority.fromValue(priority),
     projectId = projectId,
     position = position,
-    recurrenceRule = null, // entity still uses repeatAfterSeconds; format migration pending
+    recurrenceRule = recurrenceRule,
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     energyLevel = EnergyLevel.fromOrdinal(energyLevel),
@@ -53,12 +67,19 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     serverId = serverId,
     title = title,
     description = description,
+    status = status.ordinal,
     done = status.isDone,
     dueDate = dueDate?.toInstant(TimeZone.currentSystemDefault())?.toEpochMilliseconds(),
+    scheduledDate = scheduledDate?.toInstant(TimeZone.currentSystemDefault())?.toEpochMilliseconds(),
+    startDate = startDate?.toInstant(TimeZone.currentSystemDefault())?.toEpochMilliseconds(),
+    reminderTimeMinutes = reminderTime?.let { it.hour * 60 + it.minute },
+    completedDate = completedDate?.toInstant(TimeZone.currentSystemDefault())?.toEpochMilliseconds(),
+    cancelledDate = cancelledDate?.toInstant(TimeZone.currentSystemDefault())?.toEpochMilliseconds(),
     priority = priority.value,
     projectId = projectId,
     position = position,
-    repeatAfterSeconds = null, // recurrenceRule uses RRULE string; entity migration pending
+    repeatAfterSeconds = null,
+    recurrenceRule = recurrenceRule,
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     energyLevel = energyLevel.ordinal,

@@ -3,6 +3,7 @@ package app.tsosu.di
 import android.content.Context
 import androidx.room.Room
 import app.tsosu.data.local.MIGRATION_1_2
+import app.tsosu.data.local.MIGRATION_2_3
 import app.tsosu.data.local.TsosuDatabase
 import app.tsosu.data.local.dao.FocusDao
 import app.tsosu.data.local.dao.HabitDao
@@ -25,7 +26,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): TsosuDatabase =
         Room.databaseBuilder(context, TsosuDatabase::class.java, "tsosu.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides fun provideTaskDao(db: TsosuDatabase): TaskDao = db.taskDao()
