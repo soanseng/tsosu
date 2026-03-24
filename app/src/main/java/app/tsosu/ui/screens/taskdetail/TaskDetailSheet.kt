@@ -46,9 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tsosu.R
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.TaskStatus
@@ -96,13 +98,13 @@ fun TaskDetailSheet(
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text("Edit Task", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.task_detail_title), style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
             value = state.title,
             onValueChange = viewModel::onTitleChange,
-            label = { Text("Title") },
+            label = { Text(stringResource(R.string.task_detail_field_title)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -112,7 +114,7 @@ fun TaskDetailSheet(
         OutlinedTextField(
             value = state.description,
             onValueChange = viewModel::onDescriptionChange,
-            label = { Text("Description") },
+            label = { Text(stringResource(R.string.task_detail_field_description)) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2,
             maxLines = 4,
@@ -121,7 +123,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(12.dp))
 
         // Status chips
-        Text("Status", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_status), style = MaterialTheme.typography.labelLarge)
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -155,7 +157,7 @@ fun TaskDetailSheet(
 
         Spacer(Modifier.height(12.dp))
 
-        Text("Priority", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_priority), style = MaterialTheme.typography.labelLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Priority.entries.forEach { p ->
                 FilterChip(
@@ -176,7 +178,7 @@ fun TaskDetailSheet(
 
         Spacer(Modifier.height(12.dp))
 
-        Text("Energy", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_energy), style = MaterialTheme.typography.labelLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             EnergyLevel.entries.forEach { level ->
                 FilterChip(
@@ -192,7 +194,7 @@ fun TaskDetailSheet(
 
         Spacer(Modifier.height(12.dp))
 
-        Text("Time estimate", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_time_estimate), style = MaterialTheme.typography.labelLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(0, 5, 15, 30, 60).forEach { minutes ->
                 FilterChip(
@@ -201,7 +203,7 @@ fun TaskDetailSheet(
                         haptic.tick()
                         viewModel.onEstimatedMinutesChange(minutes)
                     },
-                    label = { Text(if (minutes == 0) "None" else "${minutes}m") },
+                    label = { Text(if (minutes == 0) stringResource(R.string.task_detail_time_none) else "${minutes}m") },
                 )
             }
         }
@@ -209,7 +211,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(12.dp))
 
         // Due date
-        Text("Due date", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_due_date), style = MaterialTheme.typography.labelLarge)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -219,12 +221,12 @@ fun TaskDetailSheet(
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
                     state.dueDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
-                        ?: "No date",
+                        ?: stringResource(R.string.task_detail_no_date),
                 )
             }
             if (state.dueDate != null) {
                 IconButton(onClick = { viewModel.onDueDateChange(null) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear date")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
                 }
             }
         }
@@ -232,7 +234,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(8.dp))
 
         // Scheduled date
-        Text("Scheduled date", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_scheduled_date), style = MaterialTheme.typography.labelLarge)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -242,12 +244,12 @@ fun TaskDetailSheet(
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
                     state.scheduledDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
-                        ?: "No date",
+                        ?: stringResource(R.string.task_detail_no_date),
                 )
             }
             if (state.scheduledDate != null) {
                 IconButton(onClick = { viewModel.onScheduledDateChange(null) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear date")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
                 }
             }
         }
@@ -255,7 +257,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(8.dp))
 
         // Start date
-        Text("Start date", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_start_date), style = MaterialTheme.typography.labelLarge)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -265,12 +267,12 @@ fun TaskDetailSheet(
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
                     state.startDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
-                        ?: "No date",
+                        ?: stringResource(R.string.task_detail_no_date),
                 )
             }
             if (state.startDate != null) {
                 IconButton(onClick = { viewModel.onStartDateChange(null) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear date")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
                 }
             }
         }
@@ -278,7 +280,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(8.dp))
 
         // Reminder time
-        Text("Reminder time", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.task_detail_reminder_time), style = MaterialTheme.typography.labelLarge)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -289,12 +291,12 @@ fun TaskDetailSheet(
                 Text(
                     state.reminderTime?.let {
                         "%02d:%02d".format(it.hour, it.minute)
-                    } ?: "No reminder",
+                    } ?: stringResource(R.string.task_detail_no_reminder),
                 )
             }
             if (state.reminderTime != null) {
                 IconButton(onClick = { viewModel.onReminderTimeChange(null) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear time")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_time))
                 }
             }
         }
@@ -309,7 +311,7 @@ fun TaskDetailSheet(
             modifier = Modifier.fillMaxWidth(),
             enabled = state.title.isNotBlank(),
         ) {
-            Text("Save")
+            Text(stringResource(R.string.task_detail_save))
         }
 
         Spacer(Modifier.height(8.dp))
@@ -323,7 +325,7 @@ fun TaskDetailSheet(
         ) {
             Icon(Icons.Default.Delete, contentDescription = null)
             Spacer(Modifier.padding(start = 4.dp))
-            Text("Delete Task")
+            Text(stringResource(R.string.task_detail_delete))
         }
 
         Spacer(Modifier.height(16.dp))
@@ -332,20 +334,20 @@ fun TaskDetailSheet(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete task?") },
-            text = { Text("This cannot be undone.") },
+            title = { Text(stringResource(R.string.task_detail_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.task_detail_delete_confirm_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     haptic.reject()
                     viewModel.delete()
                     showDeleteConfirm = false
                 }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.task_detail_delete_action), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.task_detail_cancel))
                 }
             },
         )
@@ -381,12 +383,12 @@ fun TaskDetailSheet(
                     }
                     datePickerTarget = null
                 }) {
-                    Text("OK")
+                    Text(stringResource(R.string.task_detail_ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { datePickerTarget = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.task_detail_cancel))
                 }
             },
         ) {
@@ -413,12 +415,12 @@ fun TaskDetailSheet(
                     )
                     showTimePicker = false
                 }) {
-                    Text("OK")
+                    Text(stringResource(R.string.task_detail_ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.task_detail_cancel))
                 }
             },
         )

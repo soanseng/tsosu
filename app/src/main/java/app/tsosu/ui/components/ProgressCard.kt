@@ -19,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.tsosu.R
 
 @Composable
 fun ProgressCard(
@@ -59,14 +61,14 @@ fun ProgressCard(
 
             Column {
                 Text(
-                    text = "$completedCount / $totalCount tasks",
+                    text = stringResource(R.string.progress_tasks, completedCount, totalCount),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(Modifier.height(4.dp))
                 Row {
                     if (totalMinutes > 0) {
                         Text(
-                            text = "${totalMinutes}m est.",
+                            text = stringResource(R.string.progress_est_minutes, totalMinutes),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -74,7 +76,7 @@ fun ProgressCard(
                     }
                     if (streakDays > 0) {
                         Text(
-                            text = "$streakDays day streak",
+                            text = stringResource(R.string.progress_streak, streakDays),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

@@ -23,9 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tsosu.R
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.usecase.HabitWithStatus
 import app.tsosu.ui.components.KonfettiOverlay
@@ -47,11 +49,11 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
     ) {
         item {
             Text(
-                text = "Daily Habits",
+                text = stringResource(R.string.habits_title),
                 style = MaterialTheme.typography.headlineMedium,
             )
             Text(
-                text = "${state.completedCount}/${state.totalCount} done",
+                text = stringResource(R.string.habits_done_count, state.completedCount, state.totalCount),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -98,7 +100,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
         if (unroutinedHabits.isNotEmpty()) {
             item {
                 Text(
-                    text = "Other",
+                    text = stringResource(R.string.habits_other),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -120,8 +122,13 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
         if (state.habits.isEmpty()) {
             item {
                 Text(
-                    text = "No habits yet. Start small!",
+                    text = "No habits yet.",
                     style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "Tap + to create your first habit.\nStart small \u2014 try one you can do in 2 minutes.",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

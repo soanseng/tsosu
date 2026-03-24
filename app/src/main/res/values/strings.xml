@@ -127,4 +127,93 @@
     <string name="energy_low">low</string>
     <string name="energy_medium">medium</string>
     <string name="energy_high">high</string>
+
+    <!-- Focus Screen (additional) -->
+    <string name="focus_filter_active">Filter active</string>
+    <string name="focus_vault_setup_title">Set up your vault</string>
+    <string name="focus_vault_setup_desc">Connect a markdown folder to sync with Obsidian, nvim, or other tools.</string>
+    <string name="focus_empty_no_tasks">No tasks for today yet.</string>
+    <string name="focus_empty_hint">Tap + to add your first task, or long-press for Pick One.</string>
+    <string name="focus_empty_break">Nothing today. You earned a break!</string>
+
+    <!-- Filter Sheet -->
+    <string name="filter_title">Filter &amp; Sort</string>
+    <string name="filter_search_title">Search by title</string>
+    <string name="filter_status">Status</string>
+    <string name="filter_min_priority">Minimum priority</string>
+    <string name="filter_energy_level">Energy level</string>
+    <string name="filter_sort_by">Sort by</string>
+    <string name="filter_clear">Clear</string>
+    <string name="filter_apply">Apply</string>
+
+    <!-- Task Detail Sheet -->
+    <string name="task_detail_title">Edit Task</string>
+    <string name="task_detail_field_title">Title</string>
+    <string name="task_detail_field_description">Description</string>
+    <string name="task_detail_status">Status</string>
+    <string name="task_detail_priority">Priority</string>
+    <string name="task_detail_energy">Energy</string>
+    <string name="task_detail_time_estimate">Time estimate</string>
+    <string name="task_detail_time_none">None</string>
+    <string name="task_detail_due_date">Due date</string>
+    <string name="task_detail_scheduled_date">Scheduled date</string>
+    <string name="task_detail_start_date">Start date</string>
+    <string name="task_detail_reminder_time">Reminder time</string>
+    <string name="task_detail_no_date">No date</string>
+    <string name="task_detail_no_reminder">No reminder</string>
+    <string name="task_detail_clear_date">Clear date</string>
+    <string name="task_detail_clear_time">Clear time</string>
+    <string name="task_detail_save">Save</string>
+    <string name="task_detail_delete">Delete Task</string>
+    <string name="task_detail_delete_confirm_title">Delete task?</string>
+    <string name="task_detail_delete_confirm_body">This cannot be undone.</string>
+    <string name="task_detail_delete_action">Delete</string>
+    <string name="task_detail_cancel">Cancel</string>
+    <string name="task_detail_ok">OK</string>
+
+    <!-- Quick Add (additional) -->
+    <string name="quick_add_priority">Priority</string>
+    <string name="quick_add_due_date">Due date</string>
+    <string name="quick_add_today">Today</string>
+    <string name="quick_add_tomorrow">Tomorrow</string>
+    <string name="quick_add_next_week">Next Week</string>
+    <string name="quick_add_no_date">No date</string>
+    <string name="quick_add_clear_date">Clear date</string>
+    <string name="quick_add_cancel">Cancel</string>
+    <string name="quick_add_ok">OK</string>
+
+    <!-- Settings (additional) -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dynamic_colors">Dynamic Colors</string>
+    <string name="settings_dynamic_colors_desc">Adapts to your wallpaper</string>
+    <string name="settings_dark_mode">Dark Mode</string>
+    <string name="settings_markdown_sync">Markdown Sync</string>
+    <string name="settings_syncing_to_folder">Syncing to folder</string>
+    <string name="settings_select_folder">Select Folder</string>
+    <string name="settings_select_folder_desc">Select a folder to sync tasks and habits as markdown files. Use a Syncthing or Obsidian Sync folder for cross-device sync.</string>
+    <string name="settings_caldav_placeholder">https://caldav.fastmail.com/dav/calendars/\u2026</string>
+
+    <!-- Task Status Display Names -->
+    <string name="status_todo">To Do</string>
+    <string name="status_in_progress">In Progress</string>
+    <string name="status_on_hold">On Hold</string>
+    <string name="status_planned">Planned</string>
+    <string name="status_done">Done</string>
+    <string name="status_cancelled">Cancelled</string>
+
+    <!-- Calendar -->
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="calendar_no_tasks">No tasks for this day</string>
+    <string name="calendar_tasks_for">Tasks for %1$s %2$d</string>
+
+    <!-- Detail Strings -->
+    <string name="detail_today">Today</string>
+    <string name="detail_tomorrow">Tomorrow</string>
+    <string name="detail_no_date">No date</string>
+
+    <!-- Progress Card -->
+    <string name="progress_tasks">%1$d / %2$d tasks</string>
+    <string name="progress_est_minutes">%dm est.</string>
+    <string name="progress_streak">%d day streak</string>
 </resources>

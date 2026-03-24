@@ -15,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.tsosu.R
 
 @Composable
 fun QuickAddHabitSheet(
@@ -30,13 +32,13 @@ fun QuickAddHabitSheet(
             .fillMaxWidth()
             .padding(16.dp),
     ) {
-        Text("New Habit", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.quick_add_habit_title), style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
-            label = { Text("Habit name") },
+            label = { Text(stringResource(R.string.quick_add_habit_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -46,8 +48,8 @@ fun QuickAddHabitSheet(
         OutlinedTextField(
             value = tinyVersion,
             onValueChange = { tinyVersion = it },
-            label = { Text("What's the 2-minute version?") },
-            supportingText = { Text("The smallest step to get started") },
+            label = { Text(stringResource(R.string.quick_add_tiny_version)) },
+            supportingText = { Text(stringResource(R.string.quick_add_tiny_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -63,7 +65,7 @@ fun QuickAddHabitSheet(
             },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Add Habit")
+            Text(stringResource(R.string.quick_add_submit_habit))
         }
     }
 }

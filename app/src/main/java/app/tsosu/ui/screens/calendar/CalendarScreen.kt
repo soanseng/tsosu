@@ -34,11 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tsosu.R
 import app.tsosu.ui.components.KonfettiOverlay
 import app.tsosu.ui.components.TaskListItem
 import kotlinx.datetime.LocalDate
@@ -94,8 +96,13 @@ fun CalendarScreen(
 
             if (state.selectedDayTasks.isEmpty()) {
                 Text(
-                    text = "No tasks for this day",
+                    text = "No tasks on this day.",
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "Long-press any day to quickly add a task.",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
@@ -138,7 +145,7 @@ private fun MonthHeader(
         IconButton(onClick = onPrevious) {
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Previous month",
+                contentDescription = stringResource(R.string.calendar_previous_month),
             )
         }
 
@@ -151,7 +158,7 @@ private fun MonthHeader(
         IconButton(onClick = onNext) {
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Next month",
+                contentDescription = stringResource(R.string.calendar_next_month),
             )
         }
     }

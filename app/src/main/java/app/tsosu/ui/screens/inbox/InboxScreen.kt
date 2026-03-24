@@ -10,9 +10,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tsosu.R
 import app.tsosu.ui.components.TaskListItem
 
 @Composable
@@ -29,13 +31,18 @@ fun InboxScreen(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         item {
-            Text("Inbox", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.inbox_title), style = MaterialTheme.typography.headlineMedium)
         }
         if (tasks.isEmpty()) {
             item {
                 Text(
-                    "Inbox zero! Nice work.",
+                    "Inbox zero!",
                     style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "New tasks without a due date appear here.",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

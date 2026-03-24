@@ -71,7 +71,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         )
 
         // Appearance Section
-        Text("Appearance", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleMedium)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -79,9 +79,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text("Dynamic Colors", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.settings_dynamic_colors), style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    "Adapts to your wallpaper",
+                    stringResource(R.string.settings_dynamic_colors_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -92,7 +92,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             )
         }
 
-        Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.settings_dark_mode), style = MaterialTheme.typography.bodyLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DarkModeOption.entries.forEach { option ->
                 FilterChip(
@@ -106,7 +106,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         HorizontalDivider()
 
         // Markdown Sync Section
-        Text("Markdown Sync", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_markdown_sync), style = MaterialTheme.typography.titleMedium)
 
         val folderPicker = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocumentTree()
@@ -123,7 +123,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         if (state.isConfigured) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Syncing to folder", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.settings_syncing_to_folder), style = MaterialTheme.typography.bodyLarge)
                     state.folderUri?.let {
                         Text(
                             Uri.parse(it).lastPathSegment ?: it,
@@ -137,18 +137,17 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                             onClick = { viewModel.sync() },
                             enabled = state.syncState != SyncState.SYNCING,
                         ) {
-                            Text(if (state.syncState == SyncState.SYNCING) "Syncing..." else "Sync Now")
+                            Text(if (state.syncState == SyncState.SYNCING) stringResource(R.string.settings_syncing) else stringResource(R.string.settings_sync_now))
                         }
                         OutlinedButton(onClick = { viewModel.disconnect() }) {
-                            Text("Disconnect")
+                            Text(stringResource(R.string.settings_disconnect))
                         }
                     }
                 }
             }
         } else {
             Text(
-                "Select a folder to sync tasks and habits as markdown files. " +
-                    "Use a Syncthing or Obsidian Sync folder for cross-device sync.",
+                stringResource(R.string.settings_select_folder_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -156,7 +155,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 onClick = { folderPicker.launch(null) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Select Folder")
+                Text(stringResource(R.string.settings_select_folder))
             }
         }
 
@@ -228,12 +227,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 )
 
                 Button(
-                    onClick = {
-                        viewModel.connectGoogle("", null, "")
-                    },
+                    onClick = { },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = false,
                 ) {
-                    Text(stringResource(R.string.settings_google_connect))
+                    Text("Google Calendar (Coming soon)")
                 }
 
                 OutlinedButton(
@@ -248,7 +246,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         value = state.caldavUrl,
                         onValueChange = { viewModel.updateCaldavUrl(it) },
                         label = { Text(stringResource(R.string.settings_server_url)) },
-                        placeholder = { Text("https://caldav.fastmail.com/dav/calendars/...") },
+                        placeholder = { Text(stringResource(R.string.settings_caldav_placeholder)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                     )

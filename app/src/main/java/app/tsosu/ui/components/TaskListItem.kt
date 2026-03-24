@@ -40,9 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.tsosu.R
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
@@ -213,13 +215,14 @@ fun TaskStatus.iconTint(): Color = when (this) {
     TaskStatus.CANCELLED -> MaterialTheme.colorScheme.error
 }
 
+@Composable
 fun TaskStatus.displayName(): String = when (this) {
-    TaskStatus.TODO -> "To Do"
-    TaskStatus.IN_PROGRESS -> "In Progress"
-    TaskStatus.ON_HOLD -> "On Hold"
-    TaskStatus.PLANNED -> "Planned"
-    TaskStatus.DONE -> "Done"
-    TaskStatus.CANCELLED -> "Cancelled"
+    TaskStatus.TODO -> stringResource(R.string.status_todo)
+    TaskStatus.IN_PROGRESS -> stringResource(R.string.status_in_progress)
+    TaskStatus.ON_HOLD -> stringResource(R.string.status_on_hold)
+    TaskStatus.PLANNED -> stringResource(R.string.status_planned)
+    TaskStatus.DONE -> stringResource(R.string.status_done)
+    TaskStatus.CANCELLED -> stringResource(R.string.status_cancelled)
 }
 
 private fun buildDetailString(task: Task): String {

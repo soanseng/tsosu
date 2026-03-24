@@ -23,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.tsosu.R
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.FilterSpec
 import app.tsosu.domain.model.Priority
@@ -67,14 +69,14 @@ fun FilterSheet(
             .fillMaxWidth()
             .padding(16.dp),
     ) {
-        Text("Filter & Sort", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.filter_title), style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(16.dp))
 
         // -- Title search --
         OutlinedTextField(
             value = titleSearch,
             onValueChange = { titleSearch = it },
-            label = { Text("Search by title") },
+            label = { Text(stringResource(R.string.filter_search_title)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -84,7 +86,7 @@ fun FilterSheet(
         Spacer(Modifier.height(12.dp))
 
         // -- Status filter --
-        Text("Status", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.filter_status), style = MaterialTheme.typography.labelLarge)
         Spacer(Modifier.height(4.dp))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -116,7 +118,7 @@ fun FilterSheet(
         Spacer(Modifier.height(12.dp))
 
         // -- Priority filter (minimum priority) --
-        Text("Minimum priority", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.filter_min_priority), style = MaterialTheme.typography.labelLarge)
         Spacer(Modifier.height(4.dp))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -144,7 +146,7 @@ fun FilterSheet(
         Spacer(Modifier.height(12.dp))
 
         // -- Energy filter --
-        Text("Energy level", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.filter_energy_level), style = MaterialTheme.typography.labelLarge)
         Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             EnergyLevel.entries.forEach { level ->
@@ -168,7 +170,7 @@ fun FilterSheet(
         Spacer(Modifier.height(12.dp))
 
         // -- Sort --
-        Text("Sort by", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.filter_sort_by), style = MaterialTheme.typography.labelLarge)
         Spacer(Modifier.height(4.dp))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -216,7 +218,7 @@ fun FilterSheet(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Clear")
+                Text(stringResource(R.string.filter_clear))
             }
             Button(
                 onClick = {
@@ -233,7 +235,7 @@ fun FilterSheet(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Apply")
+                Text(stringResource(R.string.filter_apply))
             }
         }
 
