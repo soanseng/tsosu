@@ -36,3 +36,4 @@ vikunja-openapi.json
 captures/
 .externalNativeBuild/
 .cxx/
+.kotlin/
