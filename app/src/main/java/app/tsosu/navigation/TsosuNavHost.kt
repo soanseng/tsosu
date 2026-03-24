@@ -16,6 +16,7 @@ import app.tsosu.ui.screens.calendar.CalendarScreen
 import app.tsosu.ui.screens.focus.FocusScreen
 import app.tsosu.ui.screens.focus.FocusViewModel
 import app.tsosu.ui.screens.habits.HabitsScreen
+import app.tsosu.ui.screens.inbox.InboxScreen
 import app.tsosu.ui.screens.kanban.KanbanScreen
 import app.tsosu.ui.screens.settings.SettingsScreen
 import app.tsosu.ui.screens.upcoming.UpcomingScreen
@@ -27,6 +28,8 @@ fun TsosuNavHost(
     modifier: Modifier = Modifier,
     focusViewModel: FocusViewModel? = null,
     onTaskClick: (String) -> Unit = {},
+    isVaultConfigured: Boolean = true,
+    onSelectFolder: () -> Unit = {},
 ) {
     NavHost(
         navController = navController,
@@ -39,11 +42,25 @@ fun TsosuNavHost(
             exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
         ) {
             if (focusViewModel != null) {
-                FocusScreen(viewModel = focusViewModel, onTaskClick = onTaskClick)
+                FocusScreen(
+                    viewModel = focusViewModel,
+                    onTaskClick = onTaskClick,
+                    isVaultConfigured = isVaultConfigured,
+                    onSelectFolder = onSelectFolder,
+                )
             } else {
-                FocusScreen(onTaskClick = onTaskClick)
+                FocusScreen(
+                    onTaskClick = onTaskClick,
+                    isVaultConfigured = isVaultConfigured,
+                    onSelectFolder = onSelectFolder,
+                )
             }
         }
+        composable(
+            Screen.Inbox.route,
+            enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
+        ) { InboxScreen(onTaskClick = onTaskClick) }
         composable(
             Screen.Habits.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },

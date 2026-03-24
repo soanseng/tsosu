@@ -42,8 +42,13 @@ fun UpcomingScreen(
             item {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "Clear schedule ahead!",
+                    "Nothing scheduled ahead.",
                     style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "Add due dates to your tasks to see them here.",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

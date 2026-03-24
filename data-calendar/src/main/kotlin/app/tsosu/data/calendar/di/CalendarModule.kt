@@ -4,7 +4,9 @@ import android.content.Context
 import app.tsosu.data.calendar.CalDavCredentialStore
 import app.tsosu.data.calendar.CalendarRepositoryImpl
 import app.tsosu.data.calendar.google.GoogleCredentialStore
+import app.tsosu.data.calendar.IcsExporterImpl
 import app.tsosu.domain.repository.CalendarRepository
+import app.tsosu.domain.repository.IcsExporter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +28,12 @@ object CalendarModule {
     @Singleton
     fun provideGoogleCredentialStore(@ApplicationContext context: Context): GoogleCredentialStore {
         return GoogleCredentialStore(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIcsExporter(): IcsExporter {
+        return IcsExporterImpl()
     }
 
     @Provides

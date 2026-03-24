@@ -1,9 +1,13 @@
 package app.tsosu
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -21,6 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -28,10 +34,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.navigation.BottomNavBar
 import app.tsosu.navigation.Screen
 import app.tsosu.navigation.TsosuNavHost
@@ -48,7 +56,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import app.tsosu.domain.repository.SyncRepository
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -58,8 +66,10 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject lateinit var themePreferences: ThemePreferences
     @Inject lateinit var syncRepository: SyncRepository
+    @Inject lateinit var markdownPreferences: MarkdownPreferences
 
     private var lastSyncTime = 0L
+    private val snackbarHostState = SnackbarHostState()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,9 +92,28 @@ class MainActivity : ComponentActivity() {
                 var showFilter by remember { mutableStateOf(false) }
                 var editingTaskId by remember { mutableStateOf<String?>(null) }
                 val focusViewModel: FocusViewModel = hiltViewModel()
+                val isVaultConfigured by syncRepository.isConfigured()
+                    .collectAsState(initial = true)
+                val scope = rememberCoroutineScope()
+
+                val folderPicker = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.OpenDocumentTree()
+                ) { uri: Uri? ->
+                    uri ?: return@rememberLauncherForActivityResult
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                    )
+                    scope.launch {
+                        markdownPreferences.setFolderUri(uri)
+                        syncRepository.sync()
+                    }
+                }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
                         val focusState by focusViewModel.uiState.collectAsState()
                         TopAppBar(
@@ -132,6 +161,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         focusViewModel = focusViewModel,
                         onTaskClick = { taskId -> editingTaskId = taskId },
+                        isVaultConfigured = isVaultConfigured,
+                        onSelectFolder = { folderPicker.launch(null) },
                     )
                 }
 
@@ -143,8 +174,8 @@ class MainActivity : ComponentActivity() {
                     ) {
                         QuickAddTaskSheet(
                             onDismiss = { showAddTask = false },
-                            onAdd = { title, priority, energy, minutes, dueDate ->
-                                quickAddViewModel.createTask(title, priority, energy, minutes, dueDate)
+                            onAdd = { title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule ->
+                                quickAddViewModel.createTask(title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule)
                                 showAddTask = false
                             },
                         )
@@ -200,10 +231,22 @@ class MainActivity : ComponentActivity() {
                 val now = System.currentTimeMillis()
                 if (now - lastSyncTime > 30_000) {
                     lastSyncTime = now
-                    CoroutineScope(Dispatchers.IO).launch {
+                    lifecycleScope.launch(Dispatchers.IO) {
                         val isConfigured = syncRepository.isConfigured().first()
                         if (isConfigured) {
-                            syncRepository.sync()
+                            val result = syncRepository.sync()
+                            result.fold(
+                                onSuccess = { r ->
+                                    snackbarHostState.showSnackbar(
+                                        "Synced ${r.exported} tasks, ${r.imported} habits"
+                                    )
+                                },
+                                onFailure = { e ->
+                                    snackbarHostState.showSnackbar(
+                                        "Sync failed: ${e.message}"
+                                    )
+                                },
+                            )
                         }
                     }
                 }

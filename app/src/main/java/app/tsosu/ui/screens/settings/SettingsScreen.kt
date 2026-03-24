@@ -14,16 +14,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +44,8 @@ import app.tsosu.R
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.ui.theme.DarkModeOption
+import androidx.core.content.FileProvider
+import java.io.File
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -273,6 +279,47 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                 }
             }
+        }
+
+        HorizontalDivider()
+
+        // Export Section
+        Text("Export", style = MaterialTheme.typography.titleMedium)
+
+        Text(
+            "Export tasks with due dates as an ICS calendar file.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        OutlinedButton(
+            onClick = { viewModel.exportIcs() },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(Icons.Default.Share, contentDescription = null)
+            Spacer(Modifier.padding(start = 4.dp))
+            Text("Export to ICS")
+        }
+
+        // Share ICS when content is available
+        LaunchedEffect(state.icsContent) {
+            val ics = state.icsContent ?: return@LaunchedEffect
+            val cacheDir = File(context.cacheDir, "exports")
+            cacheDir.mkdirs()
+            val file = File(cacheDir, "tsosu-tasks.ics")
+            file.writeText(ics)
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file,
+            )
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/calendar"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(shareIntent, "Export ICS"))
+            viewModel.clearIcsContent()
         }
 
         state.message?.let {
