@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
@@ -41,15 +41,16 @@ class BootReceiver : BroadcastReceiver() {
         val tasks = taskDao.getAllTasks().first()
 
         val zone = TimeZone.currentSystemDefault()
-        val today = Clock.System.now().toLocalDateTime(zone).date
 
         for (task in tasks) {
             if (task.status >= 4) continue // skip done/cancelled
             val reminderMinutes = task.reminderTimeMinutes ?: continue
-            task.dueDate ?: continue // skip tasks without a due date
+            val dueDateMillis = task.dueDate ?: continue // skip tasks without a due date
 
+            val taskDueDate = Instant.fromEpochMilliseconds(dueDateMillis)
+                .toLocalDateTime(zone).date
             val reminderTime = LocalTime(reminderMinutes / 60, reminderMinutes % 60)
-            val triggerMillis = today.atTime(reminderTime)
+            val triggerMillis = taskDueDate.atTime(reminderTime)
                 .toInstant(zone)
                 .toEpochMilliseconds()
 

@@ -56,6 +56,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     taskId = taskId,
                     status = 4, // TaskStatus.DONE ordinal
                     completedDate = now,
+                    cancelledDate = null,
                     updatedAt = now,
                 )
             } finally {

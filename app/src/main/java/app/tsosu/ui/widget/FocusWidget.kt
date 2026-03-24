@@ -26,8 +26,12 @@ class FocusWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val dao = WidgetEntryPoint.get(context).taskDao()
-        val now = System.currentTimeMillis()
-        val startOfDay = now - (now % 86_400_000)
+        val cal = java.util.Calendar.getInstance()
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        val startOfDay = cal.timeInMillis
         val endOfDay = startOfDay + 86_400_000
         val tasks = dao.getFocusTasks(startOfDay, endOfDay).first().take(MAX_TASKS)
 

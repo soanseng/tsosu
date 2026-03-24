@@ -56,8 +56,8 @@ interface TaskDao {
     @Query("UPDATE tasks SET isFocus = 0, updatedAt = :updatedAt WHERE dueDate BETWEEN :startOfDay AND :endOfDay")
     suspend fun clearFocus(startOfDay: Long, endOfDay: Long, updatedAt: Long)
 
-    @Query("UPDATE tasks SET status = :status, done = CASE WHEN :status = 4 THEN 1 ELSE 0 END, completedDate = :completedDate, updatedAt = :updatedAt WHERE id = :taskId")
-    suspend fun setStatus(taskId: String, status: Int, completedDate: Long?, updatedAt: Long)
+    @Query("UPDATE tasks SET status = :status, done = CASE WHEN :status = 4 THEN 1 ELSE 0 END, completedDate = :completedDate, cancelledDate = :cancelledDate, updatedAt = :updatedAt WHERE id = :taskId")
+    suspend fun setStatus(taskId: String, status: Int, completedDate: Long?, cancelledDate: Long?, updatedAt: Long)
 
     @Query("DELETE FROM tasks WHERE id IN (:taskIds)")
     suspend fun deleteAll(taskIds: List<String>): Int

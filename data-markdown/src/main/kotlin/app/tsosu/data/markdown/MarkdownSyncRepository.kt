@@ -33,7 +33,22 @@ class MarkdownSyncRepository(
     override suspend fun sync(): Result<SyncResult> = runCatching {
         _syncState.value = SyncState.SYNCING
 
-        // 1. Export current Room state to markdown
+        // 1. IMPORT first (capture external edits before overwriting)
+        val importedTasks = syncManager.importTasks()
+        val importedHabits = syncManager.importHabits()
+
+        // 2. Merge: upsert imported data into Room (external edits win for conflicts)
+        for (task in importedTasks.tasks) {
+            taskDao.upsert(task.toEntity())
+        }
+        for (habit in importedHabits.habits) {
+            habitDao.insert(habit.toEntity())
+        }
+        for (completion in importedHabits.completions) {
+            habitDao.insertCompletion(completion.toEntity())
+        }
+
+        // 3. EXPORT (write current Room state, which now includes external edits)
         val tasks = taskDao.getAllTasks().first().map { it.toDomain() }
         val projects = projectDao.getAll().first()
         val projectNames = projects.associate { it.id to it.title }
@@ -52,15 +67,6 @@ class MarkdownSyncRepository(
         val todayCompletions = completions.filter { it.date == today }
             .map { it.habitId }.toSet()
         syncManager.exportDailyNote(today, habits, todayCompletions)
-
-        // 2. Import from markdown (picks up external edits)
-        val importedTasks = syncManager.importTasks()
-        val importedHabits = syncManager.importHabits()
-
-        // 3. Merge: upsert imported tasks (external edits win for conflicts)
-        for (task in importedTasks.tasks) {
-            taskDao.upsert(task.toEntity())
-        }
 
         preferences.setLastSync(System.currentTimeMillis())
         _syncState.value = SyncState.IDLE

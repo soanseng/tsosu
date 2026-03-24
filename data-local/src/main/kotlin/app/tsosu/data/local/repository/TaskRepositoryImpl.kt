@@ -90,7 +90,7 @@ class TaskRepositoryImpl(
         val currentStatus = TaskStatus.fromOrdinal(entity.status)
         val newStatus = if (currentStatus.isDone) TaskStatus.TODO else TaskStatus.DONE
         val completedDate = if (newStatus.isDone) now else null
-        taskDao.setStatus(taskId, newStatus.ordinal, completedDate, now)
+        taskDao.setStatus(taskId, newStatus.ordinal, completedDate, null, now)
         onTaskChanged?.invoke(taskId, "UPDATE", null)
         entity.copy(
             status = newStatus.ordinal,
@@ -105,12 +105,14 @@ class TaskRepositoryImpl(
             ?: throw NoSuchElementException("Task $taskId not found")
         val now = Clock.System.now().toEpochMilliseconds()
         val completedDate = if (status.isDone) now else null
-        taskDao.setStatus(taskId, status.ordinal, completedDate, now)
+        val cancelledDate = if (status == TaskStatus.CANCELLED) now else null
+        taskDao.setStatus(taskId, status.ordinal, completedDate, cancelledDate, now)
         onTaskChanged?.invoke(taskId, "UPDATE", null)
         entity.copy(
             status = status.ordinal,
             done = status.isDone,
             completedDate = completedDate,
+            cancelledDate = cancelledDate,
             updatedAt = now,
         ).toDomain()
     }

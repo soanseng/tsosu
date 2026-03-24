@@ -18,9 +18,13 @@ class ToggleTaskAction : ActionCallback {
         val taskId = parameters[TaskIdKey] ?: return
         val dao = WidgetEntryPoint.get(context).taskDao()
         val now = System.currentTimeMillis()
-        dao.setStatus(taskId, DONE_ORDINAL, now, now)
+        val task = dao.getByIdSync(taskId) ?: return
+        val newStatus = if (task.status == DONE_ORDINAL) TODO_ORDINAL else DONE_ORDINAL
+        val completedDate = if (newStatus == DONE_ORDINAL) now else null
+        dao.setStatus(taskId, newStatus, completedDate, null, now)
         FocusWidget().update(context, glanceId)
     }
 }
 
+private const val TODO_ORDINAL = 0
 private const val DONE_ORDINAL = 4
