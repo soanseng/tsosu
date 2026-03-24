@@ -10,6 +10,7 @@ import app.tsosu.domain.repository.ImportFormat
 import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncState
+import app.tsosu.domain.usecase.ExportIcsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.ThemePreferences
@@ -29,6 +30,7 @@ data class SettingsUiState(
     val caldavEmail: String = "",
     val caldavPassword: String = "",
     val message: String? = null,
+    val icsContent: String? = null,
 )
 
 @HiltViewModel
@@ -38,6 +40,7 @@ class SettingsViewModel @Inject constructor(
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
     private val themePreferences: ThemePreferences,
+    private val exportIcsUseCase: ExportIcsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -198,5 +201,31 @@ class SettingsViewModel @Inject constructor(
 
     fun setDarkMode(option: DarkModeOption) {
         viewModelScope.launch { themePreferences.setDarkMode(option) }
+    }
+
+    fun exportIcs() {
+        viewModelScope.launch {
+            val result = exportIcsUseCase()
+            result.fold(
+                onSuccess = { ics ->
+                    if (ics.isBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            message = "No tasks with due dates to export",
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(icsContent = ics)
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        message = "ICS export error: ${e.message}",
+                    )
+                },
+            )
+        }
+    }
+
+    fun clearIcsContent() {
+        _uiState.value = _uiState.value.copy(icsContent = null)
     }
 }

@@ -1,5 +1,6 @@
 package app.tsosu.ui.components
 
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -32,12 +33,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -48,7 +52,9 @@ import app.tsosu.R
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import app.tsosu.ui.util.UxHintPreferences
 import app.tsosu.ui.util.rememberHaptic
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -65,6 +71,10 @@ fun TaskListItem(
     modifier: Modifier = Modifier,
 ) {
     val haptic = rememberHaptic()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val uxHintPreferences = remember { UxHintPreferences(context) }
+    val hintShown by uxHintPreferences.statusLongPressHintShown.collectAsState(initial = true)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     var showStatusMenu by remember { mutableStateOf(false) }
@@ -106,6 +116,16 @@ fun TaskListItem(
                 onTap = {
                     if (!task.done) haptic.confirm() else haptic.tick()
                     onToggleDone(task.id)
+                    if (!hintShown) {
+                        Toast.makeText(
+                            context,
+                            "Long-press for more status options",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        scope.launch {
+                            uxHintPreferences.markStatusLongPressHintShown()
+                        }
+                    }
                 },
                 onLongPress = {
                     haptic.longPress()

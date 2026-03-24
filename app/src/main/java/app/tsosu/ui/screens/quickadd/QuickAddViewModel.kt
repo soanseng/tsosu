@@ -9,6 +9,7 @@ import app.tsosu.domain.usecase.CreateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +23,8 @@ class QuickAddViewModel @Inject constructor(
         energy: EnergyLevel,
         estimatedMinutes: Int?,
         dueDate: LocalDateTime?,
+        reminderTime: LocalTime? = null,
+        recurrenceRule: String? = null,
     ) {
         viewModelScope.launch {
             val task = Task(
@@ -30,6 +33,8 @@ class QuickAddViewModel @Inject constructor(
                 energyLevel = energy,
                 estimatedMinutes = estimatedMinutes,
                 dueDate = dueDate,
+                reminderTime = reminderTime,
+                recurrenceRule = recurrenceRule,
             )
             createTaskUseCase(task)
         }
