@@ -8,6 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -35,9 +37,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import app.tsosu.R
 import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.navigation.BottomNavBar
 import app.tsosu.navigation.Screen
@@ -150,13 +154,27 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = { BottomNavBar(navController) },
                     floatingActionButton = {
+                        @OptIn(ExperimentalFoundationApi::class)
                         FloatingActionButton(
-                            onClick = {
-                                if (isOnHabitsTab) showAddHabit = true
-                                else showAddTask = true
-                            },
+                            onClick = { /* handled by combinedClickable */ },
+                            modifier = Modifier.combinedClickable(
+                                onClick = {
+                                    if (isOnHabitsTab) showAddHabit = true
+                                    else showAddTask = true
+                                },
+                                onLongClick = {
+                                    if (!isOnHabitsTab) showPickOne = true
+                                },
+                            ),
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add")
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = if (isOnHabitsTab) {
+                                    stringResource(R.string.quick_add_habit_title)
+                                } else {
+                                    stringResource(R.string.quick_add_task_title)
+                                },
+                            )
                         }
                     },
                 ) { innerPadding ->

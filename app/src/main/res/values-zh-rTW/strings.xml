@@ -21,6 +21,7 @@
     <string name="habits_title">每日習慣</string>
     <string name="habits_done_count">%1$d/%2$d 完成</string>
     <string name="habits_empty">還沒有習慣，從小的開始！</string>
+    <string name="habits_empty_hint">點 + 建立第一個習慣。\n試試兩分鐘就能完成的。</string>
     <string name="habits_morning">早晨</string>
     <string name="habits_anytime">隨時</string>
     <string name="habits_evening">晚間</string>
@@ -110,6 +111,8 @@
     <!-- Sync -->
     <string name="sync_pulled">同步完成：拉取 %1$d，推送 %2$d</string>
     <string name="sync_error">同步錯誤：%s</string>
+
+    <string name="hint_long_press_status">長按可切換更多狀態</string>
 
     <!-- Energy Levels -->
     <string name="energy_low">低</string>

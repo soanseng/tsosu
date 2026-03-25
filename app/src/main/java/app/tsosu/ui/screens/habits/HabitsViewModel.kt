@@ -1,13 +1,14 @@
 package app.tsosu.ui.screens.habits
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.Routine
 import app.tsosu.domain.model.RoutineTime
-import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.RoutineRepository
 import app.tsosu.domain.usecase.CompleteHabitUseCase
+import app.tsosu.domain.usecase.CreateHabitUseCase
 import app.tsosu.domain.usecase.GetTodayHabitsUseCase
 import app.tsosu.domain.usecase.HabitWithStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -33,9 +36,11 @@ data class HabitsUiState(
 class HabitsViewModel @Inject constructor(
     getTodayHabits: GetTodayHabitsUseCase,
     private val routineRepository: RoutineRepository,
-    private val habitRepository: HabitRepository,
+    private val createHabitUseCase: CreateHabitUseCase,
     private val completeHabit: CompleteHabitUseCase,
 ) : ViewModel() {
+
+    private val routineMutex = Mutex()
 
     val uiState: StateFlow<HabitsUiState> = combine(
         getTodayHabits(),
@@ -65,20 +70,22 @@ class HabitsViewModel @Inject constructor(
                 tinyVersion = tinyVersion,
                 routineId = routineId,
             )
-            habitRepository.createHabit(habit)
+            createHabitUseCase(habit).onFailure { e ->
+                Log.e("HabitsViewModel", "Failed to create habit", e)
+            }
         }
     }
 
-    private suspend fun findOrCreateRoutine(time: RoutineTime): String {
+    private suspend fun findOrCreateRoutine(time: RoutineTime): String = routineMutex.withLock {
         val routines = routineRepository.getRoutines().first()
         val existing = routines.find { it.timeOfDay == time }
-        if (existing != null) return existing.id
+        if (existing != null) return@withLock existing.id
 
         val routine = Routine(
             title = time.name.lowercase().replaceFirstChar { it.uppercase() },
             timeOfDay = time,
         )
         routineRepository.createRoutine(routine)
-        return routine.id
+        routine.id
     }
 }

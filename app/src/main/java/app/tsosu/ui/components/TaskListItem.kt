@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,7 +42,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -119,7 +124,7 @@ fun TaskListItem(
                     if (!hintShown) {
                         Toast.makeText(
                             context,
-                            "Long-press for more status options",
+                            context.getString(R.string.hint_long_press_status),
                             Toast.LENGTH_SHORT,
                         ).show()
                         scope.launch {
@@ -203,6 +208,8 @@ private fun StatusIconButton(
     Box(
         modifier = Modifier
             .size(48.dp)
+            .clip(CircleShape)
+            .semantics { role = Role.Button }
             .combinedClickable(
                 onClick = onTap,
                 onLongClick = onLongPress,

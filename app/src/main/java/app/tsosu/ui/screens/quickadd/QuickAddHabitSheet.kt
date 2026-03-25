@@ -2,7 +2,8 @@ package app.tsosu.ui.screens.quickadd
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,16 +14,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.tsosu.R
 import app.tsosu.domain.model.RoutineTime
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun QuickAddHabitSheet(
     onDismiss: () -> Unit,
@@ -31,6 +36,11 @@ fun QuickAddHabitSheet(
     var title by remember { mutableStateOf("") }
     var tinyVersion by remember { mutableStateOf("") }
     var routineTime by remember { mutableStateOf(RoutineTime.AFTERNOON) }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Column(
         modifier = Modifier
@@ -44,7 +54,9 @@ fun QuickAddHabitSheet(
             value = title,
             onValueChange = { title = it },
             label = { Text(stringResource(R.string.quick_add_habit_hint)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             singleLine = true,
         )
 
@@ -66,7 +78,7 @@ fun QuickAddHabitSheet(
             style = MaterialTheme.typography.labelLarge,
         )
         Spacer(Modifier.height(4.dp))
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -93,7 +105,6 @@ fun QuickAddHabitSheet(
             onClick = {
                 if (title.isNotBlank()) {
                     onAdd(title, tinyVersion.takeIf { it.isNotBlank() }, routineTime)
-                    onDismiss()
                 }
             },
             modifier = Modifier.fillMaxWidth(),

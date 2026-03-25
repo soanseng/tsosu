@@ -21,6 +21,7 @@
     <string name="habits_title">Daily Habits</string>
     <string name="habits_done_count">%1$d/%2$d done</string>
     <string name="habits_empty">No habits yet. Start small!</string>
+    <string name="habits_empty_hint">Tap + to create your first habit.\nTry one you can do in 2 minutes.</string>
     <string name="habits_morning">Morning</string>
     <string name="habits_anytime">Anytime</string>
     <string name="habits_evening">Evening</string>
@@ -130,11 +131,12 @@
     <string name="energy_high">high</string>
 
     <!-- Focus Screen (additional) -->
+    <string name="hint_long_press_status">Long-press for more status options</string>
     <string name="focus_filter_active">Filter active</string>
     <string name="focus_vault_setup_title">Set up your vault</string>
     <string name="focus_vault_setup_desc">Connect a markdown folder to sync with Obsidian, nvim, or other tools.</string>
     <string name="focus_empty_no_tasks">No tasks for today yet.</string>
-    <string name="focus_empty_hint">Tap + to add your first task, or long-press for Pick One.</string>
+    <string name="focus_empty_hint">Tap + to add your first task.</string>
     <string name="focus_empty_break">Nothing today. You earned a break!</string>
 
     <!-- Filter Sheet -->

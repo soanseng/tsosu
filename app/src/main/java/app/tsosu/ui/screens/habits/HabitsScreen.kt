@@ -60,13 +60,13 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
             Spacer(Modifier.height(8.dp))
         }
 
-        val routineGroups = mapOf(
-            RoutineTime.MORNING to "Morning",
-            RoutineTime.AFTERNOON to "Anytime",
-            RoutineTime.EVENING to "Evening",
+        val routineTimes = listOf(
+            RoutineTime.MORNING,
+            RoutineTime.AFTERNOON,
+            RoutineTime.EVENING,
         )
 
-        routineGroups.forEach { (time, label) ->
+        routineTimes.forEach { time ->
             val routineIds = state.routines
                 .filter { it.timeOfDay == time }
                 .map { it.id }
@@ -76,7 +76,13 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
             if (habitsInGroup.isNotEmpty()) {
                 item {
                     Text(
-                        text = "${time.emoji} $label",
+                        text = "${time.emoji} ${
+                            when (time) {
+                                RoutineTime.MORNING -> stringResource(R.string.habits_morning)
+                                RoutineTime.AFTERNOON -> stringResource(R.string.habits_anytime)
+                                RoutineTime.EVENING -> stringResource(R.string.habits_evening)
+                            }
+                        }",
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -122,12 +128,12 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
         if (state.habits.isEmpty()) {
             item {
                 Text(
-                    text = "No habits yet.",
+                    text = stringResource(R.string.habits_empty),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Tap + to create your first habit.\nStart small \u2014 try one you can do in 2 minutes.",
+                    text = stringResource(R.string.habits_empty_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

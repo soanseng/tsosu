@@ -177,13 +177,13 @@ fun FocusScreen(
             item {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "No tasks for today yet.",
+                    stringResource(R.string.focus_empty_no_tasks),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Tap + to add your first task, or long-press for Pick One.",
+                    stringResource(R.string.focus_empty_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
