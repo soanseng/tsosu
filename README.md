@@ -19,17 +19,21 @@ Tsosu is different. It's built on clinical understanding of ADHD and the princip
 ADHD brains freeze when facing a list of 30 tasks. Tsosu asks you to pick just 3 tasks for today. The rest folds away — still there, but not screaming at you.
 
 - Pick your top 3 each morning (or the night before)
-- Focus tasks stay at the top, everything else collapses
+- Focus tasks stay at the top, everything else collapses into a **collapsible "No date" section** with a count badge
 - Complete all 3 → 🎉 celebration animation
 - "Everything else is bonus" — because it truly is
+- **Swipe right** to mark done, **swipe left** to postpone to tomorrow — no need to hunt for tiny buttons
+- **Overdue badge** on tasks that need attention
+- Bottom nav shows your **pending count** so you know at a glance what's left
 
 ### 🔁 Daily Habits — "Make it small, make it easy."
 
 Inspired by Atomic Habits: start with something so small you can't say no. Tsosu's habit tracking is designed for ADHD minds that struggle with consistency.
 
 - **2-Minute Habits**: "Meditate" → "Sit and take 3 breaths." Small enough to always start.
-- **Flexible streaks**: Missed a day? Your streak pauses, not resets. "4 out of the last 7 days" not "Day 0 again."
-- **Morning & Evening routines**: Group habits into routines you can check off in order.
+- **Flexible streaks**: Missed a day? Your streak pauses, not resets. 🔥 streak counter shows your momentum.
+- **7-day progress bar**: Each habit shows a visual bar of your last 7 days — see the trend, not just the number.
+- **Morning, Anytime & Evening routines**: Group habits by time of day. Create new habits right from the FAB.
 - **Gentle accountability**: "You've done your morning routine 5 of the last 7 days — that's great!" not "You missed 2 days."
 
 ### 😌 No Shame UI — "Still on your list."
@@ -158,6 +162,7 @@ Inspired by [org-mode](https://doc.norang.ca/org-mode.html): text files as the u
 - **Todoist import** — bring your existing tasks
 - **Privacy** — no analytics, no tracking, no data collection, no server
 - **Architecture** — MVVM, Clean Architecture, TDD
+- **Localization** — English, 繁體中文
 
 ## Who Made This?
 

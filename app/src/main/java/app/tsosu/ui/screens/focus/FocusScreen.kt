@@ -1,5 +1,9 @@
 package app.tsosu.ui.screens.focus
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,9 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,8 +31,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,6 +53,7 @@ fun FocusScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val showKonfetti = remember { mutableStateOf(false) }
+    var noDateExpanded by rememberSaveable { mutableStateOf(false) }
 
     KonfettiOverlay(showKonfetti)
 
@@ -73,20 +83,20 @@ fun FocusScreen(
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                             Text(
-                                "Set up your vault",
+                                stringResource(R.string.focus_vault_setup_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Connect a markdown folder to sync with Obsidian, nvim, or other tools.",
+                            stringResource(R.string.focus_vault_setup_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = onSelectFolder) {
-                            Text("Select Folder")
+                            Text(stringResource(R.string.settings_select_folder))
                         }
                     }
                 }
@@ -142,6 +152,7 @@ fun FocusScreen(
                         viewModel.setStatus(id, status)
                     },
                     onClick = { onTaskClick(it.id) },
+                    onPostpone = { id -> viewModel.postponeTask(id) },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -151,25 +162,55 @@ fun FocusScreen(
         if (otherAndInbox.isNotEmpty()) {
             item {
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(R.string.focus_other_tasks),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { noDateExpanded = !noDateExpanded }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.focus_other_tasks),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        "${otherAndInbox.size}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .let { mod ->
+                                mod.padding(horizontal = 8.dp, vertical = 2.dp)
+                            },
+                    )
+                    Icon(
+                        imageVector = if (noDateExpanded) Icons.Default.KeyboardArrowUp
+                        else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            items(otherAndInbox, key = { it.id }) { task ->
-                TaskListItem(
-                    task = task,
-                    onToggleDone = { id ->
-                        viewModel.onToggleDone(id)
-                        showKonfetti.value = true
-                    },
-                    onStatusChange = { id, status ->
-                        viewModel.setStatus(id, status)
-                    },
-                    onClick = { onTaskClick(it.id) },
-                    modifier = Modifier.animateItem(),
-                )
+
+            if (noDateExpanded) {
+                items(otherAndInbox, key = { it.id }) { task ->
+                    TaskListItem(
+                        task = task,
+                        onToggleDone = { id ->
+                            viewModel.onToggleDone(id)
+                            showKonfetti.value = true
+                        },
+                        onStatusChange = { id, status ->
+                            viewModel.setStatus(id, status)
+                        },
+                        onClick = { onTaskClick(it.id) },
+                        onPostpone = { id -> viewModel.postponeTask(id) },
+                        modifier = Modifier.animateItem(),
+                    )
+                }
             }
         }
 

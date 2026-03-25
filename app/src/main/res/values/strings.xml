@@ -214,6 +214,11 @@
     <string name="detail_today">Today</string>
     <string name="detail_tomorrow">Tomorrow</string>
     <string name="detail_no_date">No date</string>
+    <string name="detail_overdue">Overdue</string>
+    <string name="swipe_done">Done</string>
+    <string name="swipe_postpone">Tomorrow</string>
+
+    <!-- Bottom Nav Badges - no new strings needed, just numbers -->
 
     <!-- Progress Card -->
     <string name="progress_tasks">%1$d / %2$d tasks</string>

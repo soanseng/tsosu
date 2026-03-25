@@ -152,7 +152,15 @@ class MainActivity : ComponentActivity() {
                             },
                         )
                     },
-                    bottomBar = { BottomNavBar(navController) },
+                    bottomBar = {
+                        val focusState by focusViewModel.uiState.collectAsState()
+                        val habitsState by habitsViewModel.uiState.collectAsState()
+                        BottomNavBar(
+                            navController = navController,
+                            focusPendingCount = focusState.totalCount - focusState.completedCount,
+                            habitsPendingCount = habitsState.totalCount - habitsState.completedCount,
+                        )
+                    },
                     floatingActionButton = {
                         @OptIn(ExperimentalFoundationApi::class)
                         FloatingActionButton(

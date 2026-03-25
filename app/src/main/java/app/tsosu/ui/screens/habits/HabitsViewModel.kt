@@ -4,8 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.domain.model.Habit
+import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.model.Routine
 import app.tsosu.domain.model.RoutineTime
+import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.RoutineRepository
 import app.tsosu.domain.usecase.CompleteHabitUseCase
 import app.tsosu.domain.usecase.CreateHabitUseCase
@@ -28,6 +30,7 @@ import javax.inject.Inject
 data class HabitsUiState(
     val habits: List<HabitWithStatus> = emptyList(),
     val routines: List<Routine> = emptyList(),
+    val streaks: Map<String, HabitStreakInfo> = emptyMap(),
     val completedCount: Int = 0,
     val totalCount: Int = 0,
 )
@@ -36,6 +39,7 @@ data class HabitsUiState(
 class HabitsViewModel @Inject constructor(
     getTodayHabits: GetTodayHabitsUseCase,
     private val routineRepository: RoutineRepository,
+    private val habitRepository: HabitRepository,
     private val createHabitUseCase: CreateHabitUseCase,
     private val completeHabit: CompleteHabitUseCase,
 ) : ViewModel() {
@@ -45,10 +49,12 @@ class HabitsViewModel @Inject constructor(
     val uiState: StateFlow<HabitsUiState> = combine(
         getTodayHabits(),
         routineRepository.getRoutines(),
-    ) { habits, routines ->
+        habitRepository.getAllStreakInfos(),
+    ) { habits, routines, streaks ->
         HabitsUiState(
             habits = habits,
             routines = routines,
+            streaks = streaks.associateBy { it.habitId },
             completedCount = habits.count { it.isCompletedToday },
             totalCount = habits.size,
         )

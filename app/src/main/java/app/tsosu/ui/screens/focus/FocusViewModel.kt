@@ -10,12 +10,19 @@ import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,7 +42,7 @@ class FocusViewModel @Inject constructor(
     getTodayOverview: GetTodayOverviewUseCase,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
     private val setTaskStatus: SetTaskStatusUseCase,
-    taskRepository: TaskRepository,
+    private val taskRepository: TaskRepository,
 ) : ViewModel() {
 
     private val _filterSpec = MutableStateFlow(FilterSpec())
@@ -86,6 +93,17 @@ class FocusViewModel @Inject constructor(
     fun setStatus(taskId: String, status: TaskStatus) {
         viewModelScope.launch {
             setTaskStatus(taskId, status)
+        }
+    }
+
+    fun postponeTask(taskId: String) {
+        viewModelScope.launch {
+            val tz = TimeZone.currentSystemDefault()
+            val tomorrow = Clock.System.now().toLocalDateTime(tz).date
+                .plus(1, DateTimeUnit.DAY)
+            val task = taskRepository.getTask(taskId).first()
+                ?: return@launch
+            taskRepository.updateTask(task.copy(dueDate = tomorrow.atTime(9, 0)))
         }
     }
 }

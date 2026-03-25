@@ -1,8 +1,13 @@
 package app.tsosu.ui.screens.habits
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -23,11 +30,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
+import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.usecase.HabitWithStatus
 import app.tsosu.ui.components.KonfettiOverlay
@@ -89,6 +98,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                 items(habitsInGroup, key = { it.habit.id }) { habitWithStatus ->
                     HabitRow(
                         habitWithStatus = habitWithStatus,
+                        streakInfo = state.streaks[habitWithStatus.habit.id],
                         onToggle = {
                             haptic.confirm()
                             if (!habitWithStatus.isCompletedToday) {
@@ -113,6 +123,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
             items(unroutinedHabits, key = { it.habit.id }) { habitWithStatus ->
                 HabitRow(
                     habitWithStatus = habitWithStatus,
+                    streakInfo = state.streaks[habitWithStatus.habit.id],
                     onToggle = {
                         haptic.confirm()
                         if (!habitWithStatus.isCompletedToday) {
@@ -147,6 +158,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
 @Composable
 private fun HabitRow(
     habitWithStatus: HabitWithStatus,
+    streakInfo: HabitStreakInfo?,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -154,12 +166,19 @@ private fun HabitRow(
         targetValue = if (habitWithStatus.isCompletedToday)
             MaterialTheme.colorScheme.secondaryContainer
         else
-            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.surfaceContainerLow,
         label = "habitCardColor",
+    )
+
+    val cornerRadius by animateDpAsState(
+        targetValue = 16.dp,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "habitCornerRadius",
     )
 
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(cornerRadius),
         colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
         Row(
@@ -174,10 +193,23 @@ private fun HabitRow(
                 onCheckedChange = { onToggle() },
             )
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = habitWithStatus.habit.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = habitWithStatus.habit.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    streakInfo?.let { info ->
+                        if (info.currentConsecutiveDays > 1) {
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "\uD83D\uDD25 ${info.currentConsecutiveDays}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
                 habitWithStatus.habit.tinyVersion?.let { tiny ->
                     Text(
                         text = tiny,
@@ -185,7 +217,42 @@ private fun HabitRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                streakInfo?.let { info ->
+                    if (info.completedLast7Days > 0 || habitWithStatus.isCompletedToday) {
+                        Spacer(Modifier.height(6.dp))
+                        WeekProgressBar(
+                            completed = info.completedLast7Days,
+                            total = 7,
+                        )
+                    }
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun WeekProgressBar(
+    completed: Int,
+    total: Int,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        repeat(total) { index ->
+            val isFilled = index < completed
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(
+                        if (isFilled) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outlineVariant,
+                    ),
+            )
         }
     }
 }
