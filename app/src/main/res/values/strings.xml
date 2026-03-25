@@ -12,7 +12,7 @@
     <!-- Focus Screen -->
     <string name="focus_title">Focus 3</string>
     <string name="focus_today">Today\'s Focus</string>
-    <string name="focus_other_tasks">Other tasks</string>
+    <string name="focus_other_tasks">No date</string>
     <string name="focus_empty">Nothing for today. Enjoy your day!</string>
     <string name="focus_minutes">%d min today</string>
     <string name="focus_complete">Focus 3 complete! Everything else is bonus.</string>
@@ -53,6 +53,7 @@
     <string name="quick_add_habit_hint">Habit name</string>
     <string name="quick_add_tiny_version">What\'s the 2-minute version?</string>
     <string name="quick_add_tiny_hint">The smallest step to get started</string>
+    <string name="quick_add_routine">Routine</string>
     <string name="quick_add_submit_habit">Add Habit</string>
 
     <!-- Search -->

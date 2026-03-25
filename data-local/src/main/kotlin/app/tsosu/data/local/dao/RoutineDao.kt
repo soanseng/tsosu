@@ -24,4 +24,7 @@ interface RoutineDao {
 
     @Query("SELECT * FROM routines WHERE id = :routineId")
     fun getById(routineId: String): Flow<RoutineEntity?>
+
+    @Query("SELECT * FROM routines WHERE timeOfDay = :timeOfDay LIMIT 1")
+    suspend fun getByTimeOfDay(timeOfDay: Int): RoutineEntity?
 }

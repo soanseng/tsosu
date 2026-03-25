@@ -8,8 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.navigation.BottomNavBar
@@ -45,7 +44,9 @@ import app.tsosu.navigation.Screen
 import app.tsosu.navigation.TsosuNavHost
 import app.tsosu.ui.screens.filter.FilterSheet
 import app.tsosu.ui.screens.focus.FocusViewModel
+import app.tsosu.ui.screens.habits.HabitsViewModel
 import app.tsosu.ui.screens.pickone.PickOneSheet
+import app.tsosu.ui.screens.quickadd.QuickAddHabitSheet
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
 import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
@@ -88,13 +89,18 @@ class MainActivity : ComponentActivity() {
             TsosuTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
                 var showAddTask by remember { mutableStateOf(false) }
+                var showAddHabit by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
                 var showFilter by remember { mutableStateOf(false) }
                 var editingTaskId by remember { mutableStateOf<String?>(null) }
                 val focusViewModel: FocusViewModel = hiltViewModel()
+                val habitsViewModel: HabitsViewModel = hiltViewModel()
                 val isVaultConfigured by syncRepository.isConfigured()
                     .collectAsState(initial = true)
                 val scope = rememberCoroutineScope()
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+                val isOnHabitsTab = currentRoute == Screen.Habits.route
 
                 val folderPicker = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.OpenDocumentTree()
@@ -144,15 +150,13 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = { BottomNavBar(navController) },
                     floatingActionButton = {
-                        @OptIn(ExperimentalFoundationApi::class)
                         FloatingActionButton(
-                            onClick = { showAddTask = true },
-                            modifier = Modifier.combinedClickable(
-                                onClick = { showAddTask = true },
-                                onLongClick = { showPickOne = true },
-                            ),
+                            onClick = {
+                                if (isOnHabitsTab) showAddHabit = true
+                                else showAddTask = true
+                            },
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Task")
+                            Icon(Icons.Default.Add, contentDescription = "Add")
                         }
                     },
                 ) { innerPadding ->
@@ -164,6 +168,21 @@ class MainActivity : ComponentActivity() {
                         isVaultConfigured = isVaultConfigured,
                         onSelectFolder = { folderPicker.launch(null) },
                     )
+                }
+
+                if (showAddHabit) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showAddHabit = false },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    ) {
+                        QuickAddHabitSheet(
+                            onDismiss = { showAddHabit = false },
+                            onAdd = { title, tinyVersion, routineTime ->
+                                habitsViewModel.createHabit(title, tinyVersion, routineTime)
+                                showAddHabit = false
+                            },
+                        )
+                    }
                 }
 
                 if (showAddTask) {

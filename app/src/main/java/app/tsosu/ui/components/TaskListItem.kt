@@ -9,6 +9,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +30,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -200,12 +200,14 @@ private fun StatusIconButton(
     onTap: () -> Unit,
     onLongPress: () -> Unit,
 ) {
-    IconButton(
-        onClick = { /* handled by combinedClickable */ },
-        modifier = Modifier.combinedClickable(
-            onClick = onTap,
-            onLongClick = onLongPress,
-        ),
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .combinedClickable(
+                onClick = onTap,
+                onLongClick = onLongPress,
+            ),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = status.icon(),

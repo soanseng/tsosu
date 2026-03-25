@@ -2,7 +2,10 @@ package app.tsosu.ui.screens.habits
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.Routine
+import app.tsosu.domain.model.RoutineTime
+import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.RoutineRepository
 import app.tsosu.domain.usecase.CompleteHabitUseCase
 import app.tsosu.domain.usecase.GetTodayHabitsUseCase
@@ -11,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -28,7 +32,8 @@ data class HabitsUiState(
 @HiltViewModel
 class HabitsViewModel @Inject constructor(
     getTodayHabits: GetTodayHabitsUseCase,
-    routineRepository: RoutineRepository,
+    private val routineRepository: RoutineRepository,
+    private val habitRepository: HabitRepository,
     private val completeHabit: CompleteHabitUseCase,
 ) : ViewModel() {
 
@@ -50,5 +55,30 @@ class HabitsViewModel @Inject constructor(
                 .toLocalDateTime(TimeZone.currentSystemDefault()).date
             completeHabit(habitId, today)
         }
+    }
+
+    fun createHabit(title: String, tinyVersion: String?, routineTime: RoutineTime) {
+        viewModelScope.launch {
+            val routineId = findOrCreateRoutine(routineTime)
+            val habit = Habit(
+                title = title,
+                tinyVersion = tinyVersion,
+                routineId = routineId,
+            )
+            habitRepository.createHabit(habit)
+        }
+    }
+
+    private suspend fun findOrCreateRoutine(time: RoutineTime): String {
+        val routines = routineRepository.getRoutines().first()
+        val existing = routines.find { it.timeOfDay == time }
+        if (existing != null) return existing.id
+
+        val routine = Routine(
+            title = time.name.lowercase().replaceFirstChar { it.uppercase() },
+            timeOfDay = time,
+        )
+        routineRepository.createRoutine(routine)
+        return routine.id
     }
 }

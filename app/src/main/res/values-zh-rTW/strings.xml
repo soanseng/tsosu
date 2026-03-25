@@ -12,7 +12,7 @@
     <!-- Focus Screen -->
     <string name="focus_title">專注 3</string>
     <string name="focus_today">今日專注</string>
-    <string name="focus_other_tasks">其他任務</string>
+    <string name="focus_other_tasks">未排期</string>
     <string name="focus_empty">今天沒事了，好好享受！</string>
     <string name="focus_minutes">今天 %d 分鐘</string>
     <string name="focus_complete">專注 3 全部完成！剩下的都是加分。</string>
@@ -53,6 +53,7 @@
     <string name="quick_add_habit_hint">習慣名稱</string>
     <string name="quick_add_tiny_version">兩分鐘版本是什麼？</string>
     <string name="quick_add_tiny_hint">最小的一步就好</string>
+    <string name="quick_add_routine">時段</string>
     <string name="quick_add_submit_habit">新增習慣</string>
 
     <!-- Search -->

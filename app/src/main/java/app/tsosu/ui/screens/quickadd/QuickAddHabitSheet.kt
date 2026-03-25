@@ -1,11 +1,14 @@
 package app.tsosu.ui.screens.quickadd
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -18,14 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.tsosu.R
+import app.tsosu.domain.model.RoutineTime
 
 @Composable
 fun QuickAddHabitSheet(
     onDismiss: () -> Unit,
-    onAdd: (title: String, tinyVersion: String?) -> Unit,
+    onAdd: (title: String, tinyVersion: String?, routineTime: RoutineTime) -> Unit,
 ) {
     var title by remember { mutableStateOf("") }
     var tinyVersion by remember { mutableStateOf("") }
+    var routineTime by remember { mutableStateOf(RoutineTime.AFTERNOON) }
 
     Column(
         modifier = Modifier
@@ -54,12 +59,40 @@ fun QuickAddHabitSheet(
             singleLine = true,
         )
 
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            stringResource(R.string.quick_add_routine),
+            style = MaterialTheme.typography.labelLarge,
+        )
+        Spacer(Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            RoutineTime.entries.forEach { time ->
+                FilterChip(
+                    selected = routineTime == time,
+                    onClick = { routineTime = time },
+                    label = {
+                        Text(
+                            when (time) {
+                                RoutineTime.MORNING -> "${time.emoji} ${stringResource(R.string.habits_morning)}"
+                                RoutineTime.AFTERNOON -> "${time.emoji} ${stringResource(R.string.habits_anytime)}"
+                                RoutineTime.EVENING -> "${time.emoji} ${stringResource(R.string.habits_evening)}"
+                            },
+                        )
+                    },
+                )
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
 
         Button(
             onClick = {
                 if (title.isNotBlank()) {
-                    onAdd(title, tinyVersion.takeIf { it.isNotBlank() })
+                    onAdd(title, tinyVersion.takeIf { it.isNotBlank() }, routineTime)
                     onDismiss()
                 }
             },

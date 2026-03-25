@@ -25,6 +25,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     data object Kanban : Screen("kanban", "Kanban", Icons.Default.ViewKanban)
 
     companion object {
-        val bottomNavItems = listOf(Inbox, Focus, Habits, Calendar, Upcoming)
+        val bottomNavItems = listOf(Focus, Habits, Calendar, Upcoming)
     }
 }
