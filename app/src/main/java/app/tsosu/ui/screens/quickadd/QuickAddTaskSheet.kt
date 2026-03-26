@@ -69,6 +69,7 @@ fun QuickAddTaskSheet(
 ) {
     val haptic = rememberHaptic()
     var title by remember { mutableStateOf("") }
+    var titleError by remember { mutableStateOf(false) }
     var selectedPriority by remember { mutableStateOf(Priority.NONE) }
     var selectedEnergy by remember { mutableStateOf(EnergyLevel.MEDIUM) }
     var estimatedMinutes by remember { mutableIntStateOf(0) }
@@ -89,10 +90,17 @@ fun QuickAddTaskSheet(
 
         OutlinedTextField(
             value = title,
-            onValueChange = { title = it },
+            onValueChange = {
+                title = it
+                if (it.isNotBlank()) titleError = false
+            },
             label = { Text(stringResource(R.string.quick_add_task_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            isError = titleError,
+            supportingText = if (titleError) {
+                { Text(stringResource(R.string.quick_add_title_required)) }
+            } else null,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -277,6 +285,8 @@ fun QuickAddTaskSheet(
                         recurrenceRule,
                     )
                     onDismiss()
+                } else {
+                    titleError = true
                 }
             },
             modifier = Modifier.fillMaxWidth(),

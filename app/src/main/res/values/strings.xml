@@ -184,6 +184,7 @@
     <string name="quick_add_clear_date">Clear date</string>
     <string name="quick_add_cancel">Cancel</string>
     <string name="quick_add_ok">OK</string>
+    <string name="quick_add_title_required">Please enter a title</string>
 
     <!-- Settings (additional) -->
     <string name="settings_appearance">Appearance</string>

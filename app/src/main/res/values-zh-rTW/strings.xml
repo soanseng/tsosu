@@ -56,6 +56,7 @@
     <string name="quick_add_tiny_hint">最小的一步就好</string>
     <string name="quick_add_routine">時段</string>
     <string name="quick_add_submit_habit">新增習慣</string>
+    <string name="quick_add_title_required">請輸入標題</string>
 
     <!-- Search -->
     <string name="search_hint">搜尋任務</string>

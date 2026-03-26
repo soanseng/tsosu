@@ -34,6 +34,7 @@ fun QuickAddHabitSheet(
     onAdd: (title: String, tinyVersion: String?, routineTime: RoutineTime) -> Unit,
 ) {
     var title by remember { mutableStateOf("") }
+    var titleError by remember { mutableStateOf(false) }
     var tinyVersion by remember { mutableStateOf("") }
     var routineTime by remember { mutableStateOf(RoutineTime.AFTERNOON) }
     val focusRequester = remember { FocusRequester() }
@@ -52,12 +53,19 @@ fun QuickAddHabitSheet(
 
         OutlinedTextField(
             value = title,
-            onValueChange = { title = it },
+            onValueChange = {
+                title = it
+                if (it.isNotBlank()) titleError = false
+            },
             label = { Text(stringResource(R.string.quick_add_habit_hint)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
             singleLine = true,
+            isError = titleError,
+            supportingText = if (titleError) {
+                { Text(stringResource(R.string.quick_add_title_required)) }
+            } else null,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -105,6 +113,8 @@ fun QuickAddHabitSheet(
             onClick = {
                 if (title.isNotBlank()) {
                     onAdd(title, tinyVersion.takeIf { it.isNotBlank() }, routineTime)
+                } else {
+                    titleError = true
                 }
             },
             modifier = Modifier.fillMaxWidth(),
