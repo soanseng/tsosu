@@ -31,7 +31,9 @@ fun BottomNavBar(
             NavigationBarItem(
                 icon = {
                     if (badgeCount > 0) {
-                        BadgedBox(badge = { Badge { Text("$badgeCount") } }) {
+                        BadgedBox(badge = {
+                            Badge { Text(if (badgeCount > 99) "99+" else "$badgeCount") }
+                        }) {
                             Icon(screen.icon, contentDescription = screen.title)
                         }
                     } else {

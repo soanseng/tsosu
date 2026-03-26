@@ -209,7 +209,7 @@ private fun HabitRow(
         ) {
             Checkbox(
                 checked = habitWithStatus.isCompletedToday,
-                onCheckedChange = { onToggle() },
+                onCheckedChange = null,
             )
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -219,7 +219,7 @@ private fun HabitRow(
                         modifier = Modifier.weight(1f, fill = false),
                     )
                     streakInfo?.let { info ->
-                        if (info.currentConsecutiveDays > 1) {
+                        if (info.currentConsecutiveDays > 0) {
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 text = "\uD83D\uDD25 ${info.currentConsecutiveDays}",
