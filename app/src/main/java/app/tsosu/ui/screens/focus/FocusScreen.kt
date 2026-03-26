@@ -80,7 +80,7 @@ fun FocusScreen(
                         ) {
                             Icon(
                                 Icons.Default.FolderOpen,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.a11y_setup_vault),
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                             Text(
@@ -124,7 +124,7 @@ fun FocusScreen(
                 ) {
                     Icon(
                         Icons.Default.FilterAlt,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.a11y_filter_active),
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -189,7 +189,10 @@ fun FocusScreen(
                     Icon(
                         imageVector = if (noDateExpanded) Icons.Default.KeyboardArrowUp
                         else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
+                        contentDescription = if (noDateExpanded)
+                            stringResource(R.string.a11y_collapse_section)
+                        else
+                            stringResource(R.string.a11y_expand_section),
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

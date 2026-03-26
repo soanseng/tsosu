@@ -195,7 +195,7 @@ fun QuickAddTaskSheet(
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { showDatePicker = true }) {
-                Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                Icon(Icons.Default.CalendarMonth, contentDescription = stringResource(R.string.a11y_pick_date))
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
                     dueDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
@@ -218,7 +218,7 @@ fun QuickAddTaskSheet(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedButton(onClick = { showTimePicker = true }) {
-                Icon(Icons.Default.AccessTime, contentDescription = null)
+                Icon(Icons.Default.AccessTime, contentDescription = stringResource(R.string.a11y_pick_time))
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
                     reminderTime?.let { "%02d:%02d".format(it.hour, it.minute) }

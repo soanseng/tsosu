@@ -145,7 +145,14 @@ fun TaskListItem(
                     .padding(horizontal = 20.dp),
                 contentAlignment = alignment,
             ) {
-                Icon(icon, contentDescription = null, tint = Color.White)
+                Icon(
+                    icon,
+                    contentDescription = when (direction) {
+                        SwipeToDismissBoxValue.StartToEnd -> stringResource(R.string.swipe_done)
+                        else -> stringResource(R.string.swipe_postpone)
+                    },
+                    tint = Color.White,
+                )
             }
         },
         enableDismissFromStartToEnd = true,

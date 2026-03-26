@@ -126,4 +126,12 @@
     <string name="energy_low">低</string>
     <string name="energy_medium">中</string>
     <string name="energy_high">高</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_filter_active">篩選已啟用</string>
+    <string name="a11y_expand_section">展開區段</string>
+    <string name="a11y_collapse_section">收合區段</string>
+    <string name="a11y_setup_vault">設定保管庫</string>
+    <string name="a11y_pick_date">選擇日期</string>
+    <string name="a11y_pick_time">選擇時間</string>
 </resources>

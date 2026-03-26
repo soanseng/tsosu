@@ -226,4 +226,12 @@
     <string name="progress_tasks">%1$d / %2$d tasks</string>
     <string name="progress_est_minutes">%dm est.</string>
     <string name="progress_streak">%d day streak</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_filter_active">Filter active</string>
+    <string name="a11y_expand_section">Expand section</string>
+    <string name="a11y_collapse_section">Collapse section</string>
+    <string name="a11y_setup_vault">Set up vault</string>
+    <string name="a11y_pick_date">Pick date</string>
+    <string name="a11y_pick_time">Pick time</string>
 </resources>
