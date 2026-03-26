@@ -51,6 +51,9 @@ class HabitsViewModel @Inject constructor(
     private val _errorEvent = MutableSharedFlow<String>()
     val errorEvent = _errorEvent.asSharedFlow()
 
+    private val _celebrateEvent = MutableSharedFlow<Unit>()
+    val celebrateEvent = _celebrateEvent.asSharedFlow()
+
     val uiState: StateFlow<HabitsUiState> = combine(
         getTodayHabits(),
         routineRepository.getRoutines(),
@@ -69,7 +72,12 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch {
             val today = Clock.System.now()
                 .toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val wasCompleted = uiState.value.habits
+                .find { it.habit.id == habitId }?.isCompletedToday ?: false
             completeHabit(habitId, today)
+            if (!wasCompleted) {
+                _celebrateEvent.emit(Unit)
+            }
         }
     }
 

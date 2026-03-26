@@ -61,6 +61,12 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.celebrateEvent.collect {
+            showKonfetti.value = true
+        }
+    }
+
     KonfettiOverlay(showKonfetti)
 
     Scaffold(
@@ -119,9 +125,6 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                         streakInfo = state.streaks[habitWithStatus.habit.id],
                         onToggle = {
                             haptic.confirm()
-                            if (!habitWithStatus.isCompletedToday) {
-                                showKonfetti.value = true
-                            }
                             viewModel.onToggleHabit(habitWithStatus.habit.id)
                         },
                         modifier = Modifier.animateItem(),
@@ -144,9 +147,6 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                     streakInfo = state.streaks[habitWithStatus.habit.id],
                     onToggle = {
                         haptic.confirm()
-                        if (!habitWithStatus.isCompletedToday) {
-                            showKonfetti.value = true
-                        }
                         viewModel.onToggleHabit(habitWithStatus.habit.id)
                     },
                     modifier = Modifier.animateItem(),
