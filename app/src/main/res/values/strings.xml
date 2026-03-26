@@ -28,6 +28,7 @@
     <string name="habits_other">Other</string>
     <string name="habits_streak">%1$d out of the last %2$d days</string>
     <string name="habits_month_count">%d times this month!</string>
+    <string name="habits_create_failed">Failed to create habit</string>
 
     <!-- Inbox -->
     <string name="inbox_title">Inbox</string>

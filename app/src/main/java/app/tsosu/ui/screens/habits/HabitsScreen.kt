@@ -23,14 +23,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,12 +52,25 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val showKonfetti = remember { mutableStateOf(false) }
     val haptic = rememberHaptic()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val errorMsg = stringResource(R.string.habits_create_failed)
+
+    LaunchedEffect(Unit) {
+        viewModel.errorEvent.collect {
+            snackbarHostState.showSnackbar(errorMsg)
+        }
+    }
 
     KonfettiOverlay(showKonfetti)
 
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
+    ) { padding ->
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .padding(padding)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -152,6 +170,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
         }
 
         item { Spacer(Modifier.height(80.dp)) }
+    }
     }
 }
 

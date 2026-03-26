@@ -14,8 +14,10 @@ import app.tsosu.domain.usecase.CreateHabitUseCase
 import app.tsosu.domain.usecase.GetTodayHabitsUseCase
 import app.tsosu.domain.usecase.HabitWithStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -45,6 +47,9 @@ class HabitsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val routineMutex = Mutex()
+
+    private val _errorEvent = MutableSharedFlow<String>()
+    val errorEvent = _errorEvent.asSharedFlow()
 
     val uiState: StateFlow<HabitsUiState> = combine(
         getTodayHabits(),
@@ -78,6 +83,7 @@ class HabitsViewModel @Inject constructor(
             )
             createHabitUseCase(habit).onFailure { e ->
                 Log.e("HabitsViewModel", "Failed to create habit", e)
+                _errorEvent.emit(e.message ?: "Unknown error")
             }
         }
     }

@@ -28,6 +28,7 @@
     <string name="habits_other">其他</string>
     <string name="habits_streak">過去 %2$d 天完成 %1$d 天</string>
     <string name="habits_month_count">這個月做了 %d 次！</string>
+    <string name="habits_create_failed">建立習慣失敗</string>
 
     <!-- Inbox -->
     <string name="inbox_title">收件匣</string>
