@@ -12,7 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -28,9 +28,9 @@ fun UpcomingScreen(
     onTaskClick: (String) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val showKonfetti = remember { mutableStateOf(false) }
+    val konfettiTrigger = remember { mutableIntStateOf(0) }
 
-    KonfettiOverlay(showKonfetti)
+    KonfettiOverlay(konfettiTrigger)
 
     LazyColumn(
         modifier = Modifier
@@ -67,7 +67,7 @@ fun UpcomingScreen(
                     task = task,
                     onToggleDone = { id ->
                         viewModel.toggleDone(id)
-                        showKonfetti.value = true
+                        konfettiTrigger.intValue++
                     },
                     onStatusChange = { id, status ->
                         viewModel.setStatus(id, status)

@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,10 +53,10 @@ fun FocusScreen(
     onSelectFolder: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val showKonfetti = remember { mutableStateOf(false) }
+    val konfettiTrigger = remember { mutableIntStateOf(0) }
     var noDateExpanded by rememberSaveable { mutableStateOf(false) }
 
-    KonfettiOverlay(showKonfetti)
+    KonfettiOverlay(konfettiTrigger)
 
     LazyColumn(
         modifier = Modifier
@@ -146,7 +147,7 @@ fun FocusScreen(
                     task = task,
                     onToggleDone = { id ->
                         viewModel.onToggleDone(id)
-                        showKonfetti.value = true
+                        konfettiTrigger.intValue++
                     },
                     onStatusChange = { id, status ->
                         viewModel.setStatus(id, status)
@@ -201,7 +202,7 @@ fun FocusScreen(
                         task = task,
                         onToggleDone = { id ->
                             viewModel.onToggleDone(id)
-                            showKonfetti.value = true
+                            konfettiTrigger.intValue++
                         },
                         onStatusChange = { id, status ->
                             viewModel.setStatus(id, status)

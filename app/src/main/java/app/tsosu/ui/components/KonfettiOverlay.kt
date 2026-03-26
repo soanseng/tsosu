@@ -2,7 +2,11 @@ package app.tsosu.ui.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import nl.dionsegijn.konfetti.compose.KonfettiView
@@ -14,8 +18,13 @@ import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.util.concurrent.TimeUnit
 
 @Composable
-fun KonfettiOverlay(showState: MutableState<Boolean>) {
-    if (!showState.value) return
+fun KonfettiOverlay(trigger: MutableIntState) {
+    val count = trigger.intValue
+    if (count == 0) return
+
+    var lastSeen by remember { mutableIntStateOf(0) }
+    if (count == lastSeen) return
+    lastSeen = count
 
     val primary = MaterialTheme.colorScheme.primary.toArgb()
     val colors = listOf(
@@ -66,9 +75,7 @@ fun KonfettiOverlay(showState: MutableState<Boolean>) {
         parties = parties,
         updateListener = object : OnParticleSystemUpdateListener {
             override fun onParticleSystemEnded(system: PartySystem, activeSystems: Int) {
-                if (activeSystems == 0) {
-                    showState.value = false
-                }
+                // no-op: counter-based, no need to reset
             }
         },
     )

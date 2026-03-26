@@ -30,7 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +50,7 @@ import app.tsosu.ui.util.rememberHaptic
 @Composable
 fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val showKonfetti = remember { mutableStateOf(false) }
+    val konfettiTrigger = remember { mutableIntStateOf(0) }
     val haptic = rememberHaptic()
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMsg = stringResource(R.string.habits_create_failed)
@@ -63,11 +63,11 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
 
     LaunchedEffect(Unit) {
         viewModel.celebrateEvent.collect {
-            showKonfetti.value = true
+            konfettiTrigger.intValue++
         }
     }
 
-    KonfettiOverlay(showKonfetti)
+    KonfettiOverlay(konfettiTrigger)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
