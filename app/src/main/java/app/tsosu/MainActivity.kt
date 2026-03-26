@@ -8,8 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -162,18 +162,18 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     floatingActionButton = {
-                        @OptIn(ExperimentalFoundationApi::class)
                         FloatingActionButton(
-                            onClick = { /* handled by combinedClickable */ },
-                            modifier = Modifier.combinedClickable(
-                                onClick = {
-                                    if (isOnHabitsTab) showAddHabit = true
-                                    else showAddTask = true
-                                },
-                                onLongClick = {
-                                    if (!isOnHabitsTab) showPickOne = true
-                                },
-                            ),
+                            onClick = {
+                                if (isOnHabitsTab) showAddHabit = true
+                                else showAddTask = true
+                            },
+                            modifier = Modifier.pointerInput(isOnHabitsTab) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        if (!isOnHabitsTab) showPickOne = true
+                                    },
+                                )
+                            },
                         ) {
                             Icon(
                                 Icons.Default.Add,
@@ -279,6 +279,7 @@ class MainActivity : ComponentActivity() {
                     lifecycleScope.launch(Dispatchers.IO) {
                         val isConfigured = syncRepository.isConfigured().first()
                         if (isConfigured) {
+                            snackbarHostState.showSnackbar("Syncing…")
                             val result = syncRepository.sync()
                             result.fold(
                                 onSuccess = { r ->
