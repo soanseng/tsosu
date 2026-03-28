@@ -127,6 +127,19 @@
     <string name="energy_medium">中</string>
     <string name="energy_high">高</string>
 
+    <!-- Todoist Import Dialog -->
+    <string name="import_dialog_title">匯入 Todoist 任務</string>
+    <string name="import_dialog_description">匯入的任務要放在哪裡？</string>
+    <string name="import_target_inbox">收件匣</string>
+    <string name="import_target_new_project">新專案</string>
+    <string name="import_target_existing">現有專案</string>
+    <string name="import_project_name">專案名稱</string>
+    <string name="import_confirm">匯入</string>
+    <string name="import_cancel">取消</string>
+
+    <!-- Quick Add Recurrence -->
+    <string name="quick_add_clear_recurrence">清除重複</string>
+
     <!-- Accessibility -->
     <string name="a11y_filter_active">篩選已啟用</string>
     <string name="a11y_expand_section">展開區段</string>

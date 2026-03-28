@@ -227,6 +227,19 @@
     <string name="progress_est_minutes">%dm est.</string>
     <string name="progress_streak">%d day streak</string>
 
+    <!-- Todoist Import Dialog -->
+    <string name="import_dialog_title">Import Todoist Tasks</string>
+    <string name="import_dialog_description">Where should imported tasks go?</string>
+    <string name="import_target_inbox">Inbox</string>
+    <string name="import_target_new_project">New Project</string>
+    <string name="import_target_existing">Existing</string>
+    <string name="import_project_name">Project name</string>
+    <string name="import_confirm">Import</string>
+    <string name="import_cancel">Cancel</string>
+
+    <!-- Quick Add Recurrence -->
+    <string name="quick_add_clear_recurrence">Clear recurrence</string>
+
     <!-- Accessibility -->
     <string name="a11y_filter_active">Filter active</string>
     <string name="a11y_expand_section">Expand section</string>

@@ -17,15 +17,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
 import app.tsosu.domain.repository.CalendarProvider
+import app.tsosu.domain.repository.ImportTarget
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.ui.theme.DarkModeOption
 import androidx.core.content.FileProvider
@@ -58,10 +66,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri ?: return@rememberLauncherForActivityResult
-        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-        if (bytes != null) {
-            viewModel.importTodoist(bytes)
-        }
+        viewModel.stageTodoistImport(uri)
     }
 
     Column(
@@ -184,6 +189,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.settings_import_todoist))
+        }
+
+        if (state.pendingImportUri != null) {
+            TodoistImportDialog(
+                projects = state.projects,
+                onConfirm = { target -> viewModel.confirmTodoistImport(target) },
+                onDismiss = { viewModel.cancelTodoistImport() },
+            )
         }
 
         HorizontalDivider()
@@ -327,4 +340,120 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             Text(it, style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+private enum class ImportDestination { INBOX, NEW_PROJECT, EXISTING_PROJECT }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TodoistImportDialog(
+    projects: List<app.tsosu.domain.model.Project>,
+    onConfirm: (ImportTarget) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var destination by remember { mutableStateOf(ImportDestination.INBOX) }
+    var newProjectName by remember { mutableStateOf("") }
+    var selectedProjectId by remember { mutableStateOf(projects.firstOrNull()?.id ?: "") }
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.import_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    stringResource(R.string.import_dialog_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = destination == ImportDestination.INBOX,
+                        onClick = { destination = ImportDestination.INBOX },
+                        label = { Text(stringResource(R.string.import_target_inbox)) },
+                    )
+                    FilterChip(
+                        selected = destination == ImportDestination.NEW_PROJECT,
+                        onClick = { destination = ImportDestination.NEW_PROJECT },
+                        label = { Text(stringResource(R.string.import_target_new_project)) },
+                    )
+                    if (projects.isNotEmpty()) {
+                        FilterChip(
+                            selected = destination == ImportDestination.EXISTING_PROJECT,
+                            onClick = { destination = ImportDestination.EXISTING_PROJECT },
+                            label = { Text(stringResource(R.string.import_target_existing)) },
+                        )
+                    }
+                }
+
+                when (destination) {
+                    ImportDestination.NEW_PROJECT -> {
+                        OutlinedTextField(
+                            value = newProjectName,
+                            onValueChange = { newProjectName = it },
+                            label = { Text(stringResource(R.string.import_project_name)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                    }
+                    ImportDestination.EXISTING_PROJECT -> {
+                        val selectedProject = projects.find { it.id == selectedProjectId }
+                        ExposedDropdownMenuBox(
+                            expanded = dropdownExpanded,
+                            onExpandedChange = { dropdownExpanded = it },
+                        ) {
+                            OutlinedTextField(
+                                value = selectedProject?.title ?: "",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                            )
+                            ExposedDropdownMenu(
+                                expanded = dropdownExpanded,
+                                onDismissRequest = { dropdownExpanded = false },
+                            ) {
+                                projects.forEach { project ->
+                                    DropdownMenuItem(
+                                        text = { Text(project.title) },
+                                        onClick = {
+                                            selectedProjectId = project.id
+                                            dropdownExpanded = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    ImportDestination.INBOX -> { /* No extra input needed */ }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val target = when (destination) {
+                        ImportDestination.INBOX -> ImportTarget.Inbox
+                        ImportDestination.NEW_PROJECT -> ImportTarget.NewProject(newProjectName)
+                        ImportDestination.EXISTING_PROJECT -> ImportTarget.ExistingProject(selectedProjectId)
+                    }
+                    onConfirm(target)
+                },
+                enabled = when (destination) {
+                    ImportDestination.INBOX -> true
+                    ImportDestination.NEW_PROJECT -> newProjectName.isNotBlank()
+                    ImportDestination.EXISTING_PROJECT -> selectedProjectId.isNotBlank()
+                },
+            ) {
+                Text(stringResource(R.string.import_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.import_cancel))
+            }
+        },
+    )
 }

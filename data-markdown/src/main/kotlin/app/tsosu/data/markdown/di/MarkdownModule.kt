@@ -1,6 +1,7 @@
 package app.tsosu.data.markdown.di
 
 import android.content.Context
+import app.tsosu.data.local.TsosuDatabase
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.TaskDao
@@ -12,7 +13,7 @@ import app.tsosu.data.markdown.MarkdownSyncManager
 import app.tsosu.data.markdown.MarkdownSyncRepository
 import app.tsosu.data.markdown.MarkdownTaskParser
 import app.tsosu.data.markdown.MarkdownTaskSerializer
-import app.tsosu.data.markdown.NoOpImportRepository
+import app.tsosu.data.markdown.TodoistImportRepository
 import app.tsosu.data.markdown.SafMarkdownFileAccess
 import app.tsosu.data.markdown.dailynote.DailyNoteWriter
 import app.tsosu.data.markdown.habitnote.HabitNoteParser
@@ -83,5 +84,9 @@ object MarkdownModule {
 
     @Provides
     @Singleton
-    fun provideImportRepository(): ImportRepository = NoOpImportRepository()
+    fun provideImportRepository(
+        database: TsosuDatabase,
+        taskDao: TaskDao,
+        projectDao: ProjectDao,
+    ): ImportRepository = TodoistImportRepository(database, taskDao, projectDao)
 }

@@ -1,24 +1,33 @@
 package app.tsosu.ui.screens.settings
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.CalendarRepository
+import app.tsosu.data.local.dao.ProjectDao
+import app.tsosu.data.local.mapper.toDomain
+import app.tsosu.domain.model.Project
 import app.tsosu.domain.repository.ImportFormat
 import app.tsosu.domain.repository.ImportRepository
+import app.tsosu.domain.repository.ImportResult
+import app.tsosu.domain.repository.ImportTarget
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.domain.usecase.ExportIcsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.ThemePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -31,14 +40,18 @@ data class SettingsUiState(
     val caldavPassword: String = "",
     val message: String? = null,
     val icsContent: String? = null,
+    val pendingImportUri: Uri? = null,
+    val projects: List<Project> = emptyList(),
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val syncRepository: SyncRepository,
     private val markdownPreferences: MarkdownPreferences,
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
+    private val projectDao: ProjectDao,
     private val themePreferences: ThemePreferences,
     private val exportIcsUseCase: ExportIcsUseCase,
 ) : ViewModel() {
@@ -71,6 +84,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             calendarRepository.activeProvider().collect { provider ->
                 _uiState.value = _uiState.value.copy(calendarProvider = provider)
+            }
+        }
+        viewModelScope.launch {
+            projectDao.getAll().collect { entities ->
+                _uiState.value = _uiState.value.copy(
+                    projects = entities.map { it.toDomain() },
+                )
             }
         }
     }
@@ -123,13 +143,43 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(caldavPassword = password)
     }
 
-    fun importTodoist(data: ByteArray) {
+    fun stageTodoistImport(uri: Uri) {
+        _uiState.value = _uiState.value.copy(pendingImportUri = uri)
+    }
+
+    fun cancelTodoistImport() {
+        _uiState.value = _uiState.value.copy(pendingImportUri = null)
+    }
+
+    companion object {
+        private const val MAX_IMPORT_SIZE = 10 * 1024 * 1024 // 10 MB
+    }
+
+    fun confirmTodoistImport(target: ImportTarget) {
+        val uri = _uiState.value.pendingImportUri ?: return
+        _uiState.value = _uiState.value.copy(pendingImportUri = null)
         viewModelScope.launch {
-            val result = importRepository.importFromTodoist(data, ImportFormat.TODOIST_CSV)
+            val result: Result<ImportResult> = withContext(Dispatchers.IO) {
+                try {
+                    val bytes = appContext.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                        ?: return@withContext Result.failure(IllegalStateException("Could not read file"))
+                    if (bytes.size > MAX_IMPORT_SIZE) {
+                        return@withContext Result.failure(
+                            IllegalArgumentException("File too large (${bytes.size / 1024}KB). Max 10MB."),
+                        )
+                    }
+                    importRepository.importFromTodoist(bytes, ImportFormat.TODOIST_CSV, target)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
             result.fold(
                 onSuccess = { r ->
+                    val warningText = if (r.warnings.isNotEmpty()) {
+                        "\n${r.warnings.joinToString("\n")}"
+                    } else ""
                     _uiState.value = _uiState.value.copy(
-                        message = "Imported ${r.tasksImported} tasks from Todoist",
+                        message = "Imported ${r.tasksImported} tasks from Todoist$warningText",
                     )
                 },
                 onFailure = { e ->

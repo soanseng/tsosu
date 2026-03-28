@@ -41,6 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.tsosu.R
+import app.tsosu.data.markdown.recurrence.RecurrenceParser
+import app.tsosu.data.markdown.recurrence.RecurrenceResult
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.ui.util.rememberHaptic
@@ -54,10 +56,10 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-private enum class RecurrenceOption(val label: String, val rule: String?) {
+private enum class RecurrenceOption(val label: String, val rrule: String?) {
     NONE("None", null),
-    DAILY("Daily", "every day"),
-    WEEKLY("Weekly", "every week"),
+    DAILY("Daily", "RRULE:FREQ=DAILY"),
+    WEEKLY("Weekly", "RRULE:FREQ=WEEKLY"),
     CUSTOM("Custom", null),
 }
 
@@ -68,6 +70,7 @@ fun QuickAddTaskSheet(
     onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?) -> Unit,
 ) {
     val haptic = rememberHaptic()
+    val recurrenceParser = remember { RecurrenceParser() }
     var title by remember { mutableStateOf("") }
     var titleError by remember { mutableStateOf(false) }
     var selectedPriority by remember { mutableStateOf(Priority.NONE) }
@@ -79,6 +82,8 @@ fun QuickAddTaskSheet(
     var showTimePicker by remember { mutableStateOf(false) }
     var selectedRecurrence by remember { mutableStateOf(RecurrenceOption.NONE) }
     var customRecurrence by remember { mutableStateOf("") }
+    var detectedRrule by remember { mutableStateOf<String?>(null) }
+    var cleanTitle by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -90,9 +95,18 @@ fun QuickAddTaskSheet(
 
         OutlinedTextField(
             value = title,
-            onValueChange = {
-                title = it
-                if (it.isNotBlank()) titleError = false
+            onValueChange = { newValue ->
+                title = newValue
+                if (newValue.isNotBlank()) titleError = false
+                // Detect trailing recurrence pattern
+                val extraction = recurrenceParser.extractFromTitle(newValue)
+                if (extraction.rrule != null) {
+                    detectedRrule = extraction.rrule
+                    cleanTitle = extraction.title
+                } else {
+                    detectedRrule = null
+                    cleanTitle = newValue
+                }
             },
             label = { Text(stringResource(R.string.quick_add_task_hint)) },
             modifier = Modifier.fillMaxWidth(),
@@ -102,6 +116,30 @@ fun QuickAddTaskSheet(
                 { Text(stringResource(R.string.quick_add_title_required)) }
             } else null,
         )
+
+        // Show detected recurrence chip
+        val currentDetectedRrule = detectedRrule
+        if (currentDetectedRrule != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FilterChip(
+                    selected = true,
+                    onClick = {
+                        detectedRrule = null
+                    },
+                    label = {
+                        Text("\uD83D\uDD01 ${RecurrenceParser.toDisplayLabel(currentDetectedRrule)}")
+                    },
+                )
+                IconButton(onClick = {
+                    detectedRrule = null
+                }) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.quick_add_clear_recurrence))
+                }
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -269,14 +307,22 @@ fun QuickAddTaskSheet(
 
         Button(
             onClick = {
-                if (title.isNotBlank()) {
+                val finalTitle = if (detectedRrule != null) cleanTitle else title
+                if (finalTitle.isNotBlank()) {
                     haptic.confirm()
-                    val recurrenceRule = when (selectedRecurrence) {
-                        RecurrenceOption.CUSTOM -> customRecurrence.takeIf { it.isNotBlank() }
-                        else -> selectedRecurrence.rule
+                    // Priority: detected from title > manual custom > preset
+                    val recurrenceRule = detectedRrule ?: when (selectedRecurrence) {
+                        RecurrenceOption.CUSTOM -> {
+                            val parsed = recurrenceParser.parse(customRecurrence)
+                            when (parsed) {
+                                is RecurrenceResult.Success -> parsed.rrule
+                                is RecurrenceResult.Unrecognized -> customRecurrence.takeIf { it.isNotBlank() }
+                            }
+                        }
+                        else -> selectedRecurrence.rrule
                     }
                     onAdd(
-                        title,
+                        finalTitle,
                         selectedPriority,
                         selectedEnergy,
                         estimatedMinutes.takeIf { it > 0 },
