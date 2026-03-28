@@ -20,7 +20,7 @@ class TodoistCsvParser(
     fun parse(csvContent: String): TodoistImportResult {
         if (csvContent.isBlank()) return TodoistImportResult(emptyList(), emptyList())
 
-        val lines = parseCsvLines(csvContent)
+        val lines = parseCsvLines(csvContent.trimStart('\uFEFF'))
         if (lines.size <= 1) return TodoistImportResult(emptyList(), emptyList())
 
         val header = lines[0].map { it.lowercase().trim() }

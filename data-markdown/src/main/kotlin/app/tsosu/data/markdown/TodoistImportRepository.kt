@@ -13,8 +13,6 @@ import app.tsosu.domain.repository.ImportFormat
 import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.ImportResult
 import app.tsosu.domain.repository.ImportTarget
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -31,7 +29,7 @@ class TodoistImportRepository(
         format: ImportFormat,
         target: ImportTarget,
     ): Result<ImportResult> = runCatching {
-        val csvContent = withContext(Dispatchers.IO) { data.toString(Charsets.UTF_8) }
+        val csvContent = data.toString(Charsets.UTF_8)
         val parseResult = csvParser.parse(csvContent)
 
         if (parseResult.tasks.isEmpty()) {

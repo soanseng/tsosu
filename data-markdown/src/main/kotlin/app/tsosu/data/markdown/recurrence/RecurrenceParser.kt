@@ -92,7 +92,7 @@ class RecurrenceParser {
         // "every month on the Nth"
         MONTHLY_DAY_EN.matchEntire(normalized)?.let { match ->
             val day = match.groupValues[1].toInt()
-            return success("FREQ=MONTHLY;BYMONTHDAY=$day")
+            if (day in 1..31) return success("FREQ=MONTHLY;BYMONTHDAY=$day")
         }
 
         // "every month"
@@ -159,7 +159,7 @@ class RecurrenceParser {
         // 每月N號
         MONTHLY_DAY_ZH.matchEntire(input)?.let { match ->
             val day = match.groupValues[1].toInt()
-            return success("FREQ=MONTHLY;BYMONTHDAY=$day")
+            if (day in 1..31) return success("FREQ=MONTHLY;BYMONTHDAY=$day")
         }
 
         // 每月

@@ -256,6 +256,24 @@ class RecurrenceParserTest {
     }
 
     @Test
+    fun `every month on the 0th is Unrecognized`() {
+        val result = parser.parse("every month on the 0th")
+        assertTrue(result is RecurrenceResult.Unrecognized)
+    }
+
+    @Test
+    fun `every month on the 32nd is Unrecognized`() {
+        val result = parser.parse("every month on the 32nd")
+        assertTrue(result is RecurrenceResult.Unrecognized)
+    }
+
+    @Test
+    fun `每月0號 is Unrecognized`() {
+        val result = parser.parse("每月0號")
+        assertTrue(result is RecurrenceResult.Unrecognized)
+    }
+
+    @Test
     fun `multi-char Chinese numeral returns Unrecognized`() {
         // 十一 is two chars, not in ZH_NUM_MAP, and not a digit string
         val result = parser.parse("每十一天")

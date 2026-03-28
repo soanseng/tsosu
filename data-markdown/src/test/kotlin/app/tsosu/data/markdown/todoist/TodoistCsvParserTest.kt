@@ -345,6 +345,17 @@ class TodoistCsvParserTest {
     }
 
     @Test
+    fun `CSV with UTF-8 BOM parses correctly`() {
+        val csv = "\uFEFFTYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE\n" +
+            "task,BOM task,,4,1,,,,,"
+
+        val result = parser.parse(csv)
+
+        assertEquals(1, result.tasks.size)
+        assertEquals("BOM task", result.tasks[0].title)
+    }
+
+    @Test
     fun `CSV with CRLF line endings parses correctly`() {
         val csv = "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE\r\n" +
             "task,Task 1,,4,1,,,,,\r\n" +

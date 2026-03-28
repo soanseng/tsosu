@@ -436,7 +436,7 @@ private fun TodoistImportDialog(
                 onClick = {
                     val target = when (destination) {
                         ImportDestination.INBOX -> ImportTarget.Inbox
-                        ImportDestination.NEW_PROJECT -> ImportTarget.NewProject(newProjectName)
+                        ImportDestination.NEW_PROJECT -> ImportTarget.NewProject(newProjectName.trim())
                         ImportDestination.EXISTING_PROJECT -> ImportTarget.ExistingProject(selectedProjectId)
                     }
                     onConfirm(target)
