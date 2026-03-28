@@ -29,6 +29,7 @@ class TodoistImportRepository(
         format: ImportFormat,
         target: ImportTarget,
     ): Result<ImportResult> = runCatching {
+        require(format == ImportFormat.TODOIST_CSV) { "Only CSV import is supported" }
         val csvContent = data.toString(Charsets.UTF_8)
         val parseResult = csvParser.parse(csvContent)
 
