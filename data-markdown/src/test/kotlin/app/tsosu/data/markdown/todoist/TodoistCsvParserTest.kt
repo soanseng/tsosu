@@ -287,7 +287,7 @@ class TodoistCsvParserTest {
     }
 
     @Test
-    fun `date with time is parsed`() {
+    fun `date with time is parsed and time is zeroed`() {
         val csv = """
             TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE
             task,Morning task,,4,1,,,2026-03-28 at 09:00,en,
@@ -301,5 +301,59 @@ class TodoistCsvParserTest {
         assertEquals(2026, dueDate!!.year)
         assertEquals(3, dueDate.monthNumber)
         assertEquals(28, dueDate.dayOfMonth)
+        assertEquals(0, dueDate.hour)
+        assertEquals(0, dueDate.minute)
+    }
+
+    @Test
+    fun `orphan subtask with no parent is promoted to top level`() {
+        val csv = """
+            TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE
+            task,Orphan child,,4,2,,,,,
+            task,Another orphan,,4,3,,,,,
+        """.trimIndent()
+
+        val result = parser.parse(csv)
+
+        // Orphans should be promoted to top-level
+        assertTrue(result.tasks.isNotEmpty())
+        assertEquals("Orphan child", result.tasks[0].title)
+    }
+
+    @Test
+    fun `CSV with missing required columns returns warning`() {
+        val csv = """
+            FOO,BAR,BAZ
+            something,else,here
+        """.trimIndent()
+
+        val result = parser.parse(csv)
+
+        assertEquals(0, result.tasks.size)
+        assertTrue(result.warnings.any { it.contains("missing") }, "Expected a warning about missing columns")
+    }
+
+    @Test
+    fun `CSV with trailing newline parses correctly`() {
+        val csv = "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE\n" +
+            "task,Task 1,,4,1,,,,,\n"
+
+        val result = parser.parse(csv)
+
+        assertEquals(1, result.tasks.size)
+        assertEquals("Task 1", result.tasks[0].title)
+    }
+
+    @Test
+    fun `CSV with CRLF line endings parses correctly`() {
+        val csv = "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE\r\n" +
+            "task,Task 1,,4,1,,,,,\r\n" +
+            "task,Task 2,,4,1,,,,,\r\n"
+
+        val result = parser.parse(csv)
+
+        assertEquals(2, result.tasks.size)
+        assertEquals("Task 1", result.tasks[0].title)
+        assertEquals("Task 2", result.tasks[1].title)
     }
 }

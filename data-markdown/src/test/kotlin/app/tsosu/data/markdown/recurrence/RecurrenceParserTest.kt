@@ -225,6 +225,43 @@ class RecurrenceParserTest {
         assertTrue(result is RecurrenceResult.Unrecognized)
     }
 
+    @Test
+    fun `whitespace only returns Unrecognized`() {
+        val result = parser.parse("   ")
+        assertTrue(result is RecurrenceResult.Unrecognized)
+    }
+
+    @Test
+    fun `invalid English day name returns Unrecognized`() {
+        val result = parser.parse("every Someday")
+        assertTrue(result is RecurrenceResult.Unrecognized)
+    }
+
+    @Test
+    fun `每日 alternative Chinese daily`() {
+        val result = parser.parse("每日")
+        assertSuccess("RRULE:FREQ=DAILY", result)
+    }
+
+    @Test
+    fun `每个工作日 simplified Chinese`() {
+        val result = parser.parse("每个工作日")
+        assertSuccess("RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", result)
+    }
+
+    @Test
+    fun `每月15号 simplified Chinese`() {
+        val result = parser.parse("每月15号")
+        assertSuccess("RRULE:FREQ=MONTHLY;BYMONTHDAY=15", result)
+    }
+
+    @Test
+    fun `multi-char Chinese numeral returns Unrecognized`() {
+        // 十一 is two chars, not in ZH_NUM_MAP, and not a digit string
+        val result = parser.parse("每十一天")
+        assertTrue(result is RecurrenceResult.Unrecognized)
+    }
+
     // ── extractFromTitle ──
 
     @Test
@@ -260,6 +297,27 @@ class RecurrenceParserTest {
         val result = parser.extractFromTitle("運動 每天")
         assertEquals("運動", result.title)
         assertEquals("RRULE:FREQ=DAILY", result.rrule)
+    }
+
+    @Test
+    fun `extractFromTitle bare Chinese recurrence`() {
+        val result = parser.extractFromTitle("每天")
+        assertEquals("", result.title)
+        assertEquals("RRULE:FREQ=DAILY", result.rrule)
+    }
+
+    @Test
+    fun `extractFromTitle unrecognized English suffix preserves full title`() {
+        val result = parser.extractFromTitle("Send report every other Tuesday")
+        assertEquals("Send report every other Tuesday", result.title)
+        assertEquals(null, result.rrule)
+    }
+
+    @Test
+    fun `extractFromTitle unrecognized Chinese suffix preserves full title`() {
+        val result = parser.extractFromTitle("做事 每星期")
+        assertEquals("做事 每星期", result.title)
+        assertEquals(null, result.rrule)
     }
 
     // ── toDisplayLabel ──
@@ -312,6 +370,27 @@ class RecurrenceParserTest {
     @Test
     fun `toDisplayLabel unknown returns raw`() {
         assertEquals("RRULE:FREQ=SECONDLY", RecurrenceParser.toDisplayLabel("RRULE:FREQ=SECONDLY"))
+    }
+
+    @Test
+    fun `toDisplayLabel with INTERVAL=1 omits interval`() {
+        assertEquals("Every day", RecurrenceParser.toDisplayLabel("RRULE:FREQ=DAILY;INTERVAL=1"))
+    }
+
+    @Test
+    fun `toDisplayLabel with interval and byday shows interval only`() {
+        // When both INTERVAL and BYDAY are present, interval takes precedence
+        assertEquals("Every 2 weeks", RecurrenceParser.toDisplayLabel("RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO"))
+    }
+
+    @Test
+    fun `toDisplayLabel with malformed segment ignores it`() {
+        assertEquals("Every day", RecurrenceParser.toDisplayLabel("RRULE:FREQ=DAILY;BROKEN"))
+    }
+
+    @Test
+    fun `toDisplayLabel without RRULE prefix still works`() {
+        assertEquals("Every day", RecurrenceParser.toDisplayLabel("FREQ=DAILY"))
     }
 
     private fun assertSuccess(expectedRrule: String, result: RecurrenceResult) {
