@@ -1,4 +1,4 @@
-package app.tsosu.data.markdown.recurrence
+package app.tsosu.domain.recurrence
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

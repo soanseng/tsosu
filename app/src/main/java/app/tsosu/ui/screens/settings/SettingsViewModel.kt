@@ -7,13 +7,12 @@ import androidx.lifecycle.viewModelScope
 import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.CalendarRepository
-import app.tsosu.data.local.dao.ProjectDao
-import app.tsosu.data.local.mapper.toDomain
 import app.tsosu.domain.model.Project
 import app.tsosu.domain.repository.ImportFormat
 import app.tsosu.domain.repository.ImportRepository
 import app.tsosu.domain.repository.ImportResult
 import app.tsosu.domain.repository.ImportTarget
+import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.domain.usecase.ExportIcsUseCase
@@ -51,7 +50,7 @@ class SettingsViewModel @Inject constructor(
     private val markdownPreferences: MarkdownPreferences,
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
-    private val projectDao: ProjectDao,
+    private val projectRepository: ProjectRepository,
     private val themePreferences: ThemePreferences,
     private val exportIcsUseCase: ExportIcsUseCase,
 ) : ViewModel() {
@@ -87,10 +86,8 @@ class SettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            projectDao.getAll().collect { entities ->
-                _uiState.value = _uiState.value.copy(
-                    projects = entities.map { it.toDomain() },
-                )
+            projectRepository.getAllProjects().collect { projects ->
+                _uiState.value = _uiState.value.copy(projects = projects)
             }
         }
     }

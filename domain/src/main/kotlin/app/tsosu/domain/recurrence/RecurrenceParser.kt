@@ -1,4 +1,4 @@
-package app.tsosu.data.markdown.recurrence
+package app.tsosu.domain.recurrence
 
 sealed class RecurrenceResult {
     data class Success(val rrule: String) : RecurrenceResult()

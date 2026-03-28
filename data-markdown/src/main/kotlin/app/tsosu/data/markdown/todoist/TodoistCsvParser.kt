@@ -1,7 +1,7 @@
 package app.tsosu.data.markdown.todoist
 
-import app.tsosu.data.markdown.recurrence.RecurrenceParser
-import app.tsosu.data.markdown.recurrence.RecurrenceResult
+import app.tsosu.domain.recurrence.RecurrenceParser
+import app.tsosu.domain.recurrence.RecurrenceResult
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus

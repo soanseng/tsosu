@@ -41,8 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.tsosu.R
-import app.tsosu.data.markdown.recurrence.RecurrenceParser
-import app.tsosu.data.markdown.recurrence.RecurrenceResult
+import app.tsosu.domain.recurrence.RecurrenceParser
+import app.tsosu.domain.recurrence.RecurrenceResult
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.ui.util.rememberHaptic

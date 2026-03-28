@@ -5,7 +5,7 @@ import app.tsosu.data.local.TsosuDatabase
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.mapper.toEntity
-import app.tsosu.data.markdown.recurrence.RecurrenceParser
+import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.data.markdown.todoist.TodoistCsvParser
 import app.tsosu.domain.model.Project
 import app.tsosu.domain.model.Task

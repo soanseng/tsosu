@@ -1,6 +1,6 @@
 package app.tsosu.data.markdown.todoist
 
-import app.tsosu.data.markdown.recurrence.RecurrenceParser
+import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.TaskStatus
 import org.junit.jupiter.api.Assertions.assertEquals
