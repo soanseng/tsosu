@@ -2,6 +2,7 @@ package app.tsosu.ui.screens.settings
 
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -46,6 +48,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
 import app.tsosu.domain.repository.CalendarProvider
@@ -61,12 +66,28 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
     val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val todoistFilePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri ?: return@rememberLauncherForActivityResult
         viewModel.stageTodoistImport(uri)
+    }
+
+    val alarmSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { viewModel.refreshAlarmPermission() }
+
+    // Refresh permission state when returning from system settings
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshAlarmPermission()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Column(
@@ -152,6 +173,25 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         }
                         OutlinedButton(onClick = { viewModel.disconnect() }) {
                             Text(stringResource(R.string.settings_disconnect))
+                        }
+                    }
+                    if (!state.canScheduleExactAlarms) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            stringResource(R.string.settings_exact_alarm_denied),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        OutlinedButton(
+                            onClick = {
+                                val intent = Intent(
+                                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:${context.packageName}"),
+                                )
+                                alarmSettingsLauncher.launch(intent)
+                            },
+                        ) {
+                            Text(stringResource(R.string.settings_enable_exact_alarm))
                         }
                     }
                 }

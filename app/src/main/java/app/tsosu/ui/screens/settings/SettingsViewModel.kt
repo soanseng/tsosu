@@ -17,6 +17,7 @@ import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.domain.usecase.ExportIcsUseCase
+import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import app.tsosu.ui.theme.DarkModeOption
@@ -34,6 +35,9 @@ data class SettingsUiState(
     val folderUri: String? = null,
     val isConfigured: Boolean = false,
     val syncState: SyncState = SyncState.IDLE,
+    val canScheduleExactAlarms: Boolean = true,
+    val lastSync: Long = 0L,
+    val vaultFileCount: Int = 0,
     val calendarProvider: CalendarProvider = CalendarProvider.NONE,
     val caldavUrl: String = "",
     val caldavEmail: String = "",
@@ -55,6 +59,7 @@ class SettingsViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val themePreferences: ThemePreferences,
     private val exportIcsUseCase: ExportIcsUseCase,
+    private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -92,6 +97,12 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(projects = projects)
             }
         }
+    }
+
+    fun refreshAlarmPermission() {
+        _uiState.value = _uiState.value.copy(
+            canScheduleExactAlarms = reminderScheduler.canScheduleExactAlarms(),
+        )
     }
 
     fun selectFolder(uri: Uri) {

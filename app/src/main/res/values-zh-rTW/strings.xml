@@ -77,6 +77,8 @@
     <string name="settings_sync_now">立即同步</string>
     <string name="settings_syncing">同步中...</string>
     <string name="settings_disconnect">中斷連線</string>
+    <string name="settings_exact_alarm_denied">提醒可能延遲：精確鬧鐘權限未開啟。</string>
+    <string name="settings_enable_exact_alarm">允許精確鬧鐘</string>
     <string name="settings_server_url">伺服器網址</string>
     <string name="settings_username">使用者名稱</string>
     <string name="settings_password">密碼</string>

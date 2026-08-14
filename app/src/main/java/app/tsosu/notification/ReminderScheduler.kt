@@ -77,19 +77,23 @@ class ReminderScheduler @Inject constructor(
         }
     }
 
+    fun canScheduleExactAlarms(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            alarmManager.canScheduleExactAlarms()
+    }
+
     fun schedule(taskId: String, triggerAtMillis: Long) {
         val pendingIntent = buildPendingIntent(taskId)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent,
-                )
-            }
-        } else {
+        if (canScheduleExactAlarms()) {
             alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent,
+            )
+        } else {
+            // Exact alarms not permitted: degrade to inexact so reminders still fire
+            alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerAtMillis,
                 pendingIntent,
