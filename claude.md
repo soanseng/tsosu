@@ -1,11 +1,13 @@
-# Tsosu — ADHD-Friendly Task Manager for Vikunja
+# Tsosu — ADHD-Friendly Markdown Task Manager
 
 > tsosu.app — 台語「做事」(tsò-sū)
 > Designed by a psychiatrist with ADHD. Built for minds that work differently.
 
 ## Project Overview
 
-Tsosu is a **Todoist-style** native Android client for [Vikunja](https://vikunja.io/), designed with ADHD minds as the primary audience. Every design decision is shaped by clinical understanding of ADHD, Atomic Habits principles, and lived experience.
+Tsosu is a **Todoist-style** native Android task manager where **Markdown is the source of truth**, stored in an **Obsidian vault** (via SAF). Designed with ADHD minds as the primary audience. Every design decision is shaped by clinical understanding of ADHD, Atomic Habits principles, and lived experience.
+
+Markdown files live in a user-selected Obsidian vault folder: `tasks.md` / `habits.md` index files plus `tasks/` and `habits/` per-item notes. Edits made in Obsidian or any text editor sync back into the app; the app writes back task state (done, due date, reminders) as machine-readable emoji metadata. Todoist CSV import provides one-time migration. Notifications (reminders, overdue summary, nudges) are local. See `plan.md` for the full development plan.
 
 **10 Core Features**:
 1. 🎯 Focus 3 — pick 3 tasks, that's your day
@@ -19,7 +21,9 @@ Tsosu is a **Todoist-style** native Android client for [Vikunja](https://vikunja
 9. 🧹 Stale Task Cleanup — gentle archive suggestions
 10. 📅 Calendar Auto-Sync — set date → on your calendar
 
-## Vikunja API Integration Strategy
+## (Legacy) Vikunja API Integration — 已停用，僅供參考
+
+> Tsosu 已轉為 Markdown-first（見 `plan.md`）。以下 Vikunja 同步策略保留作為歷史脈絡；energy/time metadata 編碼慣例（emoji label、`<!-- tsosu:{"est":N} -->`）已由 data-markdown 的行內 emoji 格式取代。
 
 ### Vikunja Task Fields Available for Sync
 
@@ -160,21 +164,25 @@ fun extractEstimate(description: String): Int? {
 │  Repository Interfaces, Models, Use Cases    │
 ├──────────────────────────────────────────────┤
 │  Data Layer                                  │
+│  ┌────────────────────────────────────────┐  │
+│  │ data-markdown/  ★ PRIMARY STORE        │  │
+│  │ SAF file access (Obsidian vault)       │  │
+│  │ parsers/serializers (tasks/habits/     │  │
+│  │ notes/index/daily note)                │  │
+│  │ sync manager + Todoist CSV import      │  │
+│  └────────────────────────────────────────┘  │
 │  ┌─────────────┐ ┌────────────────────────┐  │
-│  │ data-local/  │ │ data-vikunja/ (opt-in) │  │
-│  │ Room DB      │ │ Vikunja REST API       │  │
-│  │ (primary)    │ │ (sync engine)          │  │
-│  └─────────────┘ └────────────────────────┘  │
-│  ┌─────────────┐ ┌────────────────────────┐  │
-│  │ data-import/ │ │ data-calendar/         │  │
-│  │ Todoist CSV  │ │ CalDAV / Google (future)│  │
+│  │ data-local/  │ │ data-calendar/         │  │
+│  │ Room (cache/ │ │ CalDAV / Google        │  │
+│  │ index only)  │ │ (future)               │  │
 │  └─────────────┘ └────────────────────────┘  │
 └──────────────────────────────────────────────┘
 ```
 
+**Data flow**: App writes → Room (runtime cache) → `MarkdownSyncRepository` sync → markdown files in vault (source of truth). External vault edits (Obsidian desktop) → import on sync, external edits win for conflicts.
+
 ### Licensing
 - Tsosu: closed-source, proprietary
-- Vikunja: AGPL-3.0 — HTTP REST API only
 
 ## Tech Stack
 
@@ -182,7 +190,7 @@ fun extractEstimate(description: String): Int? {
 - **UI**: Jetpack Compose + Material 3 + Material You
 - **Architecture**: MVVM + Clean Architecture + TDD
 - **Networking**: Retrofit 2 + OkHttp + Kotlin Serialization
-- **Local DB**: Room (primary store)
+- **Local DB**: Room (runtime cache; markdown vault is source of truth)
 - **DI**: Hilt
 - **Async**: Kotlin Coroutines + Flow
 - **CalDAV**: ical4j + OkHttp
@@ -230,14 +238,15 @@ tsosu/
 │   ├── repository/
 │   └── usecase/
 │
-├── data-local/                 # Room primary store
-├── data-vikunja/               # Vikunja API + sync engine
-│   ├── api/                    # Retrofit (from OpenAPI)
-│   ├── dto/                    # Vikunja DTOs
-│   ├── mapper/                 # ★ DTO ↔ Domain + metadata encoding
-│   └── sync/                   # SyncManager + HabitSyncManager
+├── data-local/                 # Room (runtime cache/index)
+├── data-markdown/              # ★ PRIMARY: SAF vault access, parsers,
+│   │                           #   serializers, sync manager, Todoist import
+│   ├── dailynote/              # DailyNoteWriter
+│   ├── habitnote/              # HabitNoteSerializer/Parser
+│   ├── tasknote/               # TaskNoteSerializer/Parser
+│   ├── index/                  # TaskIndexGenerator, HabitIndexGenerator
+│   └── todoist/                # TodoistCsvParser
 ├── data-calendar/              # CalDAV / Google
-├── data-import/                # Todoist CSV/JSON
 │
 └── build.gradle.kts
 ```

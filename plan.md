@@ -1,372 +1,95 @@
-# Tsosu Development Plan
+# Tsosu 開發計畫 — Markdown-First（取代 Todoist）
 
 > tsosu.app — 台語「做事」(tsò-sū)
-> Designed by a psychiatrist with ADHD.
+> ADHD-Friendly 任務管理器：**Markdown 為唯一事實來源**，存於 Obsidian vault（SAF），可在 Obsidian / 任何文字編輯器雙向編輯，App 提供通知與 ADHD 輔助功能。
 
-## Vikunja Integration Summary
+## 目標與定位
 
-```
-Feature           Vikunja Sync Strategy
-──────────────────────────────────────────────
-Tasks (core)      ✅ Direct API sync
-Habits            ✅ Repeating tasks (repeatAfter)
-Routines          ✅ Projects (with metadata marker)
-Energy Level      ✅ Labels ("⚡high"/"😐medium"/"🪫low")
-Time Estimate     ✅ Description metadata (<!-- tsosu:... -->)
-Focus 3           🔶 Local only (resets daily)
-Streak tracking   🔶 Local only (HabitCompletion records)
-Calendar Event ID 🔶 Local only (per-device)
-Daily Focus       🔶 Local only
-Nudge settings    🔶 Local only
-```
+| 面向 | 決定 |
+|---|---|
+| 資料主體 | Markdown 檔案（vault 根目錄 `tasks.md`/`habits.md` 索引 + `tasks/`、`habits/` 個別 note 資料夾） |
+| 存取 | SAF（`ACTION_OPEN_DOCUMENT_TREE` + 持久化 URI），相容 Obsidian vault |
+| 取代 | Todoist（透過既有 CSV 匯入一次性遷移） |
+| 同步 | App ↔ vault 雙向；外部編輯（Obsidian 桌面同步）優先保留 |
+| 通知 | 到期提醒（exact alarm）+ 逾期彙總（WorkManager 週期）+ Gentle Nudge |
+| 架構 | Clean Architecture（domain 純 Kotlin；data-markdown 為資料層核心） |
 
----
+## 現況盤點（2026-08-14 驗證）
 
-## Phase 0：前置準備（1 天）
+**已實作並驗證（119 unit tests 全綠、`assembleDebug` 成功）：**
+
+- `domain/`：Task/Habit/Routine/Focus/WeeklyReview 模型、RecurrenceParser（自然語言週期）、14 個 use case
+- `data-markdown/`：
+  - `MarkdownTaskParser/Serializer` — 行內 emoji metadata 格式（`📅 2026-08-15`、`⏫` 優先級、`⏰ 09:00` 提醒、`🔁 every monday`、`⚡high` 能量、`🍅 30m` 估時、`<!-- id:... -->`）
+  - `TaskNoteSerializer/Parser` — 單一任務 note（含 project 名稱、subtasks）
+  - `HabitNoteSerializer/Parser`、`DailyNoteWriter`、`TaskIndexGenerator`、`HabitIndexGenerator`
+  - `SafMarkdownFileAccess` — DocumentFile 讀寫、資料夾管理
+  - `MarkdownSyncRepository` — Room ↔ markdown 雙向合併（外部編輯優先）
+  - `TodoistImportRepository` + `TodoistCsvParser`（含 recurrence parser）
+- `app/`：通知全套（`ReminderScheduler` exact alarm、`ReminderReceiver`、`BootReceiver`、`OverdueCheckWorker`、`GentleNudgeManager`、`NotificationHelper`）、設定頁 vault 資料夾選擇（`SettingsViewModel.setFolderUri`）、全部 UI 畫面（Focus 3、Habits、Inbox、Today、Kanban、Pick One、Weekly Review、Search）
+- 環境：JDK 17（Temurin，`~/jdks/jdk-17.0.20+8`）、Android SDK 35（`/home/scipio/Android/Sdk`）
+
+**已知瑕疵 / 待辦（依優先序）：**
+
+~~1. **vault 變更自動偵測**~~ ✅ 已完成（2026-08-14）：`VaultChangeWatcher`（ContentObserver on tree URI，vault 切換自動重註冊）+ `VaultChangeCoordinator`（2s debounce + AtomicBoolean 防回饋迴圈，4 個測試）。所有同步路徑（folder picker / resume pull / 設定頁 / watcher）收斂至單一守衛入口 `syncOnce()`。
+2. **增量同步** ⏳ 未做：目前每次同步全量重寫所有 note + 索引。下一步以 mtime/內容 hash 只處理變更檔案。
+3. **衝突處理** ⏳ 未做：同步為「外部優先」整體覆寫；無 per-task 衝突標記。
+4. ~~**通知排程的持久性**~~ ✅ 部分完成：`ReminderScheduler.schedule(Task)` + `rescheduleAll(List<TaskEntity>)`；BootReceiver 委派重排；`ReminderResync.afterSync()` 在每次同步後重排（匯入的新提醒立即生效）；新增/編輯/刪除/完成任務時即時排程或取消。剩餘：`OverdueCheckWorker` 仍讀 Room DAO（Phase B4）。
+5. ~~**slug 碰撞**~~ ✅ 已完成：note 檔名改 `slug-<id前8碼>.md`，匯入端依 id 去重（相容既有舊檔名），索引 wikilink 同步更新。
+6. **大 vault 效能** — 同 #2 增量同步。
+
+## 開發計畫（後續迭代）
+
+### Phase A：同步可靠性（優先）
+
+| # | 工作 | 狀態 |
+|---|---|---|
+| A1 | `ContentObserver` 註冊於 tree URI，變更觸發增量匯入 | ✅ 2026-08-14 |
+| A2 | 增量同步：以 mtime/內容 hash 只處理變更檔案（`content-hash-cache-pattern`） | ⏳ 下一步 |
+| A3 | slug 碰撞：`slugify(title)` 改 `slug-id前8碼.md`，讀取端兩者皆認 | ✅ 2026-08-14 |
+| A4 | 衝突標記：同 id 兩側皆改 → 保留 markdown 版並在 `tasks.md` 以 `<!-- conflict -->` 標記 | ⏳ |
+
+### Phase B：通知強化
+
+| # | 工作 | 狀態 |
+|---|---|---|
+| B1 | 匯入後重排：`MarkdownSyncRepository.sync()` 完成後呼叫 `ReminderScheduler.rescheduleAll()` | ✅ 2026-08-14（同步後 + 任務新增/編輯/刪除/完成即時排程） |
+| B2 | exact alarm 不可用時降級：`setAndAllowWhileIdle`（非 exact）並記錄；設定頁顯示權限狀態 + 跳轉 | ⏳ |
+| B3 | 逾期通知 tap → deep link 至該任務（現為彙總通知，需帶 taskId list + navigation） | ⏳ |
+| B4 | `OverdueCheckWorker` 改讀 markdown repository（現在讀 Room DAO，跨 vault 不一致風險） | ⏳ |
+
+### Phase C：Obsidian 體驗
+
+| # | 工作 | 驗收 |
+|---|---|---|
+| C1 | 匯入後自動產生 `📅 Tasks.md` 風格索引（資料夾 note + Dataview 相容格式）或維持現行索引格式並寫文件 | 文件說明 vault 內可讀/可改結構 |
+| C2 | README 增加「vault 資料格式」章節：emoji metadata 對照表、範例檔案、Obsidian 設定建議（排除 `.obsidian/` 不寫入） | 使用者照文件可手動新增任務 |
+| C3 | 設定頁：顯示目前 vault 路徑/檔案數、最後同步時間、一鍵同步按鈕 | 手動驗證 |
+
+### Phase D：發布
+
+| # | 工作 | 驗收 |
+|---|---|---|
+| D1 | `fastlane` metadata 更新（描述改 markdown-first） | fastlane 驗證通過 |
+| D2 | 移除/停用未使用的 Vikunja 相關程式碼（如存在）與 `vikunja-openapi.json` 引用 | `./gradlew assembleDebug` 綠 |
+| D3 | zh-TW/en 字串完整審查 | 兩語系 build 綠 |
+
+## 建置與驗證指令
 
 ```bash
-# Vikunja API
-curl https://your-vikunja.com/api/v1/info
-curl https://your-vikunja.com/api/v1/docs.json -o vikunja-openapi.json
-
-# Fastmail CalDAV
-curl -u email:app-password -X PROPFIND \
-  https://caldav.fastmail.com/dav/principals/user/email@fastmail.com/
-
-# 研究 Vikunja Task model fields
-# 重點：repeatAfter, repeatMode, labels, hexColor, description
+export JAVA_HOME=/home/scipio/jdks/jdk-17.0.20+8
+export PATH=$JAVA_HOME/bin:$PATH
+./gradlew assembleDebug                 # 主建置
+./gradlew testDebugUnitTest             # 全部 unit tests（domain + data-markdown + data-calendar）
+./gradlew :data-markdown:testDebugUnitTest  # 僅 markdown 模組
 ```
 
----
-
-## Phase 1：核心 MVP — Tasks + Habits + ADHD（3-4 週）
-
-### Sprint 1.1：Domain Layer（3 天）
-
-```
-Claude Code（先讀 claude.md，特別是 Vikunja 欄位映射段落）：
-
-domain/ 純 Kotlin：
-
-Task models:
-- Task（含 estimatedMinutes, energyLevel, isFocus）
-- EnergyLevel（含 labelTitle 欄位 for Vikunja label sync）
-- Priority, Project, Label
-
-★ Habit models — 設計時考慮 Vikunja repeating task 映射:
-- Habit（含 serverId: Long? → Vikunja task ID）
-- HabitFrequency（含 repeatAfterSeconds → maps to Vikunja repeatAfter）
-- HabitCompletion（local streak tracking）
-- HabitStreakInfo（completedLast7Days, completionRate）
-
-★ Routine models — 設計時考慮 Vikunja project 映射:
-- Routine（含 serverId: Long? → Vikunja project ID）
-- RoutineTime（MORNING/AFTERNOON/EVENING）
-
-Focus: DailyFocus, WeeklyReview
-
-Interfaces: TaskRepository, HabitRepository, RoutineRepository,
-  FocusRepository, CalendarRepository, SyncRepository, ImportRepository
-
-Use cases: CreateTask, ToggleTaskDone, GetTodayOverview,
-  PickOneTask, SetDailyFocus, CreateHabit, CompleteHabit,
-  GetTodayHabits, GetRoutine, GetStaleTaskIds, GetWeeklyReview
-
-★ TDD: 每個 use case 先寫 test
-```
-
-關鍵 Habit test:
-
-```kotlin
-class CompleteHabitUseCaseTest {
-    @Test
-    fun `records local HabitCompletion for streak tracking`() = runTest {
-        val result = useCase("habit-1")
-        assertTrue(result.isSuccess)
-        coVerify { habitRepo.completeHabit("habit-1", today()) }
-    }
-}
-
-class CreateHabitUseCaseTest {
-    @Test
-    fun `sets repeatAfter based on frequency`() = runTest {
-        val habit = Habit(title = "Meditate", frequency = HabitFrequency.DAILY)
-        val result = useCase(habit)
-        assertEquals(86400L, result.getOrThrow().frequency.repeatAfterSeconds)
-    }
-
-    @Test
-    fun `stores tinyVersion in habit`() = runTest {
-        val habit = Habit(title = "Meditate", tinyVersion = "Sit, take 3 breaths")
-        val result = useCase(habit)
-        assertEquals("Sit, take 3 breaths", result.getOrThrow().tinyVersion)
-    }
-}
-```
-
-### Sprint 1.2：Room DB（2 天）
-
-```
-Entities: TaskEntity, HabitEntity (with serverId), HabitCompletionEntity,
-  RoutineEntity (with serverId), DailyFocusEntity, ProjectEntity,
-  LabelEntity, SyncQueueEntity
-
-★ HabitEntity.serverId → Vikunja task ID (filled after first sync)
-★ RoutineEntity.serverId → Vikunja project ID
-
-★ TDD: DAO tests (Robolectric)
-```
-
-### Sprint 1.3：Focus 3 + Today View UI（3 天）
-
-```
-- 🎯 Focus 3 card at top
-- 🔁 Habits summary: "3/5 done"
-- Other tasks collapsed
-- ⏱ Time total
-- Bottom nav: 📥 🎯 🔁 📆 🎲
-
-★ strings.xml: en + zh-TW
-```
-
-### Sprint 1.4：Habits Tab + Routines（3 天）
-
-```
-- Routines grouped: 🌅 Morning | ☀️ Anytime | 🌙 Evening
-- Tap checkbox → complete habit
-- Tiny version shown as grey subtitle
-- Flexible streak: "5/7 this week"
-- Habit detail: dot calendar + "X out of Y" stats
-
-★ Habit creation: "What's the 2-minute version?" prompt
-★ Zero "streak broken" language
-```
-
-### Sprint 1.5：Quick Add + Energy/Time（2 天）
-
-```
-Quick Add: Title + optional Date/Priority/Energy/Time/Label/Project
-New Habit quick add: Title + Tiny version + Routine
-```
-
-### Sprint 1.6：Pick One 🎲（1 天）
-
-### Sprint 1.7：Inbox + Projects + Search + Widget（2 天）
-
----
-
-## Phase 2：Vikunja Sync + Calendar + Nudge（3 週）
-
-### Sprint 2.1：Vikunja Task Sync（3 天）
-
-```
-Claude Code：
-
-data-vikunja/ sync engine：
-
-1. VikunjaTaskMapper — ★ 核心 mapper，包含：
-   a. estimatedMinutes → description metadata 編碼/解碼
-   b. energyLevel → label 映射（建立 "⚡high"/"😐medium"/"🪫low"）
-   c. isFocus → 不 sync（保留 local 值）
-   d. calendarEventId → 不 sync
-
-2. SyncManager:
-   - Push: local changes → Vikunja API
-   - Pull: Vikunja → local Room
-   - 衝突: server wins, preserve local-only fields
-
-3. Energy Label 初始化:
-   - 首次 sync 時檢查 Vikunja 是否已有 energy labels
-   - 沒有 → POST /api/v1/labels 建立三個
-   - 已有 → 記住 label IDs
-
-★ TDD (MockWebServer):
-- 上傳 task → description 包含 <!-- tsosu:{"est":30} -->
-- 下載 task → 正確解析 estimatedMinutes
-- 上傳 task → 自動附加 energy label
-- 下載 task → energy label 映射回 EnergyLevel
-- Sync 後 isFocus 保持不變（local-only）
-```
-
-### Sprint 2.2：Vikunja Habit Sync（3 天）
-
-```
-★ 這是新的 sync 邏輯：Habit ↔ Vikunja Repeating Task
-
-HabitSyncManager:
-
-1. Create habit:
-   → POST /api/v1/projects/{routineProjectId}/tasks
-   → body: repeatAfter=86400, title, description (含 tinyVersion + "— Tsosu Habit")
-   → 回填 habit.serverId
-
-2. Complete habit:
-   → PUT /api/v1/tasks/{serverId} with done=true
-   → Vikunja 自動建下一個 occurrence（repeatAfter 邏輯）
-   → 本地記錄 HabitCompletion
-
-3. Create routine:
-   → POST /api/v1/projects
-   → title: "🌅 Morning Routine"
-   → description: <!-- tsosu-routine:MORNING -->
-   → 回填 routine.serverId
-
-4. Pull sync:
-   → 掃描所有 projects，識別 routine projects（by metadata）
-   → 掃描 routine projects 下的 tasks，識別 habits（repeatAfter > 0 + marker）
-   → 新的 habit occurrence → 更新本地
-
-5. 識別 Habit vs 普通 Task:
-   → Vikunja task 是 Habit 的條件：
-     a. repeatAfter > 0
-     b. 在 routine project 裡
-     c. description 包含 "— Tsosu Habit"
-   → 三個條件都滿足才當 Habit 處理
-
-★ TDD:
-- 建立 habit → Vikunja 收到 repeatAfter=86400 的 task
-- 完成 habit → Vikunja task done=true
-- 下一個 occurrence 出現 → 本地更新
-- 建立 routine → Vikunja 收到帶 metadata 的 project
-- Pull sync 正確識別 habits vs 普通 repeating tasks
-```
-
-### Sprint 2.3：CalDAV Calendar Sync（2 天）
-
-```
-Task → VEVENT auto-sync
-estimatedMinutes → event duration
-Habits 不 sync 到 calendar
-
-★ TDD: VEVENT format, duration from estimate
-```
-
-### Sprint 2.4：Gentle Nudge + Weekly Review + Stale Cleanup（2 天）
-
-```
-Task + Habit nudges (全部 en + zh-TW)
-Weekly Review 含 habit stats
-Stale cleanup (14+ days)
-
-★ UI copy review: zero shame
-```
-
-### Sprint 2.5：Todoist Import（1 天）
-
-```
-CSV/JSON import + server-side migration
-```
-
-### Sprint 2.6：UI 打磨（2 天）
-
-```
-- Sync status indicators (server + calendar)
-- Completion animations (task + habit + Focus 3)
-- Empty states
-- Full en + zh-TW copy review
-```
-
----
-
-## Phase 3：Google Calendar + 上架（1-2 週）
-
-### 3.1：Google Calendar Provider
-### 3.2：Google Play 上架
-
-```
-Hero message:
-"Designed by a psychiatrist with ADHD.
- Built for minds that work differently."
-
-「由精神科醫師設計，為不一樣的腦袋而生。」
-```
-
----
-
-## Phase 4：迭代
-
-- Habit templates（"ADHD Morning Starter Pack"）
-- Focus timer
-- Kanban view
-- Wear OS
-- Two-way calendar sync
-- More languages
-
----
-
-## Claude Code 協作流程
-
-```
-── Domain ──
-1.  「建立 Tsosu (app.tsosu)，先讀 claude.md」
-2.  「建立 domain/ task + ADHD models」
-3.  「建立 domain/ habit models（注意 serverId, repeatAfterSeconds 欄位）」
-4.  「寫 task use case tests，然後實作」
-5.  「寫 habit use case tests，然後實作」
-
-── Data Local ──
-6.  「寫 Room DAO tests，然後實作」
-7.  「寫 Repository tests，然後實作」
-
-── UI ──
-8.  「Focus view + Habits tab + Pick One」
-9.  「Quick Add + Habit detail (dot calendar, flexible streak)」
-10. 「strings.xml en + zh-TW（零羞恥 review）」
-
-── Vikunja Sync ──
-11. 「★ 寫 VikunjaTaskMapper tests（metadata encoding）」
-12. 「★ 寫 VikunjaHabitMapper tests（repeating task mapping）」
-13. 「★ 寫 VikunjaRoutineMapper tests（project metadata）」
-14. 「寫 SyncManager tests（MockWebServer），然後實作」
-15. 「寫 HabitSyncManager tests，然後實作」
-16. 「實作 energy label 初始化邏輯」
-
-── Calendar ──
-17. 「CalDavProvider tests → 實作」
-
-── Nudge + Import ──
-18. 「GentleNudgeManager（task + habit nudges）」
-19. 「TodoistImporter tests → 實作」
-```
-
----
-
-## 時程
-
-| Phase | 內容 | 時間 |
-|-------|------|------|
-| 0 | 準備 | 1 天 |
-| 1 | MVP: Tasks + Habits + ADHD (local) | 3-4 週 |
-| 2 | Vikunja Sync + Calendar + Nudge | 3 週 |
-| 3 | Google Calendar + 上架 | 1-2 週 |
-
-**Phase 1-2：7 週完成核心（含 Vikunja 同步）。**
-
----
-
-## 10 Features × Sync Status Checklist
-
-| # | Feature | Domain | Local | Vikunja Sync | UI | Test | Copy |
-|---|---------|--------|-------|-------------|-----|------|------|
-| 1 | 🎯 Focus 3 | ☐ | ☐ | 🔶 local | ☐ | ☐ | ☐ |
-| 2 | 🔁 Habits | ☐ | ☐ | ☐ repeating task | ☐ | ☐ | ☐ |
-| 3 | 😌 No Shame | — | — | — | ☐ | ☐ | ☐ |
-| 4 | ⏱ Time | ☐ | ☐ | ☐ desc metadata | ☐ | ☐ | — |
-| 5 | ⚡ Energy | ☐ | ☐ | ☐ labels | ☐ | ☐ | — |
-| 6 | 🎲 Pick One | ☐ | — | — | ☐ | ☐ | — |
-| 7 | 🔔 Nudge | ☐ | ☐ | 🔶 local | ☐ | ☐ | ☐ |
-| 8 | 🎉 Review | ☐ | ☐ | — | ☐ | ☐ | ☐ |
-| 9 | 🧹 Cleanup | ☐ | ☐ | — | ☐ | ☐ | ☐ |
-| 10 | 📅 Calendar | ☐ | ☐ | — | ☐ | ☐ | — |
-
----
-
-## 風險
-
-| 風險 | 對策 |
-|------|------|
-| Vikunja repeatAfter 邏輯跟 Habit flexible streak 不同 | 完成追蹤 local，Vikunja 只管 next occurrence |
-| Description metadata 被使用者不小心刪掉 | Parse 時 graceful fallback，重新 append |
-| Energy labels 在 Vikunja 被刪掉 | Sync 時偵測並重新建立 |
-| Routine project 被其他 client 修改 | 靠 metadata marker 識別，沒 marker = 不是 routine |
-| Habit 和普通 repeating task 分不清 | 三重條件: repeatAfter + routine project + description marker |
+## 風險登錄
+
+| 風險 | 緩解 |
+|---|---|
+| SAF 大目錄列舉慢 | Phase A2 增量；避免 `listFiles()` 全掃 |
+| Obsidian 同步（iCloud/Drive）與 App 併發寫入 | A4 衝突標記 + 寫前重讀 |
+| OEM 電池限制殺 alarm/worker | 文件說明白名單；B2 降級 |
+| `content://` 非真實路徑，禁 `File()` 假設 | 全數經 DocumentFile/contentResolver |
+| frontmatter 未知 key | parser 對未知欄位保留原樣，round-trip 不丟資料 |
