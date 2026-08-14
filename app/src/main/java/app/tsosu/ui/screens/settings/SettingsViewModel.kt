@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tsosu.data.markdown.MarkdownFileAccess
 import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.VaultChangeWatcher
 import app.tsosu.domain.repository.CalendarProvider
@@ -54,6 +55,7 @@ class SettingsViewModel @Inject constructor(
     private val syncRepository: SyncRepository,
     private val vaultChangeWatcher: VaultChangeWatcher,
     private val markdownPreferences: MarkdownPreferences,
+    private val markdownFileAccess: MarkdownFileAccess,
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
     private val projectRepository: ProjectRepository,
@@ -77,6 +79,7 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(folderUri = uri?.toString())
             }
         }
+        refreshVaultStats()
         viewModelScope.launch {
             syncRepository.isConfigured().collect { configured ->
                 _uiState.value = _uiState.value.copy(isConfigured = configured)
@@ -105,6 +108,19 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
+    fun refreshVaultStats() {
+        viewModelScope.launch {
+            val lastSync = markdownPreferences.getLastSync()
+            val taskFiles = markdownFileAccess.listFolder("tasks").size
+            val habitFiles = markdownFileAccess.listFolder("habits").size
+            val dailyFiles = markdownFileAccess.listFolder("daily").size
+            _uiState.value = _uiState.value.copy(
+                lastSync = lastSync,
+                vaultFileCount = taskFiles + habitFiles + dailyFiles,
+            )
+        }
+    }
+
     fun selectFolder(uri: Uri) {
         viewModelScope.launch {
             markdownPreferences.setFolderUri(uri)
@@ -120,6 +136,7 @@ class SettingsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         message = "Synced: ${r.exported} exported, ${r.imported} imported",
                     )
+                    refreshVaultStats()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(

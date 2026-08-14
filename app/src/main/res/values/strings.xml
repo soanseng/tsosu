@@ -91,6 +91,8 @@
     <string name="settings_disconnect">Disconnect</string>
     <string name="settings_exact_alarm_denied">Reminders may be delayed: exact alarm permission is off.</string>
     <string name="settings_enable_exact_alarm">Allow exact alarms</string>
+    <string name="settings_last_sync">Last sync: %1$s</string>
+    <string name="settings_vault_files">Vault files: %1$d</string>
     <string name="settings_server_url">Server URL</string>
     <string name="settings_username">Username</string>
     <string name="settings_password">Password</string>
