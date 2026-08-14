@@ -100,6 +100,31 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
+    fun `importTasks dedupes same task id across legacy and new filenames`() = runTest {
+        val noteContent = buildString {
+            appendLine("---")
+            appendLine("id: t1")
+            appendLine("status: todo")
+            appendLine("energy: medium")
+            appendLine("created: 2026-03-20")
+            appendLine("---")
+            appendLine()
+            appendLine("# From note")
+            appendLine()
+            appendLine("Detailed description")
+        }
+        // Same id present in a legacy slug file and the new id-suffixed file
+        coEvery { fileAccess.listFolder("tasks") } returns listOf("from-note.md", "from-note-t1.md")
+        coEvery { fileAccess.readFileInFolder("tasks", any()) } returns noteContent
+
+        val result = manager.importTasks()
+
+        assertEquals(1, result.tasks.size, "Duplicate id files must collapse to one task")
+        assertEquals("t1", result.tasks[0].id)
+        assertEquals("From note", result.tasks[0].title)
+    }
+
+    @Test
     fun `exportTasks creates note files for tasks with description`() = runTest {
         val tasks = listOf(
             task(id = "t1", title = "Complex task", description = "Some details"),
@@ -109,7 +134,7 @@ class MarkdownSyncManagerTest {
 
         coVerify {
             fileAccess.ensureFolder("tasks")
-            fileAccess.writeFileInFolder("tasks", "complex-task.md", withArg { content ->
+            fileAccess.writeFileInFolder("tasks", "complex-task-t1.md", withArg { content ->
                 assertTrue(content.contains("# Complex task"), "Note should contain H1 title")
                 assertTrue(content.contains("Some details"), "Note should contain description")
                 assertTrue(content.contains("id: t1"), "Note should contain id in frontmatter")
@@ -139,7 +164,7 @@ class MarkdownSyncManagerTest {
         coVerify {
             fileAccess.writeTasksFile(withArg { content ->
                 assertTrue(
-                    content.contains("[[tasks/complex-task]]"),
+                    content.contains("[[tasks/complex-task-t1]]"),
                     "Index should have wikilink for noted task",
                 )
             })
@@ -221,7 +246,7 @@ class MarkdownSyncManagerTest {
 
         coVerify {
             fileAccess.ensureFolder("habits")
-            fileAccess.writeFileInFolder("habits", "meditate.md", withArg { content ->
+            fileAccess.writeFileInFolder("habits", "meditate-h1.md", withArg { content ->
                 assertTrue(content.contains("# Meditate"), "Note should contain title")
                 assertTrue(content.contains("id: h1"), "Note should contain id")
                 assertTrue(content.contains("2026-03-23"), "Note should contain completion date")

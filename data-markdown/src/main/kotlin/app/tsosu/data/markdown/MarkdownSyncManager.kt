@@ -33,9 +33,10 @@ class MarkdownSyncManager(
         for (task in tasks) {
             if (shouldCreateTaskNote(task)) {
                 val slug = taskNoteSerializer.slugify(task.title)
+                val filename = "$slug-${task.id.take(8)}.md"
                 val content = taskNoteSerializer.serialize(task, projectNames[task.projectId])
-                fileAccess.writeFileInFolder("tasks", "$slug.md", content)
-                noteFilenames[task.id] = slug
+                fileAccess.writeFileInFolder("tasks", filename, content)
+                noteFilenames[task.id] = filename.removeSuffix(".md")
             }
         }
 
@@ -56,6 +57,8 @@ class MarkdownSyncManager(
             val content = fileAccess.readFileInFolder("tasks", filename) ?: continue
             try {
                 val parsed = taskNoteParser.parse(content)
+                // Legacy pre-id-suffix files and new files can both exist for the same id
+                if (parsed.task.id in noteTaskIds) continue
                 allTasks.add(parsed.task)
                 noteTaskIds.add(parsed.task.id)
                 parsed.projectName?.let { projectSections[parsed.task.id] = it }
@@ -90,12 +93,13 @@ class MarkdownSyncManager(
 
         for (habit in habits) {
             val slug = habitNoteSerializer.slugify(habit.title)
+            val filename = "$slug-${habit.id.take(8)}.md"
             val content = habitNoteSerializer.serialize(
                 habit,
                 completionsByHabit[habit.id] ?: emptyList(),
             )
-            fileAccess.writeFileInFolder("habits", "$slug.md", content)
-            noteFilenames[habit.id] = slug
+            fileAccess.writeFileInFolder("habits", filename, content)
+            noteFilenames[habit.id] = filename.removeSuffix(".md")
         }
 
         val indexContent = habitIndexGenerator.generate(habits, completions, noteFilenames)
@@ -108,11 +112,15 @@ class MarkdownSyncManager(
 
         // Read individual HabitNote files
         val noteFiles = fileAccess.listFolder("habits")
+        val seenHabitIds = mutableSetOf<String>()
         for (filename in noteFiles) {
             if (!filename.endsWith(".md")) continue
             val content = fileAccess.readFileInFolder("habits", filename) ?: continue
             try {
                 val parsed = habitNoteParser.parse(content)
+                // Legacy pre-id-suffix files and new files can both exist for the same id
+                if (parsed.habit.id in seenHabitIds) continue
+                seenHabitIds.add(parsed.habit.id)
                 allHabits.add(parsed.habit)
                 allCompletions.addAll(parsed.completions)
             } catch (_: Exception) {

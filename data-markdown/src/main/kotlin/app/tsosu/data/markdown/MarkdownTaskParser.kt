@@ -193,7 +193,7 @@ class MarkdownTaskParser {
                     .replace(priorityLowestRegex, "")
                     .trim()
 
-                val isInbox = currentSection == null || currentSection == "Inbox"
+                val section = currentSection
 
                 val task = Task(
                     id = id,
@@ -215,8 +215,8 @@ class MarkdownTaskParser {
 
                 tasks.add(task)
 
-                if (!isInbox && currentSection != null) {
-                    projectSections[id] = currentSection
+                if (section != null && section != "Inbox") {
+                    projectSections[id] = section
                 }
 
                 positionCounter += 1.0
