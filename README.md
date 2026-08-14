@@ -34,26 +34,23 @@ Inspired by Atomic Habits: start with something so small you can't say no. Tsosu
 - **Flexible streaks**: Missed a day? Your streak pauses, not resets. 🔥 streak counter shows your momentum.
 - **7-day progress bar**: Each habit shows a visual bar of your last 7 days — see the trend, not just the number.
 - **Morning, Anytime & Evening routines**: Group habits by time of day. Create new habits right from the FAB.
-- **Gentle accountability**: "You've done your morning routine 5 of the last 7 days — that's great!" not "You missed 2 days."
+- **Gentle accountability**: a weekly counter (`3/5`) and streak (`🔥7`) on every habit — progress shown, missed days not counted
 
 ### 😌 No Shame UI — "Still on your list."
 
 Every pixel is reviewed for shame and anxiety triggers.
 
-- Overdue tasks say "Still on your list — reschedule?" not "⚠️ OVERDUE"
-- No red badge counts showing "47 overdue tasks"
-- No streak penalties that punish breaks
-- Tasks older than 2 weeks? "These have been here a while. Archive or reschedule?"
+- Overdue tasks carry a small "Overdue" tag — no red counter badges screaming how many are late
+- No streak penalties that punish breaks — streaks pause, not reset
 - Weekly review shows what you **completed**, not what you didn't
 
 ### ⏱ Time Awareness — "That's a lot for one day."
 
 ADHD often comes with time blindness. Tsosu makes time visible without being preachy.
 
-- Estimate how long each task takes (15min / 30min / 1hr / 2hr)
-- Today view shows total: "⏱ Today: ~2.5 hrs estimated"
-- Over 6 hours? Gentle nudge: "That's a lot — maybe pick your top 3?"
-- Calendar events use your time estimates for accurate scheduling
+- Estimate how long each task takes — a 🍅 chip on every task card
+- "Pick One For Me" and the calendar use your estimates
+- Calendar events use your time estimate as the event duration (default 60 min)
 
 ### ⚡ Energy Matching — "Work with your energy."
 
@@ -72,15 +69,15 @@ Decision paralysis is real. When you can't choose what to do, tap the dice.
 - "Just do this one ✓" — no more analysis paralysis
 - Don't like it? "Pick another 🔄"
 
-### 🔔 Gentle Nudge — "Hey, not hey!"
+### ⏰ Task Reminders — "At the time you set."
 
-Notifications that feel like a supportive friend, not a disappointed boss.
+Reminders that live with the task — set once, fire on the due date, gone when it's done.
 
-- Morning: "Pick your Focus 3 for today 🎯"
-- Afternoon: "1/3 done — want to tackle another? 💪"
-- All done: "🎉 Focus 3 complete! You did it!"
-- Welcome back (after days away): "No pressure — pick just one thing?"
-- All nudges are configurable — turn on/off, set times
+- Per-task reminder time — a notification fires at ⏰ on the due date
+- Tap the notification to open the task; mark it done straight from the notification
+- Overdue summary notification — "3 overdue tasks", tap to open the first one
+- Exact alarms (Android 12+ permission prompt) with automatic fallback to inexact alarms
+- Alarms resync after reboot and after every vault sync
 
 ### 🎉 Weekly Review — "Look what you did!"
 
@@ -93,14 +90,6 @@ End of week = celebration, not report card.
 - "Progress, not perfection."
 - Zero mention of what's left undone
 
-### 🧹 Stale Task Cleanup — "It's OK to let go."
-
-Tasks sitting untouched for 2+ weeks get a gentle prompt:
-
-- "These have been waiting a while. Archive or reschedule?"
-- One-tap archive all
-- No guilt, no judgment — sometimes priorities change
-
 ### 📅 Calendar Auto-Sync — "Set a date, see it everywhere."
 
 Tasks with dates automatically appear on your calendar. No double entry.
@@ -111,16 +100,29 @@ Tasks with dates automatically appear on your calendar. No double entry.
 - Time estimate → calendar event duration
 - Works with **CalDAV** (Fastmail, Nextcloud) and **Google Calendar**
 
+### 📥 Todoist Import — "Bring your list with you."
+
+Import your Todoist CSV export from Settings — tasks are deduplicated by id, written as markdown, and pushed into your vault automatically.
+
+### 📝 Markdown Vault — "Your tasks are your files."
+
+Everything lives as plain markdown files in a folder you own — view and edit them in Obsidian, nvim, or any text editor, on any device. See [How It Syncs](#how-it-syncs).
+
 ## How It Syncs
 
 Tsosu is **local-first** — it works 100% offline with no account. Your data lives as plain markdown files that you own.
 
 ### Markdown Files
 
-Point Tsosu at any folder on your phone. It writes two files:
+Point Tsosu at any folder on your phone (an Obsidian vault is ideal). It writes a small set of markdown files (per-task/per-habit notes and daily notes are described in Vault Data Format below):
 
 **`tasks.md`** — your tasks, grouped by project:
 ```markdown
+---
+tsosu: v1
+generated: true
+---
+
 ## Inbox
 
 - [ ] Buy groceries ⚡medium 🍅15m <!-- id:abc-123 -->
@@ -128,17 +130,19 @@ Point Tsosu at any folder on your phone. It writes two files:
 
 ## Work
 
-- [ ] Prepare presentation 📅 2026-03-25 ⚡high 🍅60m ‼️urgent <!-- id:ghi-789 -->
+- [ ] Prepare presentation 📅 2026-03-25 ⚡high 🍅60m ⏫ <!-- id:ghi-789 -->
 ```
 
-**`habits.md`** — your habits with completion history:
+**`habits.md`** — your habits, one line each, grouped by routine, with a weekly counter and streak:
 ```markdown
+---
+tsosu: v1
+generated: true
+---
+
 ## Daily
 
-- [ ] Exercise (tiny: do 1 pushup) 🔁daily ⚡medium <!-- id:h1 -->
-  - ✅ 2026-03-23
-  - ✅ 2026-03-22
-  - ✅ 2026-03-21
+- [ ] Exercise (tiny: do 1 pushup) 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
 ```
 
 ### Cross-Device Sync
@@ -192,7 +196,7 @@ Each task is a single checkbox line. Metadata is appended as emoji markers, and 
 | `🔁 <rule>` | recurrence rule (natural language) | `🔁 every monday` |
 | `⚡high` `😐medium` `🪫low` | energy level | `⚡high` |
 | `🍅 Nm` | time estimate in minutes | `🍅60m` |
-| `⏫` `🔺` `🔽` `🔽` | priority: urgent / high / medium / low | `⏫` |
+| `⏫` `🔺` `🔼` `🔽` | priority: urgent / high / medium / low | `⏫` |
 | `<!-- id:... -->` | stable task id — **do not edit** | `<!-- id:ghi-789 -->` |
 | `<!-- conflict -->` | task was edited on both sides; vault version was kept | |
 
@@ -203,11 +207,17 @@ Projects are `## Heading` sections. Tasks under the first section (or before any
 ```markdown
 ## Daily
 
-- [ ] Exercise (tiny: do 1 pushup) 🔁daily ⚡medium <!-- id:h1 -->
-  - ✅ 2026-03-23
+- [ ] Exercise (tiny: do 1 pushup) 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
 ```
 
-Completion history is indented `- ✅ YYYY-MM-DD` lines under the habit. Full history lives in `habits/<slug>-<id8>.md`.
+| Marker | Meaning | Example |
+|--------|---------|---------|
+| `🔁 Nx/week` | weekly target frequency | `🔁7x/week` |
+| `3/5` | completions this week / target | `3/5` |
+| `🔥N` | current streak in days | `🔥7` |
+| `[[habits/...]]` | link to the full-history note | `[[habits/exercise-h1abcdef]]` |
+
+The index line carries only the counters above. Completion dates are stored in the per-habit note under `habits/` and in the daily notes.
 
 ### Obsidian tips
 
