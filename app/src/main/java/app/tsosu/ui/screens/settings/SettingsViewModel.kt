@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.data.markdown.MarkdownPreferences
+import app.tsosu.VaultChangeWatcher
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.CalendarRepository
 import app.tsosu.domain.model.Project
@@ -47,6 +48,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val syncRepository: SyncRepository,
+    private val vaultChangeWatcher: VaultChangeWatcher,
     private val markdownPreferences: MarkdownPreferences,
     private val calendarRepository: CalendarRepository,
     private val importRepository: ImportRepository,
@@ -101,7 +103,7 @@ class SettingsViewModel @Inject constructor(
 
     fun sync() {
         viewModelScope.launch {
-            val result = syncRepository.sync()
+            val result = vaultChangeWatcher.syncOnce()
             result.fold(
                 onSuccess = { r ->
                     _uiState.value = _uiState.value.copy(

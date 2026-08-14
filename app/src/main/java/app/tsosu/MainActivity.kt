@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var themePreferences: ThemePreferences
     @Inject lateinit var syncRepository: SyncRepository
     @Inject lateinit var markdownPreferences: MarkdownPreferences
+    @Inject lateinit var vaultChangeWatcher: VaultChangeWatcher
 
     private var lastSyncTime = 0L
     private val snackbarHostState = SnackbarHostState()
@@ -117,7 +118,7 @@ class MainActivity : ComponentActivity() {
                     )
                     scope.launch {
                         markdownPreferences.setFolderUri(uri)
-                        syncRepository.sync()
+                        vaultChangeWatcher.syncOnce()
                     }
                 }
 
@@ -280,7 +281,7 @@ class MainActivity : ComponentActivity() {
                         val isConfigured = syncRepository.isConfigured().first()
                         if (isConfigured) {
                             snackbarHostState.showSnackbar("Syncing…")
-                            val result = syncRepository.sync()
+                            val result = vaultChangeWatcher.syncOnce()
                             result.fold(
                                 onSuccess = { r ->
                                     snackbarHostState.showSnackbar(
