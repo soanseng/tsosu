@@ -2,9 +2,6 @@ package app.tsosu.data.markdown.index
 
 import app.tsosu.data.markdown.MarkdownTaskSerializer
 import app.tsosu.domain.model.Task
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 class TaskIndexGenerator {
 
@@ -52,11 +49,8 @@ class TaskIndexGenerator {
     }
 
     private fun StringBuilder.appendFrontmatter() {
-        val now = Clock.System.now()
-            .toLocalDateTime(TimeZone.UTC)
         appendLine("---")
         appendLine("tsosu: v1")
-        appendLine("updated: $now")
         appendLine("generated: true")
         append("---")
     }

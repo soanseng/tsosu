@@ -57,7 +57,7 @@ class HabitIndexGeneratorTest {
 
         assertTrue(result.startsWith("---\n"))
         assertTrue(result.contains("tsosu: v1"))
-        assertTrue(result.contains("updated:"))
+        assertTrue(result.contains("tsosu: v1"))
         assertTrue(result.contains("generated: true"))
         assertTrue(result.contains("---"))
     }

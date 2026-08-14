@@ -125,6 +125,34 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
+    fun `exportTasks skips writing note file when content unchanged`() = runTest {
+        val tasks = listOf(task(id = "t1", title = "Complex task", description = "Some details"))
+        coEvery {
+            fileAccess.readFileInFolder("tasks", "complex-task-t1.md")
+        } answers { taskNoteSerializer.serialize(tasks[0]) }
+
+        manager.exportTasks(tasks, emptyMap())
+
+        coVerify(exactly = 0) {
+            fileAccess.writeFileInFolder("tasks", "complex-task-t1.md", any())
+        }
+    }
+
+    @Test
+    fun `exportTasks skips rewriting index when unchanged`() = runTest {
+        val tasks = listOf(task(id = "t1", title = "Complex task", description = "Some details"))
+        coEvery { fileAccess.readTasksFile() } answers {
+            taskIndexGenerator.generate(tasks, emptyMap(), mapOf("t1" to "complex-task-t1"))
+        }
+
+        manager.exportTasks(tasks, emptyMap())
+
+        coVerify(exactly = 0) {
+            fileAccess.writeTasksFile(any())
+        }
+    }
+
+    @Test
     fun `exportTasks creates note files for tasks with description`() = runTest {
         val tasks = listOf(
             task(id = "t1", title = "Complex task", description = "Some details"),

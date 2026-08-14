@@ -35,14 +35,16 @@ class MarkdownSyncManager(
                 val slug = taskNoteSerializer.slugify(task.title)
                 val filename = "$slug-${task.id.take(8)}.md"
                 val content = taskNoteSerializer.serialize(task, projectNames[task.projectId])
-                fileAccess.writeFileInFolder("tasks", filename, content)
+                writeNoteIfChanged("tasks", filename, content)
                 noteFilenames[task.id] = filename.removeSuffix(".md")
             }
         }
 
-        // Regenerate index
+        // Regenerate index; skip write when unchanged (incremental sync)
         val indexContent = taskIndexGenerator.generate(tasks, projectNames, noteFilenames)
-        fileAccess.writeTasksFile(indexContent)
+        if (fileAccess.readTasksFile() != indexContent) {
+            fileAccess.writeTasksFile(indexContent)
+        }
     }
 
     suspend fun importTasks(): ParsedTasks {
@@ -98,12 +100,14 @@ class MarkdownSyncManager(
                 habit,
                 completionsByHabit[habit.id] ?: emptyList(),
             )
-            fileAccess.writeFileInFolder("habits", filename, content)
+            writeNoteIfChanged("habits", filename, content)
             noteFilenames[habit.id] = filename.removeSuffix(".md")
         }
 
         val indexContent = habitIndexGenerator.generate(habits, completions, noteFilenames)
-        fileAccess.writeHabitsFile(indexContent)
+        if (fileAccess.readHabitsFile() != indexContent) {
+            fileAccess.writeHabitsFile(indexContent)
+        }
     }
 
     suspend fun importHabits(): ParsedHabits {
@@ -146,7 +150,18 @@ class MarkdownSyncManager(
     ) {
         fileAccess.ensureFolder("daily")
         val content = dailyNoteWriter.write(date, habits, completedHabitIds)
-        fileAccess.writeFileInFolder("daily", dailyNoteWriter.filename(date), content)
+        writeNoteIfChanged("daily", dailyNoteWriter.filename(date), content)
+    }
+
+    /**
+     * Writes [content] only when the existing file differs — avoids rewriting
+     * unchanged notes on every sync (reduces SAF traffic and Obsidian sync churn).
+     */
+    private suspend fun writeNoteIfChanged(folder: String, filename: String, content: String) {
+        val existing = fileAccess.readFileInFolder(folder, filename)
+        if (existing != content) {
+            fileAccess.writeFileInFolder(folder, filename, content)
+        }
     }
 
     private fun shouldCreateTaskNote(task: Task): Boolean {

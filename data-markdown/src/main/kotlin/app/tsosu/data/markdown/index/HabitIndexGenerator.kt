@@ -9,10 +9,8 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
-import kotlinx.datetime.toLocalDateTime
 
 class HabitIndexGenerator {
-
     fun generate(
         habits: List<Habit>,
         completions: List<HabitCompletion>,
@@ -112,11 +110,8 @@ class HabitIndexGenerator {
     }
 
     private fun StringBuilder.appendFrontmatter() {
-        val now = Clock.System.now()
-            .toLocalDateTime(TimeZone.UTC)
         appendLine("---")
         appendLine("tsosu: v1")
-        appendLine("updated: $now")
         appendLine("generated: true")
         append("---")
     }

@@ -65,7 +65,7 @@ class TaskIndexGeneratorTest {
 
         assertTrue(result.contains("generated: true"), "Should have generated: true in frontmatter")
         assertTrue(result.contains("tsosu: v1"), "Should have tsosu version")
-        assertTrue(result.contains("updated:"), "Should have updated timestamp")
+        assertTrue(result.contains("tsosu: v1"), "Should have frontmatter")
     }
 
     // --- Wikilinks ---
