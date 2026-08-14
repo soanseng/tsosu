@@ -9,12 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atTime
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,33 +23,9 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                rescheduleReminders()
+                reminderScheduler.rescheduleAll(taskDao.getAllTasks().first())
             } finally {
                 pendingResult.finish()
-            }
-        }
-    }
-
-    private suspend fun rescheduleReminders() {
-        val now = System.currentTimeMillis()
-        val tasks = taskDao.getAllTasks().first()
-
-        val zone = TimeZone.currentSystemDefault()
-
-        for (task in tasks) {
-            if (task.status >= 4) continue // skip done/cancelled
-            val reminderMinutes = task.reminderTimeMinutes ?: continue
-            val dueDateMillis = task.dueDate ?: continue // skip tasks without a due date
-
-            val taskDueDate = Instant.fromEpochMilliseconds(dueDateMillis)
-                .toLocalDateTime(zone).date
-            val reminderTime = LocalTime(reminderMinutes / 60, reminderMinutes % 60)
-            val triggerMillis = taskDueDate.atTime(reminderTime)
-                .toInstant(zone)
-                .toEpochMilliseconds()
-
-            if (triggerMillis > now) {
-                reminderScheduler.schedule(task.id, triggerMillis)
             }
         }
     }
