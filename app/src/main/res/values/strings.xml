@@ -84,8 +84,6 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_vikunja_server">Vikunja Server</string>
-    <string name="settings_connected">Connected</string>
     <string name="settings_sync_now">Sync Now</string>
     <string name="settings_syncing">Syncing...</string>
     <string name="settings_disconnect">Disconnect</string>
