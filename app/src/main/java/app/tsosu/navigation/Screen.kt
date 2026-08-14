@@ -28,5 +28,9 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
         val bottomNavItems: List<Screen> by lazy {
             listOf(Focus, Habits, Calendar, Upcoming)
         }
+
+        val viewModes: List<Screen> by lazy {
+            listOf(Focus, Inbox, Kanban, Calendar, Upcoming)
+        }
     }
 }

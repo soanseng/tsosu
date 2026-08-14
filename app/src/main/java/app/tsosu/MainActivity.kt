@@ -3,7 +3,7 @@ package app.tsosu
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,10 +15,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ViewKanban
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -27,8 +29,9 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,7 +71,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     @Inject lateinit var themePreferences: ThemePreferences
     @Inject lateinit var syncRepository: SyncRepository
     @Inject lateinit var markdownPreferences: MarkdownPreferences
@@ -129,8 +132,63 @@ class MainActivity : ComponentActivity() {
                     snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
                         val focusState by focusViewModel.uiState.collectAsState()
+                        var showViewMenu by remember { mutableStateOf(false) }
+                        val currentView = Screen.viewModes.firstOrNull { it.route == currentRoute }
+                            ?: Screen.Focus
                         TopAppBar(
-                            title = { Text("Tsosu") },
+                            title = {
+                                TextButton(onClick = { showViewMenu = true }) {
+                                    Icon(currentView.icon, contentDescription = null)
+                                    Text(
+                                        when (currentView) {
+                                            Screen.Focus -> stringResource(R.string.view_focus)
+                                            Screen.Inbox -> stringResource(R.string.view_inbox)
+                                            Screen.Kanban -> stringResource(R.string.view_kanban)
+                                            Screen.Calendar -> stringResource(R.string.view_calendar)
+                                            Screen.Upcoming -> stringResource(R.string.view_upcoming)
+                                            else -> stringResource(R.string.app_name)
+                                        },
+                                    )
+                                    Icon(
+                                        Icons.Default.ExpandMore,
+                                        contentDescription = stringResource(R.string.view_switcher),
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showViewMenu,
+                                    onDismissRequest = { showViewMenu = false },
+                                ) {
+                                    Screen.viewModes.forEach { screen ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    when (screen) {
+                                                        Screen.Focus -> stringResource(R.string.view_focus)
+                                                        Screen.Inbox -> stringResource(R.string.view_inbox)
+                                                        Screen.Kanban -> stringResource(R.string.view_kanban)
+                                                        Screen.Calendar -> stringResource(R.string.view_calendar)
+                                                        Screen.Upcoming -> stringResource(R.string.view_upcoming)
+                                                        else -> screen.title
+                                                    },
+                                                )
+                                            },
+                                            leadingIcon = { Icon(screen.icon, contentDescription = null) },
+                                            onClick = {
+                                                showViewMenu = false
+                                                if (currentRoute != screen.route) {
+                                                    navController.navigate(screen.route) {
+                                                        popUpTo(navController.graph.startDestinationId) {
+                                                            saveState = true
+                                                        }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                    }
+                                                }
+                                            },
+                                        )
+                                    }
+                                }
+                            },
                             actions = {
                                 IconButton(onClick = { showFilter = true }) {
                                     Icon(
@@ -141,11 +199,6 @@ class MainActivity : ComponentActivity() {
                                         },
                                         contentDescription = "Filter",
                                     )
-                                }
-                                IconButton(onClick = {
-                                    navController.navigate(Screen.Kanban.route)
-                                }) {
-                                    Icon(Icons.Default.ViewKanban, contentDescription = "Kanban")
                                 }
                                 IconButton(onClick = {
                                     navController.navigate(Screen.Settings.route)

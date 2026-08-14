@@ -82,6 +82,7 @@ fun TaskListItem(
     onToggleDone: (String) -> Unit,
     onStatusChange: (String, TaskStatus) -> Unit = { _, _ -> },
     onClick: (Task) -> Unit,
+    onLongClick: ((Task) -> Unit)? = null,
     onPostpone: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -93,6 +94,7 @@ fun TaskListItem(
             onToggleDone = onToggleDone,
             onStatusChange = onStatusChange,
             onClick = onClick,
+            onLongClick = onLongClick,
             modifier = modifier,
         )
         return
@@ -163,6 +165,7 @@ fun TaskListItem(
             onToggleDone = onToggleDone,
             onStatusChange = onStatusChange,
             onClick = onClick,
+            onLongClick = onLongClick,
         )
     }
 }
@@ -174,6 +177,7 @@ private fun TaskListItemContent(
     onToggleDone: (String) -> Unit,
     onStatusChange: (String, TaskStatus) -> Unit,
     onClick: (Task) -> Unit,
+    onLongClick: ((Task) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptic = rememberHaptic()
@@ -184,6 +188,7 @@ private fun TaskListItemContent(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     var showStatusMenu by remember { mutableStateOf(false) }
+    var showActionMenu by remember { mutableStateOf(false) }
 
     val cornerRadius by animateDpAsState(
         targetValue = if (isPressed) 8.dp else 16.dp,
@@ -207,14 +212,22 @@ private fun TaskListItemContent(
     val noDateStr = stringResource(R.string.detail_no_date)
 
     Card(
-        onClick = {
-            haptic.tick()
-            onClick(task)
-        },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    haptic.tick()
+                    onClick(task)
+                },
+                onLongClick = {
+                    haptic.longPress()
+                    showActionMenu = true
+                },
+            ),
         shape = RoundedCornerShape(cornerRadius),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        interactionSource = interactionSource,
     ) {
         Row(
             modifier = Modifier
@@ -243,6 +256,30 @@ private fun TaskListItemContent(
                     showStatusMenu = true
                 },
             )
+
+            DropdownMenu(
+                expanded = showActionMenu,
+                onDismissRequest = { showActionMenu = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.task_edit)) },
+                    onClick = {
+                        showActionMenu = false
+                        haptic.tick()
+                        onClick(task)
+                    },
+                )
+                if (onLongClick != null) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.task_convert_to_habit)) },
+                        onClick = {
+                            showActionMenu = false
+                            haptic.confirm()
+                            onLongClick(task)
+                        },
+                    )
+                }
+            }
 
             DropdownMenu(
                 expanded = showStatusMenu,

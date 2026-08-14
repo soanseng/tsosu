@@ -194,6 +194,10 @@
     <string name="settings_dynamic_colors">Dynamic Colors</string>
     <string name="settings_dynamic_colors_desc">Adapts to your wallpaper</string>
     <string name="settings_dark_mode">Dark Mode</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_zh_tw">繁體中文</string>
     <string name="settings_markdown_sync">Markdown Sync</string>
     <string name="settings_syncing_to_folder">Syncing to folder</string>
     <string name="settings_select_folder">Select Folder</string>
@@ -249,4 +253,12 @@
     <string name="a11y_setup_vault">Set up vault</string>
     <string name="a11y_pick_date">Pick date</string>
     <string name="a11y_pick_time">Pick time</string>
+    <string name="task_edit">Edit</string>
+    <string name="task_convert_to_habit">Convert to habit</string>
+    <string name="view_switcher">Views</string>
+    <string name="view_focus">Focus</string>
+    <string name="view_inbox">Inbox</string>
+    <string name="view_kanban">Kanban</string>
+    <string name="view_calendar">Calendar</string>
+    <string name="view_upcoming">Upcoming</string>
 </resources>

@@ -205,6 +205,10 @@
     <string name="settings_dynamic_colors">動態色彩</string>
     <string name="settings_dynamic_colors_desc">隨桌布調整</string>
     <string name="settings_dark_mode">深色模式</string>
+    <string name="settings_language">語言</string>
+    <string name="settings_language_system">系統</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_zh_tw">繁體中文</string>
     <string name="settings_markdown_sync">Markdown 同步</string>
     <string name="settings_syncing_to_folder">同步至資料夾</string>
     <string name="settings_select_folder">選擇資料夾</string>
@@ -227,4 +231,12 @@
         <item quantity="one">%d 個逾期任務</item>
         <item quantity="other">%d 個逾期任務</item>
     </plurals>
+    <string name="task_edit">編輯</string>
+    <string name="task_convert_to_habit">轉成習慣</string>
+    <string name="view_switcher">檢視</string>
+    <string name="view_focus">專注</string>
+    <string name="view_inbox">收件匣</string>
+    <string name="view_kanban">看板</string>
+    <string name="view_calendar">日曆</string>
+    <string name="view_upcoming">即將到來</string>
 </resources>

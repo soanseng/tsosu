@@ -7,10 +7,12 @@ import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
+import app.tsosu.domain.usecase.ConvertTaskToHabitUseCase
 import app.tsosu.domain.usecase.DeleteTaskUseCase
 import app.tsosu.domain.usecase.UpdateTaskUseCase
 import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +39,7 @@ data class TaskDetailState(
     val reminderTime: LocalTime? = null,
     val saved: Boolean = false,
     val deleted: Boolean = false,
+    val converted: Boolean = false,
 )
 
 @HiltViewModel
@@ -44,16 +47,20 @@ class TaskDetailViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val updateTaskUseCase: UpdateTaskUseCase,
     private val deleteTaskUseCase: DeleteTaskUseCase,
+    private val convertTaskToHabit: ConvertTaskToHabitUseCase,
     private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TaskDetailState())
     val state: StateFlow<TaskDetailState> = _state.asStateFlow()
+    private var loadJob: Job? = null
 
     fun loadTask(taskId: String) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            _state.value = TaskDetailState()
             taskRepository.getTask(taskId).filterNotNull().collect { task ->
-                if (!_state.value.saved && !_state.value.deleted) {
+                if (!_state.value.saved && !_state.value.deleted && !_state.value.converted) {
                     _state.value = TaskDetailState(
                         task = task,
                         title = task.title,
@@ -153,6 +160,16 @@ class TaskDetailViewModel @Inject constructor(
             deleteTaskUseCase(task.id)
             reminderScheduler.cancel(task.id)
             _state.value = _state.value.copy(deleted = true)
+        }
+    }
+
+    fun convertToHabit() {
+        val task = _state.value.task ?: return
+        viewModelScope.launch {
+            convertTaskToHabit(task.id).onSuccess {
+                reminderScheduler.cancel(task.id)
+                _state.value = _state.value.copy(converted = true)
+            }
         }
     }
 }

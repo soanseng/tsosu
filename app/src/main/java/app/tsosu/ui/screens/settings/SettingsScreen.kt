@@ -57,6 +57,7 @@ import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.ImportTarget
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.ui.theme.DarkModeOption
+import app.tsosu.ui.theme.LanguageOption
 import androidx.core.content.FileProvider
 import java.io.File
 
@@ -65,6 +66,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
     val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
+    val language by viewModel.language.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -131,6 +133,25 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     selected = darkMode == option,
                     onClick = { viewModel.setDarkMode(option) },
                     label = { Text(option.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                )
+            }
+        }
+
+        Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.bodyLarge)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LanguageOption.entries.forEach { option ->
+                FilterChip(
+                    selected = language == option,
+                    onClick = { viewModel.setLanguage(option) },
+                    label = {
+                        Text(
+                            when (option) {
+                                LanguageOption.SYSTEM -> stringResource(R.string.settings_language_system)
+                                LanguageOption.ENGLISH -> stringResource(R.string.settings_language_english)
+                                LanguageOption.ZH_TW -> stringResource(R.string.settings_language_zh_tw)
+                            },
+                        )
+                    },
                 )
             }
         }

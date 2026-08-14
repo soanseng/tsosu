@@ -153,6 +153,7 @@ fun FocusScreen(
                         viewModel.setStatus(id, status)
                     },
                     onClick = { onTaskClick(it.id) },
+                    onLongClick = { viewModel.convertToHabit(it.id) },
                     onPostpone = { id -> viewModel.postponeTask(id) },
                     modifier = Modifier.animateItem(),
                 )
@@ -211,6 +212,7 @@ fun FocusScreen(
                             viewModel.setStatus(id, status)
                         },
                         onClick = { onTaskClick(it.id) },
+                        onLongClick = { viewModel.convertToHabit(it.id) },
                         onPostpone = { id -> viewModel.postponeTask(id) },
                         modifier = Modifier.animateItem(),
                     )
