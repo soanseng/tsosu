@@ -31,48 +31,51 @@
 
 **已知瑕疵 / 待辦（依優先序）：**
 
-~~1. **vault 變更自動偵測**~~ ✅ 已完成（2026-08-14）：`VaultChangeWatcher`（ContentObserver on tree URI，vault 切換自動重註冊）+ `VaultChangeCoordinator`（2s debounce + AtomicBoolean 防回饋迴圈，4 個測試）。所有同步路徑（folder picker / resume pull / 設定頁 / watcher）收斂至單一守衛入口 `syncOnce()`。
-2. **增量同步** ⏳ 未做：目前每次同步全量重寫所有 note + 索引。下一步以 mtime/內容 hash 只處理變更檔案。
-3. **衝突處理** ⏳ 未做：同步為「外部優先」整體覆寫；無 per-task 衝突標記。
-4. ~~**通知排程的持久性**~~ ✅ 部分完成：`ReminderScheduler.schedule(Task)` + `rescheduleAll(List<TaskEntity>)`；BootReceiver 委派重排；`ReminderResync.afterSync()` 在每次同步後重排（匯入的新提醒立即生效）；新增/編輯/刪除/完成任務時即時排程或取消。剩餘：`OverdueCheckWorker` 仍讀 Room DAO（Phase B4）。
-5. ~~**slug 碰撞**~~ ✅ 已完成：note 檔名改 `slug-<id前8碼>.md`，匯入端依 id 去重（相容既有舊檔名），索引 wikilink 同步更新。
-6. **大 vault 效能** — 同 #2 增量同步。
+1. ~~**vault 變更自動偵測**~~ ✅ 已完成（2026-08-14）：`VaultChangeWatcher`（ContentObserver on tree URI，vault 切換自動重註冊）+ `VaultChangeCoordinator`（2s debounce + AtomicBoolean 防回饋迴圈，4 個測試）。所有同步路徑收斂至單一守衛入口 `syncOnce()`。
+2. ~~**增量同步**~~ ✅ 已完成（2026-08-14）：export 端內容等價跳過（note/索引/daily 寫入前比較既有內容）；索引 frontmatter 移除易變 `updated:` 時間戳以確保不變內容可偵測。限制：import 端仍全量讀取（SAF 讀取成本低於解析/寫入，未做 mtime 快取）。
+3. ~~**衝突處理**~~ ✅ 已完成（2026-08-14）：`ConflictDetector` 以 last-exported 內容 hash 為基準，兩側皆改 → 保留 vault 版並在 `tasks.md` 標 `<!-- conflict -->`（6 測試）。限制：僅偵測索引行欄位（title/status/dates/reminder/recurrence/energy/estimate/priority），note 描述-only 變更不偵測。
+4. ~~**通知排程的持久性**~~ ✅ 已完成：`ReminderScheduler.schedule(Task)` + `rescheduleAll`；BootReceiver 委派重排；`ReminderResync.afterSync()` 同步後重排；新增/編輯/刪除/完成任務即時排程；`OverdueCheckWorker` 先 `syncOnce()` 再讀。
+5. ~~**slug 碰撞**~~ ✅ 已完成：note 檔名 `slug-<id前8碼>.md` + 匯入依 id 去重。
+6. ~~**大 vault 效能**~~ ✅ 隨 #2 緩解（不變檔案零寫入）。
 
-## 開發計畫（後續迭代）
+## 開發計畫（2026-08-14 全部完成）
 
-### Phase A：同步可靠性（優先）
-
-| # | 工作 | 狀態 |
-|---|---|---|
-| A1 | `ContentObserver` 註冊於 tree URI，變更觸發增量匯入 | ✅ 2026-08-14 |
-| A2 | 增量同步：以 mtime/內容 hash 只處理變更檔案（`content-hash-cache-pattern`） | ⏳ 下一步 |
-| A3 | slug 碰撞：`slugify(title)` 改 `slug-id前8碼.md`，讀取端兩者皆認 | ✅ 2026-08-14 |
-| A4 | 衝突標記：同 id 兩側皆改 → 保留 markdown 版並在 `tasks.md` 以 `<!-- conflict -->` 標記 | ⏳ |
-
-### Phase B：通知強化
+### Phase A：同步可靠性 ✅
 
 | # | 工作 | 狀態 |
 |---|---|---|
-| B1 | 匯入後重排：`MarkdownSyncRepository.sync()` 完成後呼叫 `ReminderScheduler.rescheduleAll()` | ✅ 2026-08-14（同步後 + 任務新增/編輯/刪除/完成即時排程） |
-| B2 | exact alarm 不可用時降級：`setAndAllowWhileIdle`（非 exact）並記錄；設定頁顯示權限狀態 + 跳轉 | ⏳ |
-| B3 | 逾期通知 tap → deep link 至該任務（現為彙總通知，需帶 taskId list + navigation） | ⏳ |
-| B4 | `OverdueCheckWorker` 改讀 markdown repository（現在讀 Room DAO，跨 vault 不一致風險） | ⏳ |
+| A1 | `ContentObserver` 註冊於 tree URI，變更觸發增量匯入 | ✅ |
+| A2 | 增量同步：內容不變即跳過寫入（含索引 frontmatter 時間戳修正） | ✅ |
+| A3 | slug 碰撞：`slugify(title)` → `slug-id前8碼.md` + 匯入去重 | ✅ |
+| A4 | 衝突標記：同 id 兩側皆改 → 保留 vault 版並標 `<!-- conflict -->` | ✅ |
 
-### Phase C：Obsidian 體驗
+### Phase B：通知強化 ✅
 
-| # | 工作 | 驗收 |
+| # | 工作 | 狀態 |
 |---|---|---|
-| C1 | 匯入後自動產生 `📅 Tasks.md` 風格索引（資料夾 note + Dataview 相容格式）或維持現行索引格式並寫文件 | 文件說明 vault 內可讀/可改結構 |
-| C2 | README 增加「vault 資料格式」章節：emoji metadata 對照表、範例檔案、Obsidian 設定建議（排除 `.obsidian/` 不寫入） | 使用者照文件可手動新增任務 |
-| C3 | 設定頁：顯示目前 vault 路徑/檔案數、最後同步時間、一鍵同步按鈕 | 手動驗證 |
+| B1 | 匯入後重排提醒（同步後 + 任務新增/編輯/刪除/完成即時） | ✅ |
+| B2 | exact alarm 降級為 inexact + 設定頁權限狀態與跳轉 | ✅ |
+| B3 | 逾期通知 tap → deep link 開啟任務（含 reminder 通知修正） | ✅ |
+| B4 | `OverdueCheckWorker` 先同步 vault 再讀過期任務 | ✅ |
 
-### Phase D：發布
+### Phase C：Obsidian 體驗 ✅
 
-| # | 工作 | 驗收 |
+| # | 工作 | 狀態 |
 |---|---|---|
-| D1 | `fastlane` metadata 更新（描述改 markdown-first） | fastlane 驗證通過 |
-| D2 | 移除/停用未使用的 Vikunja 相關程式碼（如存在）與 `vikunja-openapi.json` 引用 | `./gradlew assembleDebug` 綠 |
-| D3 | zh-TW/en 字串完整審查 | 兩語系 build 綠 |
+| C1 | 索引格式文件化（README「Vault Data Format」章節，en + zh-TW） | ✅ |
+| C2 | README：emoji metadata 對照表、檔案結構、Obsidian 建議、Dataview 範例 | ✅ |
+| C3 | 設定頁顯示 vault 路徑、檔案數、最後同步時間（同步鈕既有） | ✅ |
+
+### Phase D：發布 ✅
+
+| # | 工作 | 狀態 |
+|---|---|---|
+| D1 | fastlane 商店描述 + 隱私政策改 markdown-first | ✅ |
+| D2 | 移除 `vikunja-openapi.json` 與死字串（`settings_vikunja_server`/`settings_connected`） | ✅ |
+| D3 | zh-TW 補齊 75 個缺漏 key（含 plurals），兩語系 key 完全對稱 | ✅ |
+
+### 其他 ✅
+- Todoist 匯入手機端流程確認可用（Settings → GetContent 文件選擇器），匯入後自動 `syncOnce()` 寫入 vault。
 
 ## 建置與驗證指令
 
