@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tsosu 做事 — 為 ADHD 設計的任務管理器</title>
 <meta name="description" content="Tsosu 做事：台灣精神科醫師設計的 Android 任務管理器。Markdown 為資料來源，搭配 Obsidian 雙向同步、到期提醒、習慣追蹤。本地優先，無伺服器、無追蹤。">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta property="og:image" content="https://soanseng.github.io/tsosu/icon.png">
+<meta property="og:title" content="Tsosu 做事 — 為 ADHD 設計的任務管理器">
+<meta property="og:description" content="為 ADHD 設計的 Android 任務管理器。Markdown vault、Obsidian 雙向同步、到期提醒。本地優先，無伺服器、無追蹤。">
 <style>
   :root {
     --bg: #faf9f7;
@@ -33,7 +38,9 @@
   .logo {
     font-size: 20px; letter-spacing: 4px; color: var(--accent);
     font-weight: 700; text-transform: uppercase; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
   }
+  .logo img { width: 40px; height: 40px; border-radius: 10px; }
   h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.25; font-weight: 800; }
   h1 .sub { display: block; font-size: clamp(18px, 3vw, 24px); font-weight: 600; color: var(--muted); margin-top: 8px; }
   .tagline { font-size: 18px; color: var(--muted); margin: 20px auto 32px; max-width: 560px; }
@@ -109,7 +116,7 @@
 <body>
 
 <header class="wrap">
-  <div class="logo">Tsosu 做事</div>
+  <div class="logo"><img src="icon.png" width="40" height="40" alt="">Tsosu 做事</div>
   <h1>為 ADHD 設計的任務管理器
     <span class="sub">你的任務就是你的 Markdown 檔案</span>
   </h1>
