@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tsosu 做事 — 為 ADHD 設計的任務管理器</title>
+<meta name="description" content="Tsosu 做事：台灣精神科醫師設計的 Android 任務管理器。Markdown 為資料來源，搭配 Obsidian 雙向同步、到期提醒、習慣追蹤。本地優先，無伺服器、無追蹤。">
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --text: #1c1b1a;
+    --muted: #6b6560;
+    --accent: #2e7d5b;
+    --accent-soft: #e6f2ec;
+    --border: #e5e1dc;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Hero */
+  header { padding: 72px 0 48px; text-align: center; }
+  .logo {
+    font-size: 20px; letter-spacing: 4px; color: var(--accent);
+    font-weight: 700; text-transform: uppercase; margin-bottom: 12px;
+  }
+  h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.25; font-weight: 800; }
+  h1 .sub { display: block; font-size: clamp(18px, 3vw, 24px); font-weight: 600; color: var(--muted); margin-top: 8px; }
+  .tagline { font-size: 18px; color: var(--muted); margin: 20px auto 32px; max-width: 560px; }
+  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 14px 28px; border-radius: 999px;
+    font-weight: 700; font-size: 16px; transition: transform .1s ease;
+  }
+  .btn:hover { transform: translateY(-1px); text-decoration: none; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--accent-soft); color: var(--accent); }
+  .badges { margin-top: 20px; font-size: 14px; color: var(--muted); }
+
+  /* Sections */
+  section { padding: 48px 0; }
+  h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .section-sub { color: var(--muted); margin-bottom: 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+  }
+  .card h3 { font-size: 18px; margin-bottom: 8px; }
+  .card p { font-size: 15px; color: var(--muted); }
+  .card .icon { font-size: 26px; display: block; margin-bottom: 8px; }
+
+  /* Install */
+  .install { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+  .steps { counter-reset: step; list-style: none; margin: 20px 0; }
+  .steps li {
+    counter-increment: step; position: relative;
+    padding: 14px 16px 14px 58px; margin-bottom: 10px;
+    background: var(--bg); border-radius: 10px; font-size: 16px;
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%); width: 28px; height: 28px; line-height: 28px;
+    border-radius: 50%; background: var(--accent); color: #fff;
+    text-align: center; font-weight: 700; font-size: 14px;
+  }
+  code, .path {
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    background: var(--accent-soft); color: var(--accent);
+    padding: 2px 8px; border-radius: 6px; font-size: 0.92em;
+  }
+  .alt { margin-top: 18px; font-size: 14px; color: var(--muted); }
+
+  /* Sync table */
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; font-size: 15px; }
+  th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+
+  /* Privacy strip */
+  .privacy {
+    background: var(--accent); color: #fff; border-radius: var(--radius);
+    padding: 32px; text-align: center;
+  }
+  .privacy h2 { color: #fff; }
+  .privacy p { opacity: .92; max-width: 640px; margin: 8px auto 0; }
+
+  footer { padding: 40px 0 56px; text-align: center; color: var(--muted); font-size: 14px; }
+  footer .links { margin-bottom: 10px; }
+  footer .links a { margin: 0 10px; }
+
+  @media (max-width: 600px) {
+    header { padding-top: 48px; }
+    .install { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="logo">Tsosu 做事</div>
+  <h1>為 ADHD 設計的任務管理器
+    <span class="sub">你的任務就是你的 Markdown 檔案</span>
+  </h1>
+  <p class="tagline">由精神科醫師設計——把事情變小、變簡單、慶祝進度。本地優先、無帳號、無追蹤，直接同步你的 Obsidian vault。</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#install">立即安裝</a>
+    <a class="btn btn-secondary" href="https://github.com/soanseng/tsosu" target="_blank" rel="noopener">GitHub 原始碼</a>
+  </div>
+  <p class="badges">Android 原生（Kotlin + Compose）・免費・無廣告・無分析追蹤</p>
+</header>
+
+<section class="wrap" id="features">
+  <h2>為什麼是 Tsosu？</h2>
+  <p class="section-sub">多數任務管理器是為神經典型大腦設計的——逾期數字、無盡選項、落後時的罪惡感。Tsosu 不一樣。</p>
+  <div class="grid">
+    <div class="card">
+      <span class="icon">🎯</span>
+      <h3>Focus 3——「只要挑三件。」</h3>
+      <p>每天只挑 3 件今日任務，其餘收進可摺疊的「無日期」區。完成 3 件就放煙火慶祝——其他都是加分。</p>
+    </div>
+    <div class="card">
+      <span class="icon">🔁</span>
+      <h3>每日習慣——「把事情變小。」</h3>
+      <p>兩分鐘習慣、彈性連續紀錄（中斷暫停不歸零 🔥）、7 天進度條、早晚例行分組。靈感來自《原子習慣》。</p>
+    </div>
+    <div class="card">
+      <span class="icon">😌</span>
+      <h3>無羞愧 UI</h3>
+      <p>每個像素都檢視過羞愧與焦慮觸發點。週回顧只看你完成了什麼，絕口不提沒做的。</p>
+    </div>
+    <div class="card">
+      <span class="icon">🎲</span>
+      <h3>「幫我挑一件」</h3>
+      <p>選擇癱瘓是真的。選擇你現在的精力等級，骰子隨機挑一件符合的任務——「就做這件 ✓」。</p>
+    </div>
+    <div class="card">
+      <span class="icon">⏰</span>
+      <h3>任務提醒</h3>
+      <p>每個任務可設提醒時間，到期當天準時通知。點通知直接開任務、直接完成。重開機與同步後自動重排。</p>
+    </div>
+    <div class="card">
+      <span class="icon">📅</span>
+      <h3>日曆自動同步</h3>
+      <p>任務設日期 → 自動建日曆事件；改日期 → 事件跟著搬；完成 → 事件移除。支援 CalDAV（Fastmail、Nextcloud）與 Google 日曆。</p>
+    </div>
+    <div class="card">
+      <span class="icon">📝</span>
+      <h3>Markdown Vault</h3>
+      <p>一切皆純文字 Markdown，存在你自己的資料夾。在 Obsidian、nvim 或任何編輯器雙向編輯，Tsosu 下次同步自動接上。</p>
+    </div>
+    <div class="card">
+      <span class="icon">📥</span>
+      <h3>Todoist 匯入</h3>
+      <p>從設定匯入 Todoist CSV 匯出檔——任務自動去重、寫成 Markdown、推進你的 vault。</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="install">
+  <h2>安裝</h2>
+  <p class="section-sub">推薦使用 Obtainium——直接追蹤 GitHub Releases，新版自動通知更新。</p>
+  <div class="install">
+    <h3 style="margin-bottom:4px">透過 Obtainium 安裝（推薦）</h3>
+    <ol class="steps">
+      <li>在 Google Play 或 F-Droid 安裝 <a href="https://github.com/ImranR98/Obtainium" target="_blank" rel="noopener">Obtainium</a>。</li>
+      <li>打開 Obtainium，點右下角 <strong>＋</strong> 新增應用程式。</li>
+      <li>App 來源選 <strong>GitHub</strong>，輸入 <span class="path">soanseng/tsosu</span></li>
+      <li>點<strong>新增</strong>——Obtainium 會自動下載最新版 APK；之後有新 Release 也會自動提醒更新。</li>
+    </ol>
+    <p class="alt">不想用 Obtainium？直接到 <a href="https://github.com/soanseng/tsosu/releases">Releases 頁面</a>下載最新 <code>.apk</code> 安裝即可。Android 會詢問「安裝未知應用程式」權限，允許後即可安裝。</p>
+  </div>
+</section>
+
+<section class="wrap" id="sync">
+  <h2>跨裝置同步</h2>
+  <p class="section-sub">本地優先——100% 離線可用、無帳號。資料是純 Markdown 檔案，用任何檔案同步工具帶到每台裝置。</p>
+  <table>
+    <tr><th>裝置</th><th>使用方式</th></tr>
+    <tr><td>📱 手機</td><td>Tsosu App（完整 UI、習慣追蹤、Focus 3、提醒）</td></tr>
+    <tr><td>💻 電腦</td><td>Obsidian + <a href="https://publish.obsidian.md/tasks/" target="_blank" rel="noopener">Tasks 外掛</a>——核取方塊、到期日、篩選器</td></tr>
+    <tr><td>⌨️ 終端機</td><td>nvim / 任何文字編輯器——就只是 Markdown</td></tr>
+  </table>
+  <p style="margin-top:16px;font-size:15px;color:var(--muted)">資料夾用 <a href="https://syncthing.net/" target="_blank" rel="noopener">Syncthing</a> 或 Obsidian Sync 同步，任務就出現在每台裝置上。檔案格式完整文件見 <a href="https://github.com/soanseng/tsosu#vault-data-format">README</a>。</p>
+</section>
+
+<section class="wrap">
+  <div class="privacy">
+    <h2>隱私至上</h2>
+    <p>無帳號、無伺服器、無分析、無追蹤、不收集任何資料。你的任務只存在你自己的裝置與 vault 裡。</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p class="links">
+    <a href="https://github.com/soanseng/tsosu">GitHub</a>
+    <a href="https://github.com/soanseng/tsosu/releases">下載</a>
+    <a href="#install">安裝</a>
+  </p>
+  <p>Tsosu 做事 — 做事，用你的方式。</p>
+</footer>
+
+</body>
+</html>

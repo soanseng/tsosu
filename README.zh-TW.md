@@ -2,6 +2,8 @@
 
 > 台語「做事」(tsò-sū) — 由精神科醫師設計的 ADHD 友善任務管理工具。
 
+[🌐 官網](https://soanseng.github.io/tsosu/) · [English](README.md)
+
 **Tsosu** 是一款原生 Android 任務管理 app，專為不同思維模式的大腦打造。所有資料以純 markdown 檔案儲存——透過 Syncthing 同步到電腦，用 Obsidian、nvim 或任何文字編輯器管理。不需要伺服器。
 
 ## 為什麼選 Tsosu？
@@ -9,6 +11,21 @@
 大部分任務管理工具都是為神經典型的大腦設計的。它們用逾期數字懲罰你、用太多選項淹沒你、在你落後時讓你充滿罪惡感。
 
 Tsosu 不一樣。它建立在對 ADHD 的臨床理解與《原子習慣》的原則上——**做小一點、做簡單一點、慶祝進步。**
+
+## 安裝
+
+### 透過 Obtainium（推薦）
+
+[Obtainium](https://github.com/ImranR98/Obtainium) 會直接追蹤本專案的 GitHub Releases——安裝後有新版本會自動通知更新。
+
+1. 安裝 Obtainium（Google Play 或 F-Droid）
+2. 開啟 Obtainium，點右下角 **＋** 新增應用程式
+3. App 來源選 **GitHub**，輸入 `soanseng/tsosu`
+4. 點**新增**——自動下載最新版 APK，之後新版本自動提醒
+
+### 直接下載
+
+不需要 Obtainium 的話，直接到 [Releases 頁面](https://github.com/soanseng/tsosu/releases) 下載最新的 `.apk` 檔案安裝。Android 會詢問「安裝未知應用程式」權限，允許即可。
 
 ## 功能
 

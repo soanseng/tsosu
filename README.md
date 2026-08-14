@@ -1,6 +1,6 @@
 # Tsosu 做事
 
-[繁體中文](README.zh-TW.md)
+[繁體中文](README.zh-TW.md) · [🌐 Website](https://soanseng.github.io/tsosu/)
 
 > 台語「做事」(tsò-sū) — A task manager designed by a psychiatrist with ADHD.
 
@@ -11,6 +11,21 @@
 Most task managers are designed for neurotypical brains. They punish you with overdue counts, overwhelm you with options, and make you feel guilty when you fall behind.
 
 Tsosu is different. It's built on clinical understanding of ADHD and the principles of Atomic Habits — **make it small, make it easy, celebrate progress.**
+
+## Install
+
+### Via Obtainium (recommended)
+
+[Obtainium](https://github.com/ImranR98/Obtainium) tracks this project's GitHub Releases directly — install once, and new versions are auto-detected for update.
+
+1. Install Obtainium (Google Play or F-Droid)
+2. Open Obtainium, tap the **＋** button to add an app
+3. Set the app source to **GitHub**, enter `soanseng/tsosu`
+4. Tap **Add** — the latest APK downloads automatically, and future releases get update notifications
+
+### Direct download
+
+Prefer not to use Obtainium? Grab the latest `.apk` from the [Releases page](https://github.com/soanseng/tsosu/releases). Android will ask for the "install unknown apps" permission — allow it and install.
 
 ## Features
 
