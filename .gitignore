@@ -29,9 +29,6 @@ keystore.properties
 # Firebase / Google Services
 google-services.json
 
-# API specs (reference only, not runtime)
-vikunja-openapi.json
-
 # Misc
 captures/
 .externalNativeBuild/
