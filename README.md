@@ -153,6 +153,77 @@ Sync the folder with [Syncthing](https://syncthing.net/) or Obsidian Sync — yo
 
 Inspired by [org-mode](https://doc.norang.ca/org-mode.html): text files as the universal interface.
 
+## Vault Data Format
+
+Tsosu reads and writes a small, documented set of markdown files. Everything is plain text — you can edit any file by hand or with Obsidian, and Tsosu picks up the change on the next sync.
+
+### File layout
+
+```
+<your vault folder>/
+├── tasks.md              # task index — one checkbox line per task, grouped by project
+├── habits.md             # habit index — one line per habit, completion history indented
+├── tasks/
+│   └── <slug>-<id8>.md   # per-task notes (only for tasks with description/subtasks)
+├── habits/
+│   └── <slug>-<id8>.md   # per-habit notes with full completion history
+└── daily/
+    └── YYYY-MM-DD.md     # daily note — today's habits with checkboxes
+```
+
+### Task line format (`tasks.md`)
+
+Each task is a single checkbox line. Metadata is appended as emoji markers, and the machine-readable ID is a hidden HTML comment. **Do not remove or edit the `<!-- id:... -->` comment** — it is how Tsosu matches a line to a task across edits.
+
+```markdown
+- [ ] Prepare presentation 📅 2026-03-25 ⏰ 09:00 ⚡high 🍅60m ⏫ <!-- id:ghi-789 -->
+```
+
+| Marker | Meaning | Example |
+|--------|---------|---------|
+| `[ ]` `[/]` `[!]` `[>]` `[x]` `[-]` | status: todo / in-progress / on-hold / planned / done / cancelled | `[x]` |
+| `✅ YYYY-MM-DD` | completion date (on done tasks) | `✅ 2026-03-22` |
+| `❌ YYYY-MM-DD` | cancellation date (on cancelled tasks) | `❌ 2026-03-22` |
+| `📅 YYYY-MM-DD` | due date | `📅 2026-03-25` |
+| `⏳ YYYY-MM-DD` | scheduled date | `⏳ 2026-03-24` |
+| `🛫 YYYY-MM-DD` | start date | `🛫 2026-03-23` |
+| `➕ YYYY-MM-DD` | created date | `➕ 2026-03-20` |
+| `⏰ HH:MM` | reminder time (on the due date) | `⏰ 09:00` |
+| `🔁 <rule>` | recurrence rule (natural language) | `🔁 every monday` |
+| `⚡high` `😐medium` `🪫low` | energy level | `⚡high` |
+| `🍅 Nm` | time estimate in minutes | `🍅60m` |
+| `⏫` `🔺` `🔽` `🔽` | priority: urgent / high / medium / low | `⏫` |
+| `<!-- id:... -->` | stable task id — **do not edit** | `<!-- id:ghi-789 -->` |
+| `<!-- conflict -->` | task was edited on both sides; vault version was kept | |
+
+Projects are `## Heading` sections. Tasks under the first section (or before any heading) belong to Inbox. Tasks with a description or subtasks additionally get a note file under `tasks/`; the index links to it with a wikilink `[[tasks/...]]`.
+
+### Habit line format (`habits.md`)
+
+```markdown
+## Daily
+
+- [ ] Exercise (tiny: do 1 pushup) 🔁daily ⚡medium <!-- id:h1 -->
+  - ✅ 2026-03-23
+```
+
+Completion history is indented `- ✅ YYYY-MM-DD` lines under the habit. Full history lives in `habits/<slug>-<id8>.md`.
+
+### Obsidian tips
+
+- Tsosu never writes into `.obsidian/`, templates, or attachments — safe to sync the whole vault.
+- The index files use standard checkbox syntax, so the [Tasks plugin](https://publish.obsidian.md/tasks/) filters and [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) queries work directly:
+
+````markdown
+```dataview
+TASK FROM "tasks.md"
+WHERE !completed AND contains(text, "📅")
+```
+````
+
+- To add a task by hand: copy any existing line, change the title and dates, and give it a fresh id (`<!-- id:my-new-id -->`). Tsosu keeps unknown ids intact on the next sync.
+- If a task was edited in both the app and the vault since the last sync, the vault version wins and the line carries `<!-- conflict -->` so you can review and resolve it manually.
+
 ## Technical Details
 
 - **Android native** — Kotlin, Jetpack Compose, Material 3

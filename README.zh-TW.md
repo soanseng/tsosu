@@ -151,6 +151,66 @@ Tsosu 是 **local-first**——100% 離線運作，不需要帳號。你的資�
 
 靈感來自 [org-mode](https://doc.norang.ca/org-mode.html)：文字檔是萬用介面。
 
+## Vault 資料格式
+
+Tsosu 讀寫一組固定、有文件的 markdown 檔案。全部都是純文字——你可以在 Obsidian 或任何編輯器手動修改，下次同步時 Tsosu 會吃進來。
+
+### 檔案結構
+
+```
+<你的 vault 資料夾>/
+├── tasks.md              # 任務索引——每任務一行 checkbox，依專案分組
+├── habits.md             # 習慣索引——每習慣一行，完成紀錄縮排在下方
+├── tasks/
+│   └── <slug>-<id8>.md   # 單一任務 note（有描述或子任務的任務）
+├── habits/
+│   └── <slug>-<id8>.md   # 單一習慣 note（完整完成歷史）
+└── daily/
+    └── YYYY-MM-DD.md     # 每日 note——當天習慣與勾選狀態
+```
+
+### 任務行格式（`tasks.md`）
+
+每任務一行 checkbox，中繼資料用 emoji 標記，機器可讀的 id 藏在 HTML 註解裡。**不要刪改 `<!-- id:... -->` 註解**——Tsosu 靠它辨識任務。
+
+```markdown
+- [ ] Prepare presentation 📅 2026-03-25 ⏰ 09:00 ⚡high 🍅60m ⏫ <!-- id:ghi-789 -->
+```
+
+| 標記 | 意義 | 範例 |
+|------|------|------|
+| `[ ]` `[/]` `[!]` `[>]` `[x]` `[-]` | 狀態：待辦/進行中/暫緩/已排程/完成/取消 | `[x]` |
+| `✅ YYYY-MM-DD` | 完成日期（已完成任務） | `✅ 2026-03-22` |
+| `❌ YYYY-MM-DD` | 取消日期（已取消任務） | `❌ 2026-03-22` |
+| `📅 YYYY-MM-DD` | 到期日 | `📅 2026-03-25` |
+| `⏳ YYYY-MM-DD` | 排程日 | `⏳ 2026-03-24` |
+| `🛫 YYYY-MM-DD` | 開始日 | `🛫 2026-03-23` |
+| `➕ YYYY-MM-DD` | 建立日期 | `➕ 2026-03-20` |
+| `⏰ HH:MM` | 提醒時間（於到期日當天） | `⏰ 09:00` |
+| `🔁 <規則>` | 週期規則（自然語言） | `🔁 every monday` |
+| `⚡high` `😐medium` `🪫low` | 能量等級 | `⚡high` |
+| `🍅 Nm` | 預估分鐘數 | `🍅60m` |
+| `⏫` `🔺` `🔽` `🔽` | 優先級：急/高/中/低 | `⏫` |
+| `<!-- id:... -->` | 穩定任務 id——**勿編輯** | `<!-- id:ghi-789 -->` |
+| `<!-- conflict -->` | 兩端都改過；保留 vault 版本 | |
+
+專案用 `## 標題` 分區。第一個區塊（或無標題）以下是 Inbox。有描述或子任務的任務會額外在 `tasks/` 產生 note 檔，索引以 wikilink `[[tasks/...]]` 連結。
+
+### Obsidian 建議
+
+- Tsosu 不會寫入 `.obsidian/`、templates 或 attachments——整個 vault 同步都安全。
+- 索引檔是標準 checkbox 語法，[Tasks 外掛](https://publish.obsidian.md/tasks/) 篩選與 [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) 查詢可直接用：
+
+````markdown
+```dataview
+TASK FROM "tasks.md"
+WHERE !completed AND contains(text, "📅")
+```
+````
+
+- 手動新增任務：複製任一行，改標題與日期，換一個新 id（`<!-- id:my-new-id -->`）。Tsosu 下次同步會保留未知 id。
+- 若任務在 App 與 vault 兩端都被修改：保留 vault 版本，並在該行加上 `<!-- conflict -->` 讓你知道需要人工確認。
+
 ## 技術細節
 
 - **Android 原生** — Kotlin、Jetpack Compose、Material 3
