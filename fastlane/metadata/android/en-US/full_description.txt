@@ -18,8 +18,8 @@ Every habit has a 2-minute version. "Meditate" becomes "sit and take 3 breaths."
 GENTLE NUDGES
 Morning routine reminders that respect your pace. No guilt trips. No anxiety-inducing badge counts.
 
-SYNC WITH VIKUNJA
-Self-hosted task sync via Vikunja. Your data stays on your server. Tasks, habits, routines — all synced.
+SYNC WITH YOUR OWN FILES
+Everything is stored as plain markdown in a folder you own. Point Tsosu at your Obsidian vault and tasks stay in sync across devices — edit on desktop with Obsidian or nvim, sync with Syncthing or Obsidian Sync. No server required.
 
 CALENDAR INTEGRATION
 Sync tasks to Google Calendar or any CalDAV calendar (Fastmail, Nextcloud, etc.). See your tasks alongside your schedule.
@@ -34,4 +34,4 @@ BILINGUAL
 Full English and Traditional Chinese (zh-TW) support.
 
 PRIVACY FIRST
-No analytics. No ads. No tracking. Optional self-hosted sync only.
+No analytics. No ads. No tracking. Your data lives in your own markdown files.

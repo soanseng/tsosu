@@ -10,7 +10,7 @@ Tsosu stores your tasks, habits, routines, and focus data **locally on your devi
 
 Tsosu can optionally sync with:
 
-- **Vikunja** (self-hosted): Your data is sent to your own Vikunja server. The developer has no access to your server or data.
+- **Markdown vault** (Obsidian / any folder): Your tasks are stored as plain markdown files in a folder you choose on your device. You may sync that folder yourself with Syncthing, Obsidian Sync, or any file-sync tool. The developer has no access to your files.
 - **CalDAV** (Fastmail, Nextcloud, etc.): Task events are synced to your CalDAV calendar. Authentication credentials are stored locally on your device.
 - **Google Calendar**: Task events are synced to your Google Calendar via the Google Calendar API. OAuth tokens are stored locally on your device. Tsosu accesses only the calendar data necessary to create, update, and delete task events.
 
@@ -24,7 +24,7 @@ Tsosu does **not** share data with any third-party services. All sync features a
 
 ## Data storage
 
-All data is stored locally on your device using an encrypted database. Sync credentials (server URLs, tokens, passwords) are stored in Android DataStore on your device.
+All data is stored locally on your device: tasks and habits live as plain markdown files in the folder you selected, with a local database used as a fast index. Sync credentials (calendar URLs, tokens, passwords) are stored in Android DataStore on your device.
 
 ## Data deletion
 
