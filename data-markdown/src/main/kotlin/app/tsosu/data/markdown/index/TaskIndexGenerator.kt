@@ -11,6 +11,7 @@ class TaskIndexGenerator {
         tasks: List<Task>,
         projectNames: Map<String, String>,
         noteFilenames: Map<String, String>,
+        conflictIds: Set<String> = emptySet(),
     ): String = buildString {
         appendFrontmatter()
         appendLine()
@@ -21,7 +22,7 @@ class TaskIndexGenerator {
         appendLine("## Inbox")
         grouped[null]
             ?.sortedBy { it.position }
-            ?.forEach { appendLine(formatIndexTask(it, noteFilenames)) }
+            ?.forEach { appendLine(formatIndexTask(it, noteFilenames, conflictIds)) }
         appendLine()
 
         // Emit named project sections in alphabetical order
@@ -34,18 +35,23 @@ class TaskIndexGenerator {
                 appendLine("## $sectionName")
                 projectTasks
                     .sortedBy { it.position }
-                    .forEach { appendLine(formatIndexTask(it, noteFilenames)) }
+                    .forEach { appendLine(formatIndexTask(it, noteFilenames, conflictIds)) }
                 appendLine()
             }
     }
 
-    private fun formatIndexTask(task: Task, noteFilenames: Map<String, String>): String {
+    private fun formatIndexTask(
+        task: Task,
+        noteFilenames: Map<String, String>,
+        conflictIds: Set<String>,
+    ): String {
         val baseLine = serializer.formatTask(task)
-        val slug = noteFilenames[task.id] ?: return baseLine
+        val conflictMarker = if (task.id in conflictIds) " <!-- conflict -->" else ""
 
-        // Insert wikilink before the id comment
+        // Insert wikilink (and conflict marker) before the id comment
         val idComment = "<!-- id:${task.id} -->"
-        return baseLine.replace(idComment, "[[tasks/$slug]] $idComment")
+        val slug = noteFilenames[task.id] ?: return baseLine.replace(idComment, "$idComment$conflictMarker")
+        return baseLine.replace(idComment, "[[tasks/$slug]] $idComment$conflictMarker")
     }
 
     private fun StringBuilder.appendFrontmatter() {

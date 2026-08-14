@@ -26,7 +26,11 @@ class MarkdownSyncManager(
     private val taskIndexGenerator: TaskIndexGenerator = TaskIndexGenerator(),
     private val habitIndexGenerator: HabitIndexGenerator = HabitIndexGenerator(),
 ) {
-    suspend fun exportTasks(tasks: List<Task>, projectNames: Map<String, String>) {
+    suspend fun exportTasks(
+        tasks: List<Task>,
+        projectNames: Map<String, String>,
+        conflictIds: Set<String> = emptySet(),
+    ) {
         fileAccess.ensureFolder("tasks")
         val noteFilenames = mutableMapOf<String, String>()
 
@@ -41,7 +45,7 @@ class MarkdownSyncManager(
         }
 
         // Regenerate index; skip write when unchanged (incremental sync)
-        val indexContent = taskIndexGenerator.generate(tasks, projectNames, noteFilenames)
+        val indexContent = taskIndexGenerator.generate(tasks, projectNames, noteFilenames, conflictIds)
         if (fileAccess.readTasksFile() != indexContent) {
             fileAccess.writeTasksFile(indexContent)
         }

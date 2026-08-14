@@ -71,6 +71,36 @@ class TaskIndexGeneratorTest {
     // --- Wikilinks ---
 
     @Test
+    fun `conflicted task line carries conflict marker`() {
+        val tasks = listOf(task(id = "a1b2", title = "Buy groceries"))
+
+        val result = generator.generate(tasks, emptyMap(), emptyMap(), conflictIds = setOf("a1b2"))
+        val taskLine = result.lines().first { it.startsWith("- [") }
+
+        assertTrue(
+            taskLine.contains("<!-- conflict -->"),
+            "Conflicted task should carry marker, got: $taskLine",
+        )
+        assertTrue(
+            taskLine.contains("<!-- id:a1b2 -->"),
+            "Marker must not replace id comment, got: $taskLine",
+        )
+    }
+
+    @Test
+    fun `non-conflicted task line has no conflict marker`() {
+        val tasks = listOf(task(id = "a1b2", title = "Buy groceries"))
+
+        val result = generator.generate(tasks, emptyMap(), emptyMap())
+        val taskLine = result.lines().first { it.startsWith("- [") }
+
+        assertFalse(
+            taskLine.contains("conflict"),
+            "Unchanged task should have no marker, got: $taskLine",
+        )
+    }
+
+    @Test
     fun `task with noteFilename gets wikilink before id comment`() {
         val tasks = listOf(task(id = "a1b2", title = "Buy groceries"))
         val noteFilenames = mapOf("a1b2" to "buy-groceries")

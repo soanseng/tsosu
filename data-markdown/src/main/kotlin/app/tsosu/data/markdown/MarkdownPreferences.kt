@@ -19,6 +19,7 @@ class MarkdownPreferences(private val context: Context) {
 
     private val folderUriKey = stringPreferencesKey("folder_uri")
     private val lastSyncKey = longPreferencesKey("last_sync")
+    private val taskHashesKey = stringPreferencesKey("task_hashes")
 
     fun folderUri(): Flow<Uri?> = context.markdownDataStore.data.map { prefs ->
         prefs[folderUriKey]?.let { Uri.parse(it) }
@@ -45,6 +46,33 @@ class MarkdownPreferences(private val context: Context) {
             prefs[lastSyncKey] = timestamp
         }
     }
+
+    /**
+     * Last-exported canonical hash per task id — baseline for conflict detection.
+     */
+    suspend fun getTaskHashes(): Map<String, String> =
+        context.markdownDataStore.data.first()[taskHashesKey]?.let(::decodeHashes) ?: emptyMap()
+
+    suspend fun setTaskHashes(hashes: Map<String, String>) {
+        context.markdownDataStore.edit { prefs ->
+            if (hashes.isEmpty()) {
+                prefs.remove(taskHashesKey)
+            } else {
+                prefs[taskHashesKey] = encodeHashes(hashes)
+            }
+        }
+    }
+
+    private fun encodeHashes(hashes: Map<String, String>): String =
+        hashes.entries.joinToString("\n") { "${it.key}=${it.value}" }
+
+    private fun decodeHashes(raw: String): Map<String, String> =
+        raw.lineSequence()
+            .mapNotNull { line ->
+                val idx = line.indexOf('=')
+                if (idx > 0) line.substring(0, idx) to line.substring(idx + 1) else null
+            }
+            .toMap()
 
     suspend fun clear() {
         context.markdownDataStore.edit { it.clear() }
