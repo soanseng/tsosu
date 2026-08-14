@@ -6,6 +6,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.usecase.CreateTaskUseCase
+import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class QuickAddViewModel @Inject constructor(
     private val createTaskUseCase: CreateTaskUseCase,
+    private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     fun createTask(
@@ -36,7 +38,7 @@ class QuickAddViewModel @Inject constructor(
                 reminderTime = reminderTime,
                 recurrenceRule = recurrenceRule,
             )
-            createTaskUseCase(task)
+            createTaskUseCase(task).getOrNull()?.let { reminderScheduler.schedule(it) }
         }
     }
 }

@@ -7,6 +7,7 @@ import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
+import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ import javax.inject.Inject
 class InboxViewModel @Inject constructor(
     taskRepository: TaskRepository,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
+    private val reminderScheduler: ReminderScheduler,
     private val setTaskStatus: SetTaskStatusUseCase,
 ) : ViewModel() {
 
@@ -26,7 +28,7 @@ class InboxViewModel @Inject constructor(
 
     fun toggleDone(taskId: String) {
         viewModelScope.launch {
-            toggleTaskDone(taskId)
+            toggleTaskDone(taskId).getOrNull()?.let { reminderScheduler.schedule(it) }
         }
     }
 

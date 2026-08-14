@@ -9,6 +9,7 @@ import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.DeleteTaskUseCase
 import app.tsosu.domain.usecase.UpdateTaskUseCase
+import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +44,7 @@ class TaskDetailViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val updateTaskUseCase: UpdateTaskUseCase,
     private val deleteTaskUseCase: DeleteTaskUseCase,
+    private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TaskDetailState())
@@ -140,6 +142,7 @@ class TaskDetailViewModel @Inject constructor(
                 cancelledDate = cancelledDate,
             )
             updateTaskUseCase(updated)
+            reminderScheduler.schedule(updated)
             _state.value = _state.value.copy(saved = true)
         }
     }
@@ -148,6 +151,7 @@ class TaskDetailViewModel @Inject constructor(
         val task = _state.value.task ?: return
         viewModelScope.launch {
             deleteTaskUseCase(task.id)
+            reminderScheduler.cancel(task.id)
             _state.value = _state.value.copy(deleted = true)
         }
     }

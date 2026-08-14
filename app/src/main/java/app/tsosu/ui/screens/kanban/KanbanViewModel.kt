@@ -9,6 +9,7 @@ import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
+import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,6 +40,7 @@ data class KanbanUiState(
 class KanbanViewModel @Inject constructor(
     taskRepository: TaskRepository,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
+    private val reminderScheduler: ReminderScheduler,
     private val setTaskStatus: SetTaskStatusUseCase,
 ) : ViewModel() {
 
@@ -60,7 +62,7 @@ class KanbanViewModel @Inject constructor(
 
     fun onToggleDone(taskId: String) {
         viewModelScope.launch {
-            toggleTaskDone(taskId)
+            toggleTaskDone(taskId).getOrNull()?.let { reminderScheduler.schedule(it) }
         }
     }
 

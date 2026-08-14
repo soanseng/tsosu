@@ -10,6 +10,7 @@ import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
+import app.tsosu.notification.ReminderScheduler
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -41,6 +42,7 @@ data class FocusUiState(
 class FocusViewModel @Inject constructor(
     getTodayOverview: GetTodayOverviewUseCase,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
+    private val reminderScheduler: ReminderScheduler,
     private val setTaskStatus: SetTaskStatusUseCase,
     private val taskRepository: TaskRepository,
 ) : ViewModel() {
@@ -86,7 +88,7 @@ class FocusViewModel @Inject constructor(
 
     fun onToggleDone(taskId: String) {
         viewModelScope.launch {
-            toggleTaskDone(taskId)
+            toggleTaskDone(taskId).getOrNull()?.let { reminderScheduler.schedule(it) }
         }
     }
 
