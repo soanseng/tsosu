@@ -98,12 +98,13 @@ class NotificationHelper @Inject constructor(
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
-    fun showOverdueSummary(count: Int, titles: List<String>) {
+    fun showOverdueSummary(count: Int, titles: List<String>, taskIds: List<String>) {
         if (!hasPermission()) return
         if (count == 0) return
 
         val tapIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            taskIds.firstOrNull()?.let { putExtra("taskId", it) }
         }
         val tapPending = PendingIntent.getActivity(
             context,

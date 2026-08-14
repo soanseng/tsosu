@@ -97,7 +97,9 @@ class MainActivity : ComponentActivity() {
                 var showAddHabit by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
                 var showFilter by remember { mutableStateOf(false) }
-                var editingTaskId by remember { mutableStateOf<String?>(null) }
+                var editingTaskId by remember {
+                    mutableStateOf(intent.getStringExtra("taskId") ?: null)
+                }
                 val focusViewModel: FocusViewModel = hiltViewModel()
                 val habitsViewModel: HabitsViewModel = hiltViewModel()
                 val isVaultConfigured by syncRepository.isConfigured()
