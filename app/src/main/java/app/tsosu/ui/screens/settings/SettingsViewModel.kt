@@ -180,6 +180,8 @@ class SettingsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         message = "Imported ${r.tasksImported} tasks from Todoist$warningText",
                     )
+                    // Push imported tasks into the markdown vault
+                    vaultChangeWatcher.syncOnce()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
