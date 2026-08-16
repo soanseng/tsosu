@@ -11,6 +11,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import io.mockk.coEvery
@@ -338,6 +339,80 @@ class MarkdownSyncManagerTest {
         assertEquals("h1", result.habits[0].id)
         assertEquals("Meditate", result.habits[0].title)
         assertEquals(1, result.completions.size)
+    }
+
+    @Test
+    fun `importHabits merges index-only lines when note files exist`() = runTest {
+        val noteContent = buildString {
+            appendLine("---")
+            appendLine("id: h1")
+            appendLine("frequency: daily")
+            appendLine("energy: medium")
+            appendLine("created: 2026-03-20")
+            appendLine("---")
+            appendLine()
+            appendLine("# Meditate")
+        }
+        val indexContent = buildString {
+            appendLine("---")
+            appendLine("tsosu: v1")
+            appendLine("---")
+            appendLine()
+            appendLine("## \uD83C\uDF05 Morning")
+            appendLine()
+            appendLine("- Meditate \u26A1medium <!-- id:h1 -->")
+            appendLine("- Water plants \u26A1low <!-- id:hand-1 -->")
+        }
+        coEvery { fileAccess.listFolder("habits") } returns listOf("meditate.md")
+        coEvery { fileAccess.readFileInFolder("habits", "meditate.md") } returns noteContent
+        coEvery { fileAccess.readHabitsFile() } returns indexContent
+
+        val result = manager.importHabits()
+
+        // Note-file habit wins for h1; the hand-added index-only line
+        // supplements instead of being wiped by the next push.
+        assertEquals(2, result.habits.size)
+        assertEquals(setOf("h1", "hand-1"), result.habits.map { it.id }.toSet())
+        val h1 = result.habits.first { it.id == "h1" }
+        assertEquals("Meditate", h1.title)
+        assertEquals("medium", h1.energyLevel.name.lowercase())
+    }
+
+    @Test
+    fun `index-only line strips wikilink and infers routine from heading`() = runTest {
+        val indexContent = buildString {
+            appendLine("---")
+            appendLine("tsosu: v1")
+            appendLine("---")
+            appendLine()
+            appendLine("## \uD83C\uDF05 Morning")
+            appendLine()
+            appendLine("- Water plants \u26A1low [[habits/water-plants-x1]] <!-- id:hand-1 -->")
+        }
+        coEvery { fileAccess.listFolder("habits") } returns emptyList()
+        coEvery { fileAccess.readHabitsFile() } returns indexContent
+
+        val result = manager.importHabits()
+
+        assertEquals(1, result.habits.size)
+        assertEquals("Water plants", result.habits[0].title)
+        assertEquals(RoutineTime.MORNING, result.routineTimeByHabitId["hand-1"])
+    }
+
+    @Test
+    fun `evening heading maps index-only habit to evening routine`() = runTest {
+        val indexContent = buildString {
+            appendLine("## \uD83C\uDF19 Evening")
+            appendLine()
+            appendLine("- Stretch <!-- id:eve-1 -->")
+        }
+        coEvery { fileAccess.listFolder("habits") } returns emptyList()
+        coEvery { fileAccess.readHabitsFile() } returns indexContent
+
+        val result = manager.importHabits()
+
+        assertEquals("Stretch", result.habits[0].title)
+        assertEquals(RoutineTime.EVENING, result.routineTimeByHabitId["eve-1"])
     }
 
     @Test

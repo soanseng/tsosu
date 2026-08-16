@@ -276,14 +276,26 @@ class TodoistCsvParserTest {
     fun `description with existing text and unrecognized recurrence merges`() {
         val csv = """
             TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE
-            task,Task,Existing description,4,1,,,every other month,en,
+            task,Task,Existing description,4,1,,,every fortnight-ish,en,
         """.trimIndent()
 
         val result = parser.parse(csv)
 
         val desc = result.tasks[0].description
         assertTrue(desc.contains("Existing description"))
-        assertTrue(desc.contains("every other month"))
+        assertTrue(desc.contains("every fortnight-ish"))
+    }
+
+    @Test
+    fun `every other month is recognized as recurrence rule`() {
+        val csv = """
+            TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE
+            task,Task,Existing description,4,1,,,every other month,en,
+        """.trimIndent()
+
+        val result = parser.parse(csv)
+
+        assertEquals("RRULE:FREQ=MONTHLY;INTERVAL=2", result.tasks[0].recurrenceRule)
     }
 
     @Test

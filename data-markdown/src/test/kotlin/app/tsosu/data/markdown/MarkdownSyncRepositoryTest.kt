@@ -203,4 +203,36 @@ class MarkdownSyncRepositoryTest {
             )
         }
     }
+
+    @Test
+    fun `pull imports habits from legacy index fallback with no parsed notes`() = runTest {
+        val preferences = mockk<MarkdownPreferences>(relaxed = true)
+        val legacyHabit = app.tsosu.domain.model.Habit(id = "legacy-1", title = "Old line habit")
+        // Legacy habits.md fallback: habits populated, parsedNotes empty.
+        val syncManager = mockk<MarkdownSyncManager>(relaxed = true)
+        coEvery { syncManager.importTasks() } returns ParsedTasks(emptyList(), emptyMap())
+        coEvery { syncManager.importHabits() } returns ParsedHabits(
+            habits = listOf(legacyHabit),
+            completions = emptyList(),
+            parsedNotes = emptyList(),
+        )
+
+        val taskDao = mockk<TaskDao>(relaxed = true)
+        coEvery { taskDao.getAllTasks() } returns flowOf(emptyList())
+        val habitDao = mockk<HabitDao>(relaxed = true)
+        coEvery { habitDao.getActiveHabits() } returns flowOf(emptyList())
+        val projectDao = mockk<ProjectDao>(relaxed = true)
+        coEvery { projectDao.getAll() } returns flowOf(emptyList())
+        val routineDao = mockk<RoutineDao>(relaxed = true)
+        coEvery { routineDao.getAll() } returns flowOf(emptyList())
+
+        val repo = MarkdownSyncRepository(preferences, syncManager, taskDao, habitDao, projectDao, routineDao)
+        repo.pull().getOrThrow()
+
+        // The legacy habit must land in Room — otherwise the next push
+        // would wipe its line from habits.md (data loss).
+        coVerify {
+            habitDao.insert(match { it.id == "legacy-1" })
+        }
+    }
 }

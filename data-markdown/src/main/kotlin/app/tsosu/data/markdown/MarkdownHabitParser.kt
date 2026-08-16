@@ -13,18 +13,25 @@ import kotlin.uuid.Uuid
 data class ParsedHabits(
     val habits: List<Habit>,
     val completions: List<HabitCompletion>,
+    /**
+     * Routine grouping per habit id, when derivable (index section headings or
+     * per-habit notes); empty for vaults that carry neither.
+     */
+    val routineTimeByHabitId: Map<String, RoutineTime> = emptyMap(),
     /** Parsed per-habit notes with their routine grouping; empty for the legacy index fallback. */
     val parsedNotes: List<Pair<app.tsosu.data.markdown.habitnote.ParsedHabitNote, RoutineTime?>> = emptyList(),
 )
 
 class MarkdownHabitParser {
-
     private val habitLineRegex = Regex("""^- \[ ] (.+)$""")
+    // Generated index lines use a bare dash (no checkbox state for habits).
+    private val bareHabitLineRegex = Regex("""^- ([^\[].*)$""")
     private val idRegex = Regex("""<!-- id:(\S+) -->""")
+    private val wikilinkRegex = Regex("""\[\[habits/[^\]]*\]\]""")
     private val tinyRegex = Regex("""\(tiny: ([^)]+)\)""")
-    private val frequencyDailyRegex = Regex("""\uD83D\uDD01daily""")
     private val frequencyWeekdaysRegex = Regex("""\uD83D\uDD01weekdays""")
     private val frequencyCustomRegex = Regex("""\uD83D\uDD01(\d+)x/week""")
+    private val frequencyDailyRegex = Regex("""\uD83D\uDD01daily""")
     private val energyHighRegex = Regex("""\u26A1high""")
     private val energyMediumRegex = Regex("""\u26A1medium""")
     private val energyLowRegex = Regex("""\u26A1low""")
@@ -37,10 +44,11 @@ class MarkdownHabitParser {
         val lines = markdown.lines()
         val habits = mutableListOf<Habit>()
         val completions = mutableListOf<HabitCompletion>()
-
+        val routineByHabitId = mutableMapOf<String, RoutineTime>()
         var insideFrontmatter = false
         var frontmatterClosed = false
         var currentHabitId: String? = null
+        var currentRoutine: RoutineTime? = null
         var positionCounter = 0.0
 
         for (line in lines) {
@@ -59,8 +67,16 @@ class MarkdownHabitParser {
             }
             if (insideFrontmatter) continue
 
-            // Skip section headings
-            if (trimmed.startsWith("## ")) continue
+            // Track section heading → routine for index lines
+            if (trimmed.startsWith("## ")) {
+                currentRoutine = when {
+                    trimmed.contains("Morning") -> RoutineTime.MORNING
+                    trimmed.contains("Anytime") -> RoutineTime.AFTERNOON
+                    trimmed.contains("Evening") -> RoutineTime.EVENING
+                    else -> null
+                }
+                continue
+            }
 
             // Check for completion line (must come before habit line check)
             val completionMatch = completionLineRegex.find(line)
@@ -78,6 +94,7 @@ class MarkdownHabitParser {
 
             // Check for habit line
             val habitMatch = habitLineRegex.find(trimmed)
+                ?: bareHabitLineRegex.find(trimmed)
             if (habitMatch != null) {
                 val rawContent = habitMatch.groupValues[1]
 
@@ -113,9 +130,10 @@ class MarkdownHabitParser {
                     else -> EnergyLevel.LOW
                 }
 
-                // Clean title: strip all metadata markers and id comment
+                // Clean title: strip all metadata markers, wikilink, and id comment
                 val title = rawContent
                     .replace(idRegex, "")
+                    .replace(wikilinkRegex, "")
                     .replace(tinyRegex, "")
                     .replace(frequencyCustomRegex, "")
                     .replace(frequencyWeekdaysRegex, "")
@@ -123,6 +141,7 @@ class MarkdownHabitParser {
                     .replace(energyHighRegex, "")
                     .replace(energyMediumRegex, "")
                     .replace(energyLowRegex, "")
+                    .replace(Regex("\\s+"), " ")
                     .trim()
 
                 val habit = Habit(
@@ -134,8 +153,8 @@ class MarkdownHabitParser {
                     energyLevel = energyLevel,
                     position = positionCounter,
                 )
-
                 habits.add(habit)
+                currentRoutine?.let { routineByHabitId[id] = it }
                 currentHabitId = id
                 positionCounter += 1.0
             } else {
@@ -146,6 +165,6 @@ class MarkdownHabitParser {
             }
         }
 
-        return ParsedHabits(habits, completions)
+        return ParsedHabits(habits, completions, routineTimeByHabitId = routineByHabitId)
     }
 }

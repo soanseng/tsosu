@@ -144,15 +144,32 @@ class MarkdownSyncManager(
             }
         }
 
-        // Fallback: if no habit note files found, try old habits.md
-        if (allHabits.isEmpty()) {
-            val content = fileAccess.readHabitsFile()
-            if (content != null) {
-                return habitParser.parse(content)
+        // Also parse the habits.md index: note-file habits win by id, and
+        // index-only lines (hand-added in Obsidian) supplement them. This
+        // covers no-notes, mixed, and all-notes vaults uniformly.
+        val indexRoutineByHabitId = mutableMapOf<String, RoutineTime>()
+        val indexContent = fileAccess.readHabitsFile()
+        if (indexContent != null) {
+            try {
+                val indexParsed = habitParser.parse(indexContent)
+                for (habit in indexParsed.habits) {
+                    if (habit.id in seenHabitIds) continue
+                    seenHabitIds.add(habit.id)
+                    allHabits.add(habit)
+                }
+                allCompletions.addAll(indexParsed.completions)
+                indexRoutineByHabitId.putAll(indexParsed.routineTimeByHabitId)
+            } catch (_: Exception) {
+                // skip malformed index
             }
         }
 
-        return ParsedHabits(allHabits, allCompletions, parsedNotes)
+        return ParsedHabits(
+            habits = allHabits,
+            completions = allCompletions,
+            routineTimeByHabitId = indexRoutineByHabitId,
+            parsedNotes = parsedNotes,
+        )
     }
 
     suspend fun exportDailyNote(

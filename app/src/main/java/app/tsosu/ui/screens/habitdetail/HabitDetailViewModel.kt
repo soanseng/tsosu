@@ -13,6 +13,7 @@ import app.tsosu.notification.ReminderTriggerCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -54,9 +55,14 @@ class HabitDetailViewModel @Inject constructor(
     val state: StateFlow<HabitDetailState> = _state.asStateFlow()
 
     private val routineMutex = Mutex()
+    private var loadJob: Job? = null
 
     fun loadHabit(habitId: String) {
-        viewModelScope.launch {
+        // Reset synchronously before the DB suspension so a stale
+        // saved/archived flag can't auto-dismiss the sheet on re-open.
+        loadJob?.cancel()
+        _state.value = HabitDetailState()
+        loadJob = viewModelScope.launch {
             val habit = habitRepository.getHabit(habitId).first() ?: return@launch
             val routineTime = habit.routineId?.let { id ->
                 routineRepository.getRoutines().first()

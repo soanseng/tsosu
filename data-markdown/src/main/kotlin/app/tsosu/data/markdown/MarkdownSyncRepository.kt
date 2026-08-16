@@ -40,18 +40,16 @@ class MarkdownSyncRepository(
 
     override fun isConfigured(): Flow<Boolean> = preferences.isConfigured()
 
-    override suspend fun sync(): Result<SyncResult> = runCatching {
-        _syncState.value = SyncState.SYNCING
-
+    override suspend fun sync(): Result<SyncResult> = wrapSyncState {
         pullInternal().getOrThrow()
         val exportedCount = pushInternal().getOrThrow()
 
-        SyncResult(
-            exported = exportedCount,
-            imported = lastImportedCount,
+        Result.success(
+            SyncResult(
+                exported = exportedCount,
+                imported = lastImportedCount,
+            ),
         )
-    }.onFailure {
-        _syncState.value = SyncState.ERROR
     }
 
     override suspend fun pull(): Result<Unit> = wrapSyncState { pullInternal() }
@@ -75,9 +73,16 @@ class MarkdownSyncRepository(
         for (task in importedTasks.tasks) {
             taskDao.upsert(task.toEntity())
         }
-        for ((parsed, routineTime) in importedHabits.parsedNotes) {
-            val routineId = routineTime?.let { resolveRoutineId(it) }
-            habitDao.insert(parsed.habit.copy(routineId = routineId).toEntity())
+        // Import every habit (parsedNotes covers note files; index-only lines
+        // come through habits/completions with the index routine map).
+        val routineTimeByNote = importedHabits.parsedNotes.associate { (note, time) ->
+            note.habit.id to time
+        }
+        for (habit in importedHabits.habits) {
+            val routineTime = routineTimeByNote[habit.id]
+                ?: importedHabits.routineTimeByHabitId[habit.id]
+            val routineId = routineTime?.let { resolveRoutineId(it) } ?: habit.routineId
+            habitDao.insert(habit.copy(routineId = routineId).toEntity())
         }
         for (completion in importedHabits.completions) {
             habitDao.insertCompletion(completion.toEntity())
@@ -121,6 +126,8 @@ class MarkdownSyncRepository(
         preferences.setTaskHashes(
             tasks.associate { it.id to conflictDetector.serializer.formatTask(it) },
         )
+        // Conflict markers were written; don't re-emit them on later pushes.
+        pendingConflictIds = emptySet()
 
         preferences.setLastSync(System.currentTimeMillis())
         tasks.size + habits.size
