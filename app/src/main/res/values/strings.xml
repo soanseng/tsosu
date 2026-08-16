@@ -79,6 +79,7 @@
     <string name="notif_channel_habits">Habit Reminders</string>
     <string name="notif_channel_habits_desc">Daily habit reminder nudges</string>
     <string name="notif_habit_done">Done</string>
+    <string name="habits_buy_freeze">Buy freeze ⚡30</string>
 
     <!-- Habit Editor -->
     <string name="habit_detail_title">Edit Habit</string>

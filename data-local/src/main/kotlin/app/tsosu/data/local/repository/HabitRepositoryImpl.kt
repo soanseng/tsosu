@@ -12,6 +12,7 @@ import app.tsosu.domain.usecase.HabitStreakCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -43,9 +44,13 @@ class HabitRepositoryImpl(
         return combine(
             habitDao.getById(habitId),
             habitDao.getCompletionDates(habitId),
-        ) { habit, dateEpochs ->
+            gamification?.shieldedDates(habitId) ?: flowOf(emptyList()),
+        ) { habit, dateEpochs, shieldEpochs ->
             val tz = TimeZone.currentSystemDefault()
             val dates = dateEpochs.map {
+                Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
+            }.toSet()
+            val shielded = shieldEpochs.map {
                 Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
             }.toSet()
             HabitStreakInfo(
@@ -53,7 +58,9 @@ class HabitRepositoryImpl(
                 habitTitle = habit?.title ?: "",
                 completedLast7Days = HabitStreakCalculator.countInWindow(dates, 7),
                 completedLast30Days = HabitStreakCalculator.countInWindow(dates, 30),
-                currentConsecutiveDays = HabitStreakCalculator.consecutiveDays(dates),
+                currentConsecutiveDays = HabitStreakCalculator.consecutiveDays(
+                    distinctDates = dates + shielded,
+                ),
                 completionRate = if (dates.isNotEmpty()) {
                     HabitStreakCalculator.countInWindow(dates, 30) / 30f
                 } else 0f,
@@ -98,10 +105,24 @@ class HabitRepositoryImpl(
             if (inserted > 0) {
                 // First completion of the day earns energy.
                 gamification?.awardEnergy(ENERGY_PER_HABIT)
+                // A completed habit with a bought freeze auto-bridges its
+                // most recent gap (Duolingo-style streak repair).
+                autoShieldGap(habitId)
             }
             onHabitChanged?.invoke(habitId)
             completion
         }
+
+    private suspend fun autoShieldGap(habitId: String) {
+        val gamification = gamification ?: return
+        val tz = TimeZone.currentSystemDefault()
+        val dates = habitDao.getCompletionDatesSync(habitId).map {
+            Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
+        }.toSet()
+        val gap = HabitStreakCalculator.firstGapBeforeStreak(dates) ?: return
+        val gapEpoch = gap.atStartOfDayIn(tz).toEpochMilliseconds()
+        gamification.shieldGap(habitId, gapEpoch)
+    }
 
     override suspend fun uncompleteHabit(habitId: String, date: LocalDate): Result<Unit> =
         runCatching {

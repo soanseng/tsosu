@@ -8,4 +8,5 @@ import androidx.room.PrimaryKey
 data class GamificationEntity(
     @PrimaryKey val id: Int = 1,
     val energy: Int = 0,
+    val freezes: Int = 0,
 )

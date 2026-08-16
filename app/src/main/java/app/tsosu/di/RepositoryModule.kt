@@ -4,6 +4,7 @@ import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.FocusDao
 import app.tsosu.data.local.dao.GamificationDao
 import app.tsosu.data.local.dao.HabitDao
+import app.tsosu.data.local.dao.StreakShieldDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
@@ -62,8 +63,11 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideGamificationRepository(gamificationDao: GamificationDao): GamificationRepository =
-        GamificationRepositoryImpl(gamificationDao)
+    fun provideGamificationRepository(
+        gamificationDao: GamificationDao,
+        streakShieldDao: StreakShieldDao,
+    ): GamificationRepository =
+        GamificationRepositoryImpl(gamificationDao, streakShieldDao)
 
     @Provides
     @Singleton

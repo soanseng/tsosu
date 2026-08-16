@@ -7,9 +7,11 @@ import app.tsosu.data.local.MIGRATION_2_3
 import app.tsosu.data.local.MIGRATION_3_4
 import app.tsosu.data.local.MIGRATION_4_5
 import app.tsosu.data.local.MIGRATION_5_6
+import app.tsosu.data.local.MIGRATION_6_7
 import app.tsosu.data.local.TsosuDatabase
 import app.tsosu.data.local.dao.FocusDao
 import app.tsosu.data.local.dao.GamificationDao
+import app.tsosu.data.local.dao.StreakShieldDao
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.LabelDao
 import app.tsosu.data.local.dao.ProjectDao
@@ -30,8 +32,9 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): TsosuDatabase =
         Room.databaseBuilder(context, TsosuDatabase::class.java, "tsosu.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
             .build()
+    @Provides fun provideStreakShieldDao(db: TsosuDatabase): StreakShieldDao = db.streakShieldDao()
     @Provides fun provideGamificationDao(db: TsosuDatabase): GamificationDao = db.gamificationDao()
 
     @Provides fun provideTaskDao(db: TsosuDatabase): TaskDao = db.taskDao()

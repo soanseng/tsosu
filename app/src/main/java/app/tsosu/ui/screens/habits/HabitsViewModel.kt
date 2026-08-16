@@ -9,9 +9,10 @@ import app.tsosu.domain.model.Routine
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.RoutineRepository
+import app.tsosu.domain.repository.GamificationRepository
+import app.tsosu.domain.usecase.GetTodayHabitsUseCase
 import app.tsosu.domain.usecase.CompleteHabitUseCase
 import app.tsosu.domain.usecase.CreateHabitUseCase
-import app.tsosu.domain.usecase.GetTodayHabitsUseCase
 import app.tsosu.domain.usecase.HabitWithStatus
 import app.tsosu.notification.ReminderScheduler
 import app.tsosu.notification.ReminderTriggerCalculator
@@ -48,7 +49,9 @@ class HabitsViewModel @Inject constructor(
     private val createHabitUseCase: CreateHabitUseCase,
     private val completeHabit: CompleteHabitUseCase,
     private val reminderScheduler: ReminderScheduler,
+    private val gamification: GamificationRepository,
 ) : ViewModel() {
+
 
     private val routineMutex = Mutex()
 
@@ -71,6 +74,19 @@ class HabitsViewModel @Inject constructor(
             totalCount = habits.size,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsUiState())
+
+    val freezes: StateFlow<Int> = gamification.freezes()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun buyFreeze() {
+        viewModelScope.launch {
+            val ok = gamification.buyFreeze()
+            if (!ok) {
+                _errorEvent.emit("Not enough energy")
+            }
+        }
+    }
+
 
     fun onToggleHabit(habitId: String) {
         viewModelScope.launch {

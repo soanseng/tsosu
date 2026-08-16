@@ -158,6 +158,7 @@
     <string name="notif_channel_habits">習慣提醒</string>
     <string name="notif_channel_habits_desc">每日習慣提醒督促</string>
     <string name="notif_habit_done">完成</string>
+    <string name="habits_buy_freeze">買護盾 ⚡30</string>
 
     <!-- Habit Editor -->
     <string name="habit_detail_title">編輯習慣</string>

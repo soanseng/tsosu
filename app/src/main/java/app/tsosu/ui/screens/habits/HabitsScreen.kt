@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -53,6 +54,7 @@ fun HabitsScreen(
     viewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val freezes by viewModel.freezes.collectAsStateWithLifecycle()
     val konfettiTrigger = remember { mutableIntStateOf(0) }
     val haptic = rememberHaptic()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -84,10 +86,21 @@ fun HabitsScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Text(
-                text = stringResource(R.string.habits_title),
-                style = MaterialTheme.typography.headlineMedium,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.habits_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Spacer(Modifier.width(8.dp))
+                AssistChip(
+                    onClick = { viewModel.buyFreeze() },
+                    label = {
+                        Text(
+                            "❄$freezes · " + stringResource(R.string.habits_buy_freeze),
+                        )
+                    },
+                )
+            }
             Text(
                 text = stringResource(R.string.habits_done_count, state.completedCount, state.totalCount),
                 style = MaterialTheme.typography.bodyMedium,
