@@ -7,16 +7,17 @@ import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.repository.HabitRepository
+import app.tsosu.domain.usecase.HabitStreakCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Duration.Companion.days
 
 class HabitRepositoryImpl(
     private val habitDao: HabitDao,
@@ -38,24 +39,23 @@ class HabitRepositoryImpl(
     }
 
     override fun getStreakInfo(habitId: String): Flow<HabitStreakInfo> {
-        val now = Clock.System.now()
-        val tz = TimeZone.currentSystemDefault()
-        val last7Start = (now - 7.days).toEpochMilliseconds()
-        val last30Start = (now - 30.days).toEpochMilliseconds()
-        val end = now.toEpochMilliseconds()
-
         return combine(
             habitDao.getById(habitId),
-            habitDao.getCompletionCount(habitId, last7Start, end),
-            habitDao.getCompletionCount(habitId, last30Start, end),
-        ) { habit, last7, last30 ->
+            habitDao.getCompletionDates(habitId),
+        ) { habit, dateEpochs ->
+            val tz = TimeZone.currentSystemDefault()
+            val dates = dateEpochs.map {
+                Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
+            }.toSet()
             HabitStreakInfo(
                 habitId = habitId,
                 habitTitle = habit?.title ?: "",
-                completedLast7Days = last7,
-                completedLast30Days = last30,
-                currentConsecutiveDays = last7, // simplified
-                completionRate = if (last30 > 0) last30 / 30f else 0f,
+                completedLast7Days = HabitStreakCalculator.countInWindow(dates, 7),
+                completedLast30Days = HabitStreakCalculator.countInWindow(dates, 30),
+                currentConsecutiveDays = HabitStreakCalculator.consecutiveDays(dates),
+                completionRate = if (dates.isNotEmpty()) {
+                    HabitStreakCalculator.countInWindow(dates, 30) / 30f
+                } else 0f,
             )
         }
     }
@@ -89,7 +89,11 @@ class HabitRepositoryImpl(
         runCatching {
             val now = Clock.System.now()
             val completion = HabitCompletion(habitId, date, now)
-            habitDao.insertCompletion(completion.toEntity())
+            habitDao.insertCompletionOnce(
+                habitId = habitId,
+                date = completion.toEntity().date,
+                completedAt = now.toEpochMilliseconds(),
+            )
             onHabitChanged?.invoke(habitId)
             completion
         }

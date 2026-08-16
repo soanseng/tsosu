@@ -116,12 +116,10 @@ class ReminderReceiver : BroadcastReceiver() {
             try {
                 val habit = habitDao.getByIdSync(habitId) ?: return@launch
                 val now = Clock.System.now().toEpochMilliseconds()
-                habitDao.insertCompletion(
-                    HabitCompletionEntity(
-                        habitId = habitId,
-                        date = todayEpoch(),
-                        completedAt = now,
-                    ),
+                habitDao.insertCompletionOnce(
+                    habitId = habitId,
+                    date = todayEpoch(),
+                    completedAt = now,
                 )
                 NotificationManagerCompat.from(context).cancel(habitId.hashCode())
                 rescheduleNext(habitId, habit.reminderMinutes, habit.isArchived)

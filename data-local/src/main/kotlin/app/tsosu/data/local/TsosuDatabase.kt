@@ -44,6 +44,21 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Collapse historical duplicate completions (same habit + day),
+        // then enforce one row per (habitId, date) forever.
+        db.execSQL(
+            """DELETE FROM habit_completions WHERE id NOT IN (
+               SELECT MIN(id) FROM habit_completions GROUP BY habitId, date)""",
+        )
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS index_habit_completions_habitId_date " +
+                "ON habit_completions(habitId, date)",
+        )
+    }
+}
+
 @Database(
     entities = [
         TaskEntity::class,
@@ -54,8 +69,7 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         ProjectEntity::class,
         LabelEntity::class,
     ],
-    version = 4,
-    exportSchema = false,
+    version = 5,
 )
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao

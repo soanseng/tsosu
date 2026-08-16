@@ -85,7 +85,12 @@ class MarkdownSyncRepository(
             habitDao.insert(habit.copy(routineId = routineId).toEntity())
         }
         for (completion in importedHabits.completions) {
-            habitDao.insertCompletion(completion.toEntity())
+            val entity = completion.toEntity()
+            habitDao.insertCompletionOnce(
+                habitId = entity.habitId,
+                date = entity.date,
+                completedAt = entity.completedAt,
+            )
         }
 
         preferences.setLastSync(System.currentTimeMillis())
