@@ -160,6 +160,7 @@
     <string name="notif_habit_done">完成</string>
     <string name="habits_buy_freeze">買護盾 ⚡30</string>
     <string name="habits_not_enough_energy">⚡ 還不夠——完成任務與習慣來賺能量</string>
+    <string name="kanban_habits_section">習慣</string>
 
     <!-- Habit Editor -->
     <string name="habit_detail_title">編輯習慣</string>

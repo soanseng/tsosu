@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.Task
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -56,6 +57,7 @@ fun KanbanScreen(
         KanbanBoard(
             columns = state.columns,
             onTaskClick = onTaskClick,
+            habitsForColumn = viewModel::habitsForProjectByTitle,
         )
     }
 }
@@ -85,6 +87,7 @@ private fun GroupByTabRow(
 private fun KanbanBoard(
     columns: List<KanbanColumnData>,
     onTaskClick: (String) -> Unit,
+    habitsForColumn: (String) -> List<Habit>,
 ) {
     LazyRow(
         modifier = Modifier.fillMaxSize(),
@@ -95,6 +98,7 @@ private fun KanbanBoard(
             KanbanColumn(
                 column = column,
                 onTaskClick = onTaskClick,
+                habits = habitsForColumn(column.title),
             )
         }
     }
@@ -104,6 +108,7 @@ private fun KanbanBoard(
 private fun KanbanColumn(
     column: KanbanColumnData,
     onTaskClick: (String) -> Unit,
+    habits: List<Habit> = emptyList(),
 ) {
     Card(
         modifier = Modifier
@@ -143,6 +148,34 @@ private fun KanbanColumn(
                         task = task,
                         onClick = { onTaskClick(task.id) },
                     )
+                }
+
+                if (habits.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.kanban_habits_section),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        )
+                    }
+                    items(habits, key = { "habit-${it.id}" }) { habit ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            ),
+                        ) {
+                            Text(
+                                text = "🔁 ${habit.title}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            )
+                        }
+                    }
                 }
 
                 item { Spacer(Modifier.height(8.dp)) }
