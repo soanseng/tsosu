@@ -96,4 +96,30 @@ class GetTodayHabitsUseCaseTest {
             awaitComplete()
         }
     }
+
+    @Test
+    fun `scheduled weekday shows, unscheduled hides`() = runTest {
+        // 2026-08-17 is a Monday (ISO 1)
+        val monday = LocalDate(2026, 8, 17)
+        val mondayUseCase = GetTodayHabitsUseCase(habitRepository, today = { monday })
+        val habits = listOf(
+            Habit(id = "h1", title = "MWF run", weekdays = setOf(1, 3, 5)),
+            Habit(id = "h2", title = "Daily stretch"),
+        )
+        every { habitRepository.getActiveHabits() } returns flowOf(habits)
+        every { habitRepository.getTodayCompletions() } returns flowOf(emptyList())
+
+        mondayUseCase().test {
+            assertEquals(listOf("h1", "h2"), awaitItem().map { it.habit.id })
+            awaitComplete()
+        }
+
+        // Tuesday (ISO 2): MWF habit hidden, daily kept.
+        val tuesday = LocalDate(2026, 8, 18)
+        val tuesdayUseCase = GetTodayHabitsUseCase(habitRepository, today = { tuesday })
+        tuesdayUseCase().test {
+            assertEquals(listOf("h2"), awaitItem().map { it.habit.id })
+            awaitComplete()
+        }
+    }
 }

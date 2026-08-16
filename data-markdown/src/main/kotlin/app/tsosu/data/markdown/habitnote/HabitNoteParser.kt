@@ -38,6 +38,7 @@ class HabitNoteParser {
         val routineTime = parseRoutine(fm["routine"])
         val reminderTime = parseReminder(fm["reminder"])
         val projectName = fm["project"]?.trim()?.removeSurrounding("\"")
+        val weekdays = parseWeekdays(fm["weekdays"])
 
         val title = extractTitle(doc.body)
 
@@ -46,6 +47,7 @@ class HabitNoteParser {
             title = title,
             tinyVersion = tiny,
             frequency = frequency,
+            weekdays = weekdays,
             targetDaysPerWeek = targetDays,
             energyLevel = energy,
             color = color,
@@ -54,6 +56,7 @@ class HabitNoteParser {
             createdAt = created?.atStartOfDayIn(TimeZone.UTC)
                 ?: kotlinx.datetime.Clock.System.now(),
         )
+
         val completions = parseCompletions(doc.body, id)
 
         return ParsedHabitNote(habit, completions, routineTime, projectName)
@@ -109,5 +112,13 @@ class HabitNoteParser {
         val hour = match.groupValues[1].toIntOrNull() ?: return null
         val minute = match.groupValues[2].toIntOrNull() ?: return null
         return if (hour in 0..23 && minute in 0..59) LocalTime(hour, minute) else null
+    }
+
+    private fun parseWeekdays(value: String?): Set<Int> {
+        val body = value?.removeSurrounding("[", "]") ?: return emptySet()
+        return body.split(',')
+            .mapNotNull { it.trim().toIntOrNull() }
+            .filter { it in 1..7 }
+            .toSet()
     }
 }

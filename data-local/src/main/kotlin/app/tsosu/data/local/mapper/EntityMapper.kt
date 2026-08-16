@@ -94,6 +94,8 @@ fun HabitEntity.toDomain(): Habit = Habit(
     title = title,
     tinyVersion = tinyVersion,
     frequency = HabitFrequency.fromOrdinal(frequency),
+    weekdays = weekdays?.split(',')?.mapNotNull { it.trim().toIntOrNull() }?.toSet()
+        ?: emptySet(),
     targetDaysPerWeek = targetDaysPerWeek,
     energyLevel = EnergyLevel.fromOrdinal(energyLevel),
     routineId = routineId,
@@ -111,6 +113,7 @@ fun Habit.toEntity(): HabitEntity = HabitEntity(
     title = title,
     tinyVersion = tinyVersion,
     frequency = frequency.ordinal,
+    weekdays = weekdays.takeIf { it.isNotEmpty() }?.joinToString(","),
     targetDaysPerWeek = targetDaysPerWeek,
     energyLevel = energyLevel.ordinal,
     routineId = routineId,

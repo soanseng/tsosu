@@ -12,6 +12,8 @@ data class Habit(
     val title: String,
     val tinyVersion: String? = null,
     val frequency: HabitFrequency = HabitFrequency.DAILY,
+    /** ISO weekdays (1=Mon..7=Sun) the habit is scheduled on; empty = every scheduled day. */
+    val weekdays: Set<Int> = emptySet(),
     val targetDaysPerWeek: Int = 7,
     val energyLevel: EnergyLevel = EnergyLevel.LOW,
     val routineId: String? = null,

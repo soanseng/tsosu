@@ -153,6 +153,17 @@ class HabitNoteSerializerTest {
         val result = serializer.serialize(habit, emptyList())
         assertTrue(!result.contains("project:"))
     }
+
+    @Test
+    fun `round trip preserves weekdays`() {
+        val parser = HabitNoteParser()
+        val mwf = habit.copy(weekdays = setOf(1, 3, 5))
+        val serialized = serializer.serialize(mwf, emptyList())
+        assertTrue(serialized.contains("weekdays: [1,3,5]"))
+
+        val parsed = parser.parse(serialized)
+        assertEquals(setOf(1, 3, 5), parsed.habit.weekdays)
+    }
     @Test
     fun `non-archived habit has archived false`() {
         val result = serializer.serialize(habit, emptyList())

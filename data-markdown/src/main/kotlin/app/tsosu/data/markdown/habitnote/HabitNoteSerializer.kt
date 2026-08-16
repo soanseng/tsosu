@@ -21,6 +21,9 @@ class HabitNoteSerializer {
         if (habit.frequency == HabitFrequency.CUSTOM) {
             appendLine("target_days: ${habit.targetDaysPerWeek}")
         }
+        if (habit.weekdays.isNotEmpty()) {
+            appendLine("weekdays: [${habit.weekdays.sorted().joinToString(",")}]")
+        }
         if (routineTime != null) {
             appendLine("routine: ${routineTime.name.lowercase()}")
         }

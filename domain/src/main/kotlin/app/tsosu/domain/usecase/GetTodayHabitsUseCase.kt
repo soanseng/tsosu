@@ -28,9 +28,13 @@ class GetTodayHabitsUseCase(
             habitRepository.getTodayCompletions(),
         ) { habits, completions ->
             val completedIds = completions.map(HabitCompletion::habitId).toSet()
-            val isWeekend = today().dayOfWeek.ordinal in 5..6 // kotlinx-datetime 0.6: MONDAY=0..SUNDAY=6
+            val todayDate = today()
+            val isWeekend = todayDate.dayOfWeek.ordinal in 5..6 // Mon=0..Sun=6
+            val isoDay = todayDate.dayOfWeek.ordinal + 1 // ISO Mon=1..Sun=7
             habits
                 .filter { !(isWeekend && it.frequency == HabitFrequency.WEEKDAYS) }
+                // Specific weekdays (e.g. Mon/Wed/Fri): hide unscheduled days.
+                .filter { it.weekdays.isEmpty() || isoDay in it.weekdays }
                 .map { habit ->
                     HabitWithStatus(
                         habit = habit,
