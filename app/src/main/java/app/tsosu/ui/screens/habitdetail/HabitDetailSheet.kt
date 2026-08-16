@@ -167,6 +167,59 @@ fun HabitDetailSheet(
 
         Spacer(Modifier.height(12.dp))
 
+        Text(stringResource(R.string.habit_field_weekdays), style = MaterialTheme.typography.labelLarge)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            (1..7).forEach { day ->
+                FilterChip(
+                    selected = state.weekdays.isEmpty() || day in state.weekdays,
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onWeekdayToggle(day)
+                    },
+                    label = { Text(stringResource(weekdayLabel(day))) },
+                )
+            }
+        }
+        if (state.weekdays.isEmpty()) {
+            Text(
+                stringResource(R.string.habit_weekdays_every_day),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(stringResource(R.string.habit_field_project), style = MaterialTheme.typography.labelLarge)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            FilterChip(
+                selected = state.selectedProjectId == null,
+                onClick = {
+                    haptic.tick()
+                    viewModel.onProjectChange(null)
+                },
+                label = { Text(stringResource(R.string.habit_project_none)) },
+            )
+            state.projects.forEach { project ->
+                FilterChip(
+                    selected = state.selectedProjectId == project.id,
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onProjectChange(project.id)
+                    },
+                    label = { Text(project.title) },
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
         Text(stringResource(R.string.habit_field_energy), style = MaterialTheme.typography.labelLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             EnergyLevel.entries.forEach { level ->
@@ -289,4 +342,15 @@ fun HabitDetailSheet(
             },
         )
     }
+}
+
+@Composable
+private fun weekdayLabel(day: Int): Int = when (day) {
+    1 -> R.string.weekday_mon
+    2 -> R.string.weekday_tue
+    3 -> R.string.weekday_wed
+    4 -> R.string.weekday_thu
+    5 -> R.string.weekday_fri
+    6 -> R.string.weekday_sat
+    else -> R.string.weekday_sun
 }

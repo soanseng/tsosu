@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.Project
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.repository.HabitRepository
+import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.RoutineRepository
 import app.tsosu.notification.ReminderScheduler
 import app.tsosu.notification.ReminderTriggerCalculator
@@ -39,6 +41,9 @@ data class HabitDetailState(
     val targetDaysPerWeek: Int = 3,
     val energyLevel: EnergyLevel = EnergyLevel.LOW,
     val reminderTime: LocalTime? = null,
+    val projects: List<Project> = emptyList(),
+    val selectedProjectId: String? = null,
+    val weekdays: Set<Int> = emptySet(),
     val saved: Boolean = false,
     val archived: Boolean = false,
     val error: Boolean = false,
@@ -48,6 +53,7 @@ data class HabitDetailState(
 class HabitDetailViewModel @Inject constructor(
     private val habitRepository: HabitRepository,
     private val routineRepository: RoutineRepository,
+    private val projectRepository: ProjectRepository,
     private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
@@ -68,6 +74,7 @@ class HabitDetailViewModel @Inject constructor(
                 routineRepository.getRoutines().first()
                     .find { it.id == id }?.timeOfDay
             }
+            val projects = projectRepository.getAllProjects().first()
             _state.value = HabitDetailState(
                 habit = habit,
                 title = habit.title,
@@ -82,6 +89,9 @@ class HabitDetailViewModel @Inject constructor(
                 targetDaysPerWeek = habit.targetDaysPerWeek,
                 energyLevel = habit.energyLevel,
                 reminderTime = habit.reminderTime,
+                projects = projects,
+                selectedProjectId = habit.projectId?.takeIf { id -> projects.any { it.id == id } },
+                weekdays = habit.weekdays,
             )
         }
     }
@@ -114,6 +124,18 @@ class HabitDetailViewModel @Inject constructor(
         _state.value = _state.value.copy(reminderTime = value)
     }
 
+    fun onProjectChange(projectId: String?) {
+        _state.value = _state.value.copy(selectedProjectId = projectId)
+    }
+
+    fun onWeekdayToggle(day: Int) {
+        val current = _state.value.weekdays
+        // Empty set = every scheduled day; toggling off the last day clears the schedule.
+        _state.value = _state.value.copy(
+            weekdays = if (day in current) current - day else current + day,
+        )
+    }
+
     fun save() {
         val current = _state.value
         val habit = current.habit ?: return
@@ -131,6 +153,8 @@ class HabitDetailViewModel @Inject constructor(
                 targetDaysPerWeek = current.targetDaysPerWeek,
                 energyLevel = current.energyLevel,
                 reminderTime = current.reminderTime,
+                projectId = current.selectedProjectId,
+                weekdays = current.weekdays,
             )
             habitRepository.updateHabit(updated)
                 .onSuccess {

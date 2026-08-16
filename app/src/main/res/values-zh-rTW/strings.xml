@@ -161,6 +161,17 @@
     <string name="habits_buy_freeze">買護盾 ⚡30</string>
     <string name="habits_not_enough_energy">⚡ 還不夠——完成任務與習慣來賺能量</string>
     <string name="kanban_habits_section">習慣</string>
+    <string name="habit_field_weekdays">特定星期幾</string>
+    <string name="habit_weekdays_every_day">每天——選取日子以限制排程</string>
+    <string name="habit_field_project">專案</string>
+    <string name="habit_project_none">無</string>
+    <string name="weekday_mon">一</string>
+    <string name="weekday_tue">二</string>
+    <string name="weekday_wed">三</string>
+    <string name="weekday_thu">四</string>
+    <string name="weekday_fri">五</string>
+    <string name="weekday_sat">六</string>
+    <string name="weekday_sun">日</string>
 
     <!-- Habit Editor -->
     <string name="habit_detail_title">編輯習慣</string>
