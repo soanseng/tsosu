@@ -233,7 +233,7 @@ Projects are `## Heading` sections. Tasks under the first section (or before any
 | `🔥N` | current streak in days | `🔥7` |
 | `[[habits/...]]` | link to the full-history note | `[[habits/exercise-h1abcdef]]` |
 
-Sections are routines: `## 🌅 Morning`, `## ☀️ Anytime`, `## 🌙 Evening`, then `## Other`. The index line carries only the counters above; completion dates and settings live in the per-habit note under `habits/`, whose frontmatter also stores the routine (`routine: morning`) and reminder (`reminder: "07:30"`) — edit either side, Tsosu reconciles them on the next sync.
+Sections are routines: `## 🌅 Morning`, `## ☀️ Anytime`, `## 🌙 Evening`, then `## Other`. The index line carries only the counters above; completion dates and settings live in the per-habit note under `habits/`, whose frontmatter also stores the routine (`routine: morning`), the linked project (`project: "Work"`), the reminder (`reminder: "07:30"`), and specific weekdays (`weekdays: [1,3,5]`, ISO Mon=1..Sun=7 — the habit only appears on those days) — edit either side, Tsosu reconciles them on the next sync.
 
 ### Obsidian tips
 

@@ -233,7 +233,7 @@ Tsosu 讀寫一組固定、有文件的 markdown 檔案。全部都是純文字�
 | `🔥N` | 目前連續天數 | `🔥7` |
 | `[[habits/...]]` | 連結到完整歷史 note | `[[habits/exercise-h1abcdef]]` |
 
-分區即例行時段：`## 🌅 Morning`、`## ☀️ Anytime`、`## 🌙 Evening`，再來是 `## Other`。索引行只帶上面的計數；完成日期與設定存放在 `habits/` 下的習慣 note，其 frontmatter 也記錄例行時段（`routine: morning`）與提醒（`reminder: "07:30"`）——任一端修改，下次同步 Tsosu 會自動對齊。
+分區即例行時段：`## 🌅 Morning`、`## ☀️ Anytime`、`## 🌙 Evening`，再來是 `## Other`。索引行只帶上面的計數；完成日期與設定存放在 `habits/` 下的習慣 note，其 frontmatter 也記錄例行時段（`routine: morning`）、連結的專案（`project: "Work"`）、提醒（`reminder: "07:30"`）與特定星期幾（`weekdays: [1,3,5]`，ISO 週一=1..週日=7——習慣只在那些天出現）——任一端修改，下次同步 Tsosu 會自動對齊。
 
 ### Obsidian 建議
 
