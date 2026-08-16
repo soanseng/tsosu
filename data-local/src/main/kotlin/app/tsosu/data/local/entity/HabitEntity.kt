@@ -13,6 +13,7 @@ data class HabitEntity(
     val targetDaysPerWeek: Int = 7,
     val energyLevel: Int = 0,
     val routineId: String? = null,
+    val projectId: String? = null,
     val position: Double = 0.0,
     val color: String = "#4CAF50",
     val isArchived: Boolean = false,

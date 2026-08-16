@@ -97,6 +97,7 @@ class MarkdownSyncManager(
         habits: List<Habit>,
         completions: List<HabitCompletion>,
         routineTimeByHabitId: Map<String, RoutineTime> = emptyMap(),
+        projectNameByHabitId: Map<String, String> = emptyMap(),
     ) {
         fileAccess.ensureFolder("habits")
         val completionsByHabit = completions.groupBy { it.habitId }
@@ -109,6 +110,7 @@ class MarkdownSyncManager(
                 habit,
                 completionsByHabit[habit.id] ?: emptyList(),
                 routineTimeByHabitId[habit.id],
+                projectNameByHabitId[habit.id],
             )
             writeNoteIfChanged("habits", filename, content)
             noteFilenames[habit.id] = filename.removeSuffix(".md")
@@ -124,7 +126,7 @@ class MarkdownSyncManager(
         val allHabits = mutableListOf<Habit>()
         val allCompletions = mutableListOf<HabitCompletion>()
         val parsedNotes = mutableListOf<Pair<app.tsosu.data.markdown.habitnote.ParsedHabitNote, RoutineTime?>>()
-
+        val projectNameByHabit = mutableMapOf<String, String>()
         // Read individual HabitNote files
         val noteFiles = fileAccess.listFolder("habits")
         val seenHabitIds = mutableSetOf<String>()
@@ -139,6 +141,9 @@ class MarkdownSyncManager(
                 allHabits.add(parsed.habit)
                 allCompletions.addAll(parsed.completions)
                 parsedNotes.add(parsed to parsed.routineTime)
+                parsed.projectName?.let { name ->
+                    projectNameByHabit[parsed.habit.id] = name
+                }
             } catch (_: Exception) {
                 // skip malformed files
             }
@@ -169,6 +174,7 @@ class MarkdownSyncManager(
             completions = allCompletions,
             routineTimeByHabitId = indexRoutineByHabitId,
             parsedNotes = parsedNotes,
+            projectNameByHabitId = projectNameByHabit,
         )
     }
 

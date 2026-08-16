@@ -13,8 +13,8 @@ class HabitNoteSerializer {
         habit: Habit,
         completions: List<HabitCompletion>,
         routineTime: RoutineTime? = null,
+        projectName: String? = null,
     ): String = buildString {
-        // YAML frontmatter
         appendLine("---")
         appendLine("id: ${habit.id}")
         appendLine("frequency: ${frequencyValue(habit.frequency)}")
@@ -23,6 +23,9 @@ class HabitNoteSerializer {
         }
         if (routineTime != null) {
             appendLine("routine: ${routineTime.name.lowercase()}")
+        }
+        projectName?.let { project ->
+            appendLine("project: \"$project\"")
         }
         habit.reminderTime?.let { reminder ->
             appendLine("reminder: \"%02d:%02d\"".format(reminder.hour, reminder.minute))

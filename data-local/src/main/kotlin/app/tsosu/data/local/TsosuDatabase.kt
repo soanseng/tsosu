@@ -83,7 +83,14 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
-@Database(entities = [TaskEntity::class, HabitEntity::class, HabitCompletionEntity::class, RoutineEntity::class, DailyFocusEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 7)
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE habits ADD COLUMN projectId TEXT")
+    }
+}
+
+
+@Database(entities = [TaskEntity::class, HabitEntity::class, HabitCompletionEntity::class, RoutineEntity::class, DailyFocusEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 8)
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun habitDao(): HabitDao

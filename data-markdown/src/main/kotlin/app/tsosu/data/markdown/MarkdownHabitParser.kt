@@ -20,6 +20,8 @@ data class ParsedHabits(
     val routineTimeByHabitId: Map<String, RoutineTime> = emptyMap(),
     /** Parsed per-habit notes with their routine grouping; empty for the legacy index fallback. */
     val parsedNotes: List<Pair<app.tsosu.data.markdown.habitnote.ParsedHabitNote, RoutineTime?>> = emptyList(),
+    /** Habit id → project title from note frontmatter (project: "..."). */
+    val projectNameByHabitId: Map<String, String> = emptyMap(),
 )
 
 class MarkdownHabitParser {

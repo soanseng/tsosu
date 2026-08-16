@@ -15,8 +15,8 @@ data class ParsedHabitNote(
     val habit: Habit,
     val completions: List<HabitCompletion>,
     val routineTime: RoutineTime? = null,
+    val projectName: String? = null,
 )
-
 class HabitNoteParser {
 
     private val yamlParser = YamlFrontmatterParser()
@@ -37,6 +37,7 @@ class HabitNoteParser {
         val created = fm["created"]?.let { LocalDate.parse(it) }
         val routineTime = parseRoutine(fm["routine"])
         val reminderTime = parseReminder(fm["reminder"])
+        val projectName = fm["project"]?.trim()?.removeSurrounding("\"")
 
         val title = extractTitle(doc.body)
 
@@ -53,10 +54,9 @@ class HabitNoteParser {
             createdAt = created?.atStartOfDayIn(TimeZone.UTC)
                 ?: kotlinx.datetime.Clock.System.now(),
         )
-
         val completions = parseCompletions(doc.body, id)
 
-        return ParsedHabitNote(habit, completions, routineTime)
+        return ParsedHabitNote(habit, completions, routineTime, projectName)
     }
 
     private fun extractTitle(body: String): String {

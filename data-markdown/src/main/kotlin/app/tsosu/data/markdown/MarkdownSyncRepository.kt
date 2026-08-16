@@ -4,6 +4,7 @@ import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
+import app.tsosu.data.local.entity.ProjectEntity
 import app.tsosu.data.local.entity.RoutineEntity
 import app.tsosu.data.local.mapper.toDomain
 import app.tsosu.data.local.mapper.toEntity
@@ -82,7 +83,9 @@ class MarkdownSyncRepository(
             val routineTime = routineTimeByNote[habit.id]
                 ?: importedHabits.routineTimeByHabitId[habit.id]
             val routineId = routineTime?.let { resolveRoutineId(it) } ?: habit.routineId
-            habitDao.insert(habit.copy(routineId = routineId).toEntity())
+            val projectId = importedHabits.projectNameByHabitId[habit.id]
+                ?.let { resolveProjectId(it) } ?: habit.projectId
+            habitDao.insert(habit.copy(routineId = routineId, projectId = projectId).toEntity())
         }
         for (completion in importedHabits.completions) {
             val entity = completion.toEntity()
@@ -113,13 +116,17 @@ class MarkdownSyncRepository(
             val hc = habitDao.getAllCompletionsForHabit(habit.id).first()
             completions.addAll(hc.map { it.toDomain() })
         }
+        val projectNameById = projectNames
+        val projectNameByHabitId = habits.mapNotNull { habit ->
+            habit.projectId?.let { pid -> projectNameById[pid]?.let { habit.id to it } }
+        }.toMap()
         // exportHabits expects habitId → RoutineTime; resolve through each habit's routineId.
         val routinesById = routineDao.getAll().first()
             .associate { it.id to RoutineTime.fromOrdinal(it.timeOfDay) }
         val routineTimeByHabitId = habits.mapNotNull { habit ->
             habit.routineId?.let { rid -> routinesById[rid]?.let { habit.id to it } }
         }.toMap()
-        syncManager.exportHabits(habits, completions, routineTimeByHabitId)
+        syncManager.exportHabits(habits, completions, routineTimeByHabitId, projectNameByHabitId)
 
         // Export today's daily note
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -160,6 +167,18 @@ class MarkdownSyncRepository(
             timeOfDay = time.ordinal,
         )
         routineDao.insert(entity)
+        return entity.id
+    }
+
+    private suspend fun resolveProjectId(title: String): String {
+        val existing = projectDao.getAll().first().find { it.title == title }
+        if (existing != null) return existing.id
+
+        val entity = ProjectEntity(
+            id = UUID.randomUUID().toString(),
+            title = title,
+        )
+        projectDao.insert(entity)
         return entity.id
     }
 }

@@ -138,6 +138,21 @@ class HabitNoteSerializerTest {
         assertEquals(RoutineTime.MORNING, parsed.routineTime)
         assertEquals(LocalTime(21, 45), parsed.habit.reminderTime)
     }
+
+    @Test
+    fun `round trip preserves project name`() {
+        val parser = HabitNoteParser()
+        val serialized = serializer.serialize(habit, emptyList(), projectName = "Work")
+        val parsed = parser.parse(serialized)
+
+        assertEquals("Work", parsed.projectName)
+    }
+
+    @Test
+    fun `omits project when null`() {
+        val result = serializer.serialize(habit, emptyList())
+        assertTrue(!result.contains("project:"))
+    }
     @Test
     fun `non-archived habit has archived false`() {
         val result = serializer.serialize(habit, emptyList())
