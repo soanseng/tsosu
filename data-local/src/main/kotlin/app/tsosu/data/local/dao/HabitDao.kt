@@ -44,7 +44,7 @@ interface HabitDao {
                SELECT 1 FROM habit_completions WHERE habitId = :habitId AND date = :date
            )""",
     )
-    suspend fun insertCompletionOnce(habitId: String, date: Long, completedAt: Long)
+    suspend fun insertCompletionOnce(habitId: String, date: Long, completedAt: Long): Long
 
     @Query("SELECT DISTINCT date FROM habit_completions WHERE habitId = :habitId")
     fun getCompletionDates(habitId: String): Flow<List<Long>>

@@ -7,6 +7,7 @@ import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.repository.HabitRepository
+import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.usecase.HabitStreakCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -22,8 +23,8 @@ import kotlinx.datetime.toLocalDateTime
 class HabitRepositoryImpl(
     private val habitDao: HabitDao,
     private val onHabitChanged: (suspend (habitId: String) -> Unit)? = null,
+    private val gamification: GamificationRepository? = null,
 ) : HabitRepository {
-
     override fun getActiveHabits(): Flow<List<Habit>> =
         habitDao.getActiveHabits().map { it.map { e -> e.toDomain() } }
 
@@ -89,11 +90,15 @@ class HabitRepositoryImpl(
         runCatching {
             val now = Clock.System.now()
             val completion = HabitCompletion(habitId, date, now)
-            habitDao.insertCompletionOnce(
+            val inserted = habitDao.insertCompletionOnce(
                 habitId = habitId,
                 date = completion.toEntity().date,
                 completedAt = now.toEpochMilliseconds(),
             )
+            if (inserted > 0) {
+                // First completion of the day earns energy.
+                gamification?.awardEnergy(ENERGY_PER_HABIT)
+            }
             onHabitChanged?.invoke(habitId)
             completion
         }
@@ -109,5 +114,9 @@ class HabitRepositoryImpl(
         val tz = TimeZone.currentSystemDefault()
         val today = Clock.System.now().toLocalDateTime(tz).date
         return today.atStartOfDayIn(tz).toEpochMilliseconds()
+    }
+
+    companion object {
+        const val ENERGY_PER_HABIT = 5
     }
 }

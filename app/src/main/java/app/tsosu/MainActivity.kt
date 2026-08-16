@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -37,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,6 +70,7 @@ import app.tsosu.ui.theme.ThemePreferences
 import app.tsosu.ui.theme.TsosuTheme
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.SyncRepository
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.lifecycleScope
@@ -82,6 +85,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var syncRepository: SyncRepository
     @Inject lateinit var markdownPreferences: MarkdownPreferences
     @Inject lateinit var vaultChangeWatcher: VaultChangeWatcher
+    @Inject lateinit var gamificationRepository: GamificationRepository
 
     private var lastSyncTime = 0L
     private val snackbarHostState = SnackbarHostState()
@@ -127,6 +131,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 val focusViewModel: FocusViewModel = hiltViewModel()
                 val habitsViewModel: HabitsViewModel = hiltViewModel()
+                val energy by gamificationRepository.energy().collectAsState(initial = 0)
                 val isVaultConfigured by syncRepository.isConfigured()
                     .collectAsState(initial = true)
                 val scope = rememberCoroutineScope()
@@ -212,6 +217,11 @@ class MainActivity : AppCompatActivity() {
                                 }
                             },
                             actions = {
+                                Text(
+                                    "⚡$energy",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(end = 8.dp),
+                                )
                                 IconButton(onClick = { showFilter = true }) {
                                     Icon(
                                         imageVector = if (focusState.isFiltered) {

@@ -2,16 +2,19 @@ package app.tsosu.di
 
 import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.FocusDao
+import app.tsosu.data.local.dao.GamificationDao
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.repository.FocusRepositoryImpl
+import app.tsosu.data.local.repository.GamificationRepositoryImpl
 import app.tsosu.data.local.repository.HabitRepositoryImpl
 import app.tsosu.data.local.repository.ProjectRepositoryImpl
 import app.tsosu.data.local.repository.RoutineRepositoryImpl
 import app.tsosu.data.local.repository.TaskRepositoryImpl
 import app.tsosu.domain.repository.FocusRepository
+import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.RoutineRepository
@@ -28,13 +31,21 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideTaskRepository(taskDao: TaskDao, watcher: VaultChangeWatcher): TaskRepository =
-        TaskRepositoryImpl(taskDao) { _, _, _ -> watcher.pushSoon() }
+    fun provideTaskRepository(
+        taskDao: TaskDao,
+        watcher: VaultChangeWatcher,
+        gamification: GamificationRepository,
+    ): TaskRepository =
+        TaskRepositoryImpl(taskDao, { _, _, _ -> watcher.pushSoon() }, gamification)
 
     @Provides
     @Singleton
-    fun provideHabitRepository(habitDao: HabitDao, watcher: VaultChangeWatcher): HabitRepository =
-        HabitRepositoryImpl(habitDao) { _ -> watcher.pushSoon() }
+    fun provideHabitRepository(
+        habitDao: HabitDao,
+        watcher: VaultChangeWatcher,
+        gamification: GamificationRepository,
+    ): HabitRepository =
+        HabitRepositoryImpl(habitDao, { _ -> watcher.pushSoon() }, gamification)
 
     @Provides
     @Singleton
@@ -48,6 +59,11 @@ object RepositoryModule {
         taskDao: TaskDao,
         habitDao: HabitDao,
     ): FocusRepository = FocusRepositoryImpl(focusDao, taskDao, habitDao)
+
+    @Provides
+    @Singleton
+    fun provideGamificationRepository(gamificationDao: GamificationDao): GamificationRepository =
+        GamificationRepositoryImpl(gamificationDao)
 
     @Provides
     @Singleton

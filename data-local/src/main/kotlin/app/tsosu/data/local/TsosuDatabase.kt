@@ -5,12 +5,14 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.tsosu.data.local.dao.FocusDao
+import app.tsosu.data.local.dao.GamificationDao
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.LabelDao
 import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.entity.DailyFocusEntity
+import app.tsosu.data.local.entity.GamificationEntity
 import app.tsosu.data.local.entity.HabitCompletionEntity
 import app.tsosu.data.local.entity.HabitEntity
 import app.tsosu.data.local.entity.LabelEntity
@@ -59,6 +61,16 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `gamification` (" +
+                "`id` INTEGER NOT NULL, `energy` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        )
+        db.execSQL("INSERT OR IGNORE INTO gamification (id, energy) VALUES (1, 0)")
+    }
+}
+
 @Database(
     entities = [
         TaskEntity::class,
@@ -67,9 +79,10 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         RoutineEntity::class,
         DailyFocusEntity::class,
         ProjectEntity::class,
+        GamificationEntity::class,
         LabelEntity::class,
     ],
-    version = 5,
+    version = 6,
 )
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
@@ -78,4 +91,5 @@ abstract class TsosuDatabase : RoomDatabase() {
     abstract fun focusDao(): FocusDao
     abstract fun projectDao(): ProjectDao
     abstract fun labelDao(): LabelDao
+    abstract fun gamificationDao(): GamificationDao
 }

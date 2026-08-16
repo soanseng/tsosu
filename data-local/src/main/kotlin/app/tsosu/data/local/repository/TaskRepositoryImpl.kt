@@ -6,6 +6,7 @@ import app.tsosu.data.local.mapper.toEntity
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.days
 class TaskRepositoryImpl(
     private val taskDao: TaskDao,
     private val onTaskChanged: (suspend (entityId: String, operation: String, serverId: Long?) -> Unit)? = null,
+    private val gamification: GamificationRepository? = null,
 ) : TaskRepository {
 
     override fun getInboxTasks(): Flow<List<Task>> =
@@ -91,6 +93,7 @@ class TaskRepositoryImpl(
         val newStatus = if (currentStatus.isDone) TaskStatus.TODO else TaskStatus.DONE
         val completedDate = if (newStatus.isDone) now else null
         taskDao.setStatus(taskId, newStatus.ordinal, completedDate, null, now)
+        if (newStatus.isDone) gamification?.awardEnergy(ENERGY_PER_TASK)
         onTaskChanged?.invoke(taskId, "UPDATE", null)
         entity.copy(
             status = newStatus.ordinal,
@@ -107,6 +110,7 @@ class TaskRepositoryImpl(
         val completedDate = if (status.isDone) now else null
         val cancelledDate = if (status == TaskStatus.CANCELLED) now else null
         taskDao.setStatus(taskId, status.ordinal, completedDate, cancelledDate, now)
+        if (status.isDone) gamification?.awardEnergy(ENERGY_PER_TASK)
         onTaskChanged?.invoke(taskId, "UPDATE", null)
         entity.copy(
             status = status.ordinal,
@@ -157,7 +161,10 @@ class TaskRepositoryImpl(
         val end = start + 86_400_000 - 1
         return start to end
     }
-
     private fun kotlinx.datetime.Instant.toLocalDate(tz: TimeZone): LocalDate =
         toLocalDateTime(tz).date
+
+    companion object {
+        const val ENERGY_PER_TASK = 2
+    }
 }

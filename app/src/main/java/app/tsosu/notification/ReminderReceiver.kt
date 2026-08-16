@@ -7,13 +7,13 @@ import androidx.core.app.NotificationManagerCompat
 import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.TaskDao
-import app.tsosu.data.local.entity.HabitCompletionEntity
+import app.tsosu.domain.repository.GamificationRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -29,6 +29,8 @@ class ReminderReceiver : BroadcastReceiver() {
         const val ACTION_HABIT_REMINDER = "app.tsosu.ACTION_HABIT_REMINDER"
         const val ACTION_HABIT_COMPLETE = "app.tsosu.ACTION_HABIT_COMPLETE"
         const val EXTRA_HABIT_ID = "extra_habit_id"
+        const val ENERGY_PER_TASK = 2
+        const val ENERGY_PER_HABIT = 5
     }
 
     @Inject lateinit var notificationHelper: NotificationHelper
@@ -36,6 +38,7 @@ class ReminderReceiver : BroadcastReceiver() {
     @Inject lateinit var habitDao: HabitDao
     @Inject lateinit var reminderScheduler: ReminderScheduler
     @Inject lateinit var watcher: VaultChangeWatcher
+    @Inject lateinit var gamificationRepository: GamificationRepository
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
@@ -75,6 +78,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     cancelledDate = null,
                     updatedAt = now,
                 )
+                gamificationRepository.awardEnergy(ENERGY_PER_TASK)
                 reminderScheduler.cancel(taskId)
                 NotificationManagerCompat.from(context).cancel(taskId.hashCode())
                 watcher.pushSoon()
@@ -83,7 +87,6 @@ class ReminderReceiver : BroadcastReceiver() {
             }
         }
     }
-
     private fun handleHabitReminder(habitId: String) {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
@@ -116,11 +119,14 @@ class ReminderReceiver : BroadcastReceiver() {
             try {
                 val habit = habitDao.getByIdSync(habitId) ?: return@launch
                 val now = Clock.System.now().toEpochMilliseconds()
-                habitDao.insertCompletionOnce(
+                val inserted = habitDao.insertCompletionOnce(
                     habitId = habitId,
                     date = todayEpoch(),
                     completedAt = now,
                 )
+                if (inserted > 0) {
+                    gamificationRepository.awardEnergy(ENERGY_PER_HABIT)
+                }
                 NotificationManagerCompat.from(context).cancel(habitId.hashCode())
                 rescheduleNext(habitId, habit.reminderMinutes, habit.isArchived)
                 watcher.pushSoon()
