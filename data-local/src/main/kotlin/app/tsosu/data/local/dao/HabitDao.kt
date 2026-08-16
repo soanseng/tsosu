@@ -20,6 +20,12 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :habitId")
     fun getById(habitId: String): Flow<HabitEntity?>
 
+    @Query("SELECT * FROM habits WHERE id = :habitId")
+    suspend fun getByIdSync(habitId: String): HabitEntity?
+
+    @Query("SELECT * FROM habits WHERE isArchived = 0 ORDER BY position")
+    suspend fun getActiveHabitsSync(): List<HabitEntity>
+
     @Query("SELECT * FROM habits WHERE isArchived = 0 ORDER BY position")
     fun getActiveHabits(): Flow<List<HabitEntity>>
 

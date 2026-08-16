@@ -4,6 +4,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlin.uuid.ExperimentalUuidApi
@@ -12,6 +13,8 @@ import kotlin.uuid.Uuid
 data class ParsedHabits(
     val habits: List<Habit>,
     val completions: List<HabitCompletion>,
+    /** Parsed per-habit notes with their routine grouping; empty for the legacy index fallback. */
+    val parsedNotes: List<Pair<app.tsosu.data.markdown.habitnote.ParsedHabitNote, RoutineTime?>> = emptyList(),
 )
 
 class MarkdownHabitParser {

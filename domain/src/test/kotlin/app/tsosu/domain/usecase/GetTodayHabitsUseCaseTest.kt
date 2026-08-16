@@ -2,6 +2,7 @@ package app.tsosu.domain.usecase
 
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
+import app.tsosu.domain.model.HabitFrequency
 import app.tsosu.domain.repository.HabitRepository
 import app.cash.turbine.test
 import io.mockk.every
@@ -54,6 +55,44 @@ class GetTodayHabitsUseCaseTest {
             val result = awaitItem()
             assertEquals(1, result.size)
             assertFalse(result[0].isCompletedToday)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `weekend hides WEEKDAYS habits but keeps DAILY`() = runTest {
+        // 2026-08-15 is a Saturday (ISO dayNumber 6)
+        val saturday = LocalDate(2026, 8, 15)
+        val weekendUseCase = GetTodayHabitsUseCase(habitRepository, today = { saturday })
+        val habits = listOf(
+            Habit(id = "h1", title = "Meditate", frequency = HabitFrequency.DAILY),
+            Habit(id = "h2", title = "Standup", frequency = HabitFrequency.WEEKDAYS),
+        )
+        every { habitRepository.getActiveHabits() } returns flowOf(habits)
+        every { habitRepository.getTodayCompletions() } returns flowOf(emptyList())
+
+        weekendUseCase().test {
+            val result = awaitItem()
+            assertEquals(listOf("h1"), result.map { it.habit.id })
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `weekday keeps WEEKDAYS habits`() = runTest {
+        // 2026-08-14 is a Friday (ISO dayNumber 5)
+        val friday = LocalDate(2026, 8, 14)
+        val weekdayUseCase = GetTodayHabitsUseCase(habitRepository, today = { friday })
+        val habits = listOf(
+            Habit(id = "h1", title = "Meditate", frequency = HabitFrequency.DAILY),
+            Habit(id = "h2", title = "Standup", frequency = HabitFrequency.WEEKDAYS),
+        )
+        every { habitRepository.getActiveHabits() } returns flowOf(habits)
+        every { habitRepository.getTodayCompletions() } returns flowOf(emptyList())
+
+        weekdayUseCase().test {
+            val result = awaitItem()
+            assertEquals(listOf("h1", "h2"), result.map { it.habit.id })
             awaitComplete()
         }
     }

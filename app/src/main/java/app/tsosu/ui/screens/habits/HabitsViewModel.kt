@@ -13,7 +13,10 @@ import app.tsosu.domain.usecase.CompleteHabitUseCase
 import app.tsosu.domain.usecase.CreateHabitUseCase
 import app.tsosu.domain.usecase.GetTodayHabitsUseCase
 import app.tsosu.domain.usecase.HabitWithStatus
+import app.tsosu.notification.ReminderScheduler
+import app.tsosu.notification.ReminderTriggerCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,9 +28,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import javax.inject.Inject
 
 data class HabitsUiState(
     val habits: List<HabitWithStatus> = emptyList(),
@@ -44,6 +47,7 @@ class HabitsViewModel @Inject constructor(
     private val habitRepository: HabitRepository,
     private val createHabitUseCase: CreateHabitUseCase,
     private val completeHabit: CompleteHabitUseCase,
+    private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     private val routineMutex = Mutex()
@@ -74,25 +78,43 @@ class HabitsViewModel @Inject constructor(
                 .toLocalDateTime(TimeZone.currentSystemDefault()).date
             val wasCompleted = uiState.value.habits
                 .find { it.habit.id == habitId }?.isCompletedToday ?: false
-            completeHabit(habitId, today)
-            if (!wasCompleted) {
+            if (wasCompleted) {
+                habitRepository.uncompleteHabit(habitId, today)
+            } else {
+                completeHabit(habitId, today)
                 _celebrateEvent.emit(Unit)
             }
         }
     }
 
-    fun createHabit(title: String, tinyVersion: String?, routineTime: RoutineTime) {
+    fun createHabit(
+        title: String,
+        tinyVersion: String?,
+        routineTime: RoutineTime,
+        reminderTime: LocalTime? = null,
+    ) {
         viewModelScope.launch {
             val routineId = findOrCreateRoutine(routineTime)
             val habit = Habit(
                 title = title,
                 tinyVersion = tinyVersion,
                 routineId = routineId,
+                reminderTime = reminderTime,
             )
-            createHabitUseCase(habit).onFailure { e ->
-                Log.e("HabitsViewModel", "Failed to create habit", e)
-                _errorEvent.emit(e.message ?: "Unknown error")
-            }
+            createHabitUseCase(habit)
+                .onSuccess { created ->
+                    val trigger = ReminderTriggerCalculator.triggerMillisForHabit(
+                        reminderMinutes = reminderTime?.let { it.hour * 60 + it.minute },
+                        isArchived = false,
+                    )
+                    if (trigger != null) {
+                        reminderScheduler.scheduleHabit(created.id, trigger)
+                    }
+                }
+                .onFailure { e ->
+                    Log.e("HabitsViewModel", "Failed to create habit", e)
+                    _errorEvent.emit(e.message ?: "Unknown error")
+                }
         }
     }
 

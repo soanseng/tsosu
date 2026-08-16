@@ -12,7 +12,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -71,9 +70,11 @@ class ConvertTaskToHabitUseCaseTest {
     fun `rejects blank title`() = runTest {
         every { taskRepository.getTask("blank") } returns flowOf(Task(id = "blank", title = "  "))
 
-        assertThrows<IllegalArgumentException> {
-            useCase("blank")
-        }
+        val result = useCase("blank")
+
+        // Blank title is a Result failure (no crash from the long-press path),
+        // and nothing is created.
+        assertTrue(result.isFailure)
         coVerify(exactly = 0) { habitRepository.createHabit(any()) }
     }
 

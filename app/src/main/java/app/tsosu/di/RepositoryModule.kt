@@ -1,5 +1,6 @@
 package app.tsosu.di
 
+import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.FocusDao
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
@@ -27,13 +28,13 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideTaskRepository(taskDao: TaskDao): TaskRepository =
-        TaskRepositoryImpl(taskDao)
+    fun provideTaskRepository(taskDao: TaskDao, watcher: VaultChangeWatcher): TaskRepository =
+        TaskRepositoryImpl(taskDao) { _, _, _ -> watcher.pushSoon() }
 
     @Provides
     @Singleton
-    fun provideHabitRepository(habitDao: HabitDao): HabitRepository =
-        HabitRepositoryImpl(habitDao)
+    fun provideHabitRepository(habitDao: HabitDao, watcher: VaultChangeWatcher): HabitRepository =
+        HabitRepositoryImpl(habitDao) { _ -> watcher.pushSoon() }
 
     @Provides
     @Singleton

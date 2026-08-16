@@ -4,8 +4,10 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -100,6 +102,42 @@ class HabitNoteSerializerTest {
         assertTrue(result.contains("archived: true"))
     }
 
+
+    @Test
+    fun `serializes routine when provided`() {
+        val result = serializer.serialize(habit, emptyList(), routineTime = RoutineTime.EVENING)
+        assertTrue(result.contains("routine: evening"))
+    }
+
+    @Test
+    fun `omits routine when null`() {
+        val result = serializer.serialize(habit, emptyList())
+        assertTrue(!result.contains("routine:"))
+    }
+
+    @Test
+    fun `serializes reminder time as quoted HH mm`() {
+        val withReminder = habit.copy(reminderTime = LocalTime(7, 5))
+        val result = serializer.serialize(withReminder, emptyList())
+        assertTrue(result.contains("reminder: \"07:05\""))
+    }
+
+    @Test
+    fun `omits reminder when null`() {
+        val result = serializer.serialize(habit, emptyList())
+        assertTrue(!result.contains("reminder:"))
+    }
+
+    @Test
+    fun `round trip preserves routine and reminder`() {
+        val parser = HabitNoteParser()
+        val original = habit.copy(reminderTime = LocalTime(21, 45))
+        val serialized = serializer.serialize(original, emptyList(), routineTime = RoutineTime.MORNING)
+        val parsed = parser.parse(serialized)
+
+        assertEquals(RoutineTime.MORNING, parsed.routineTime)
+        assertEquals(LocalTime(21, 45), parsed.habit.reminderTime)
+    }
     @Test
     fun `non-archived habit has archived false`() {
         val result = serializer.serialize(habit, emptyList())

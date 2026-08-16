@@ -25,6 +25,7 @@ class NotificationHelper @Inject constructor(
     companion object {
         const val CHANNEL_REMINDERS = "task_reminders"
         const val CHANNEL_OVERDUE = "task_overdue"
+        const val CHANNEL_HABITS = "habit_reminders"
         private const val OVERDUE_SUMMARY_ID = 2001
     }
 
@@ -44,7 +45,6 @@ class NotificationHelper @Inject constructor(
                 description = context.getString(R.string.notif_channel_reminders_desc)
             }
         )
-
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_OVERDUE,
@@ -52,6 +52,16 @@ class NotificationHelper @Inject constructor(
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
                 description = context.getString(R.string.notif_channel_overdue_desc)
+            }
+        )
+
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_HABITS,
+                context.getString(R.string.notif_channel_habits),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = context.getString(R.string.notif_channel_habits_desc)
             }
         )
     }
@@ -98,6 +108,50 @@ class NotificationHelper @Inject constructor(
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
+    fun showHabitReminder(habitId: String, title: String, text: String?) {
+        if (!hasPermission()) return
+
+        val notificationId = habitId.hashCode()
+        val tapIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("habitId", habitId)
+        }
+        val tapPending = PendingIntent.getActivity(
+            context,
+            notificationId,
+            tapIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val doneIntent = Intent(context, ReminderReceiver::class.java).apply {
+            action = ReminderReceiver.ACTION_HABIT_COMPLETE
+            putExtra(ReminderReceiver.EXTRA_HABIT_ID, habitId)
+        }
+        val donePending = PendingIntent.getBroadcast(
+            context,
+            notificationId + 20_000,
+            doneIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_HABITS)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(tapPending)
+            .setAutoCancel(true)
+            .addAction(
+                R.mipmap.ic_launcher,
+                context.getString(R.string.notif_habit_done),
+                donePending,
+            )
+        if (!text.isNullOrBlank()) {
+            builder.setContentText(text)
+        }
+
+        NotificationManagerCompat.from(context).notify(notificationId, builder.build())
+    }
+
     fun showOverdueSummary(count: Int, titles: List<String>, taskIds: List<String>) {
         if (!hasPermission()) return
         if (count == 0) return
@@ -131,6 +185,10 @@ class NotificationHelper @Inject constructor(
             .build()
 
         NotificationManagerCompat.from(context).notify(OVERDUE_SUMMARY_ID, notification)
+    }
+
+    fun cancelOverdueSummary() {
+        NotificationManagerCompat.from(context).cancel(OVERDUE_SUMMARY_ID)
     }
 
     private fun hasPermission(): Boolean {

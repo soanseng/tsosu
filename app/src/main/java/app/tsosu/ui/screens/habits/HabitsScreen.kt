@@ -48,7 +48,10 @@ import app.tsosu.ui.components.KonfettiOverlay
 import app.tsosu.ui.util.rememberHaptic
 
 @Composable
-fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
+fun HabitsScreen(
+    onHabitClick: (String) -> Unit = {},
+    viewModel: HabitsViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val konfettiTrigger = remember { mutableIntStateOf(0) }
     val haptic = rememberHaptic()
@@ -127,6 +130,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                             haptic.confirm()
                             viewModel.onToggleHabit(habitWithStatus.habit.id)
                         },
+                        onOpen = { onHabitClick(habitWithStatus.habit.id) },
                         modifier = Modifier.animateItem(),
                     )
                 }
@@ -149,6 +153,7 @@ fun HabitsScreen(viewModel: HabitsViewModel = hiltViewModel()) {
                         haptic.confirm()
                         viewModel.onToggleHabit(habitWithStatus.habit.id)
                     },
+                    onOpen = { onHabitClick(habitWithStatus.habit.id) },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -179,6 +184,7 @@ private fun HabitRow(
     habitWithStatus: HabitWithStatus,
     streakInfo: HabitStreakInfo?,
     onToggle: () -> Unit,
+    onOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val containerColor by animateColorAsState(
@@ -203,13 +209,13 @@ private fun HabitRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onToggle)
+                .clickable(onClick = onOpen)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Checkbox(
                 checked = habitWithStatus.isCompletedToday,
-                onCheckedChange = null,
+                onCheckedChange = { onToggle() },
             )
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

@@ -4,10 +4,12 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
@@ -30,6 +32,7 @@ class HabitIndexGeneratorTest {
         targetDaysPerWeek: Int = 7,
         energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
         position: Double = 0.0,
+        reminderTime: LocalTime? = null,
     ) = Habit(
         id = id,
         title = title,
@@ -37,9 +40,9 @@ class HabitIndexGeneratorTest {
         targetDaysPerWeek = targetDaysPerWeek,
         energyLevel = energyLevel,
         position = position,
+        reminderTime = reminderTime,
         createdAt = fixedCreatedAt,
     )
-
     private fun completionAt(habitId: String, daysAgo: Int): HabitCompletion {
         val date = today.minus(daysAgo, DateTimeUnit.DAY)
         return HabitCompletion(
@@ -65,40 +68,76 @@ class HabitIndexGeneratorTest {
     // --- Grouping ---
 
     @Test
-    fun `groups habits by frequency into sections`() {
+    fun `groups habits by routine into sections`() {
         val habits = listOf(
-            habit(id = "h1", title = "Morning run", frequency = HabitFrequency.DAILY),
-            habit(id = "h2", title = "Standup", frequency = HabitFrequency.WEEKDAYS),
-            habit(id = "h3", title = "Read tech blog", frequency = HabitFrequency.CUSTOM, targetDaysPerWeek = 3),
+            habit(id = "h1", title = "Morning run"),
+            habit(id = "h2", title = "Standup"),
+            habit(id = "h3", title = "Read tech blog"),
+            habit(id = "h4", title = "Unassigned"),
+        )
+        val routines = mapOf(
+            "h1" to RoutineTime.MORNING,
+            "h2" to RoutineTime.AFTERNOON,
+            "h3" to RoutineTime.EVENING,
         )
 
-        val result = generator.generate(habits, emptyList())
+        val result = generator.generate(habits, emptyList(), emptyMap(), routines)
 
-        assertTrue(result.contains("## Daily"))
-        assertTrue(result.contains("## Weekdays"))
-        assertTrue(result.contains("## Custom"))
+        assertTrue(result.contains("## 🌅 Morning"))
+        assertTrue(result.contains("## ☀\uFE0F Anytime"))
+        assertTrue(result.contains("## 🌙 Evening"))
+        assertTrue(result.contains("## Other"))
 
-        val dailySection = extractSection(result, "Daily")
-        assertTrue(dailySection.contains("Morning run"))
+        assertTrue(extractSection(result, "🌅 Morning").contains("Morning run"))
+        assertTrue(extractSection(result, "☀\uFE0F Anytime").contains("Standup"))
+        assertTrue(extractSection(result, "🌙 Evening").contains("Read tech blog"))
+        assertTrue(extractSection(result, "Other").contains("Unassigned"))
+    }
 
-        val weekdaysSection = extractSection(result, "Weekdays")
-        assertTrue(weekdaysSection.contains("Standup"))
+    @Test
+    fun `routine sections appear in fixed order morning afternoon evening other`() {
+        val habits = listOf(
+            habit(id = "h3", title = "Evening habit"),
+            habit(id = "h4", title = "Unassigned habit"),
+            habit(id = "h2", title = "Anytime habit"),
+            habit(id = "h1", title = "Morning habit"),
+        )
+        val routines = mapOf(
+            "h1" to RoutineTime.MORNING,
+            "h2" to RoutineTime.AFTERNOON,
+            "h3" to RoutineTime.EVENING,
+        )
 
-        val customSection = extractSection(result, "Custom")
-        assertTrue(customSection.contains("Read tech blog"))
+        val result = generator.generate(habits, emptyList(), emptyMap(), routines)
+
+        val headings = result.lines().filter { it.startsWith("## ") }
+        assertEquals(
+            listOf("## 🌅 Morning", "## ☀\uFE0F Anytime", "## 🌙 Evening", "## Other"),
+            headings,
+        )
     }
 
     @Test
     fun `empty sections are skipped`() {
-        val habits = listOf(
-            habit(id = "h1", title = "Morning run", frequency = HabitFrequency.DAILY),
-        )
+        val habits = listOf(habit(id = "h1", title = "Morning run"))
+        val routines = mapOf("h1" to RoutineTime.MORNING)
+
+        val result = generator.generate(habits, emptyList(), emptyMap(), routines)
+
+        assertTrue(result.contains("## 🌅 Morning"))
+        assertFalse(result.contains("## ☀\uFE0F Anytime"))
+        assertFalse(result.contains("## 🌙 Evening"))
+        assertFalse(result.contains("## Other"))
+    }
+
+    @Test
+    fun `habits without routine map all land in Other`() {
+        val habits = listOf(habit(id = "h1", title = "Exercise"))
 
         val result = generator.generate(habits, emptyList())
 
-        assertTrue(result.contains("## Daily"))
-        assertFalse(result.contains("## Weekdays"))
-        assertFalse(result.contains("## Custom"))
+        assertTrue(result.contains("## Other"))
+        assertTrue(extractSection(result, "Other").contains("Exercise"))
     }
 
     @Test
@@ -265,6 +304,26 @@ class HabitIndexGeneratorTest {
         )
     }
 
+    // --- Reminder marker ---
+
+    @Test
+    fun `habit line includes reminder marker when reminderTime set`() {
+        val h = habit(id = "h1", title = "Meditation", reminderTime = LocalTime(7, 30))
+        val result = generator.generate(listOf(h), emptyList())
+
+        val line = result.lines().first { it.contains("<!-- id:h1 -->") }
+        assertTrue(line.contains("\u23F0 07:30"), "Should show ⏰ 07:30, got: $line")
+    }
+
+    @Test
+    fun `habit line omits reminder marker when reminderTime null`() {
+        val h = habit(id = "h1", title = "Meditation")
+        val result = generator.generate(listOf(h), emptyList())
+
+        val line = result.lines().first { it.contains("<!-- id:h1 -->") }
+        assertFalse(line.contains("\u23F0"), "Should not show ⏰, got: $line")
+    }
+
     // --- Sorting ---
 
     @Test
@@ -299,15 +358,12 @@ class HabitIndexGeneratorTest {
             ),
         )
         val completions = listOf(
-            // Meditation: 12-day streak (for streak to be 12, we need 12 consecutive days)
             completionAt("h1", 0),
             completionAt("h1", 1),
             completionAt("h1", 2),
-            // Exercise: 3-day streak
             completionAt("h2", 0),
             completionAt("h2", 1),
             completionAt("h2", 2),
-            // Read tech blog: 2 completions in last 7 days
             completionAt("h3", 1),
             completionAt("h3", 4),
         )
@@ -317,23 +373,31 @@ class HabitIndexGeneratorTest {
             "h5" to "standup",
             "h3" to "reading",
         )
+        val routines = mapOf(
+            "h1" to RoutineTime.MORNING,
+            "h2" to RoutineTime.EVENING,
+            "h5" to RoutineTime.AFTERNOON,
+        )
 
-        val result = generator.generate(habits, completions, slugs)
+        val result = generator.generate(habits, completions, slugs, routines)
 
-        // Daily section
-        val dailySection = extractSection(result, "Daily")
-        assertTrue(dailySection.contains("Meditation \u26A1medium \uD83D\uDD253 [[habits/meditation]] <!-- id:h1 -->"))
-        assertTrue(dailySection.contains("Exercise \u26A1high \uD83D\uDD253 [[habits/exercise]] <!-- id:h2 -->"))
+        // Morning section
+        val morningSection = extractSection(result, "🌅 Morning")
+        assertTrue(morningSection.contains("Meditation \u26A1medium \uD83D\uDD253 [[habits/meditation]] <!-- id:h1 -->"))
 
-        // Weekdays section
-        val weekdaysSection = extractSection(result, "Weekdays")
-        assertTrue(weekdaysSection.contains("Standup \u26A1low [[habits/standup]] <!-- id:h5 -->"))
+        // Anytime section
+        val anytimeSection = extractSection(result, "☀\uFE0F Anytime")
+        assertTrue(anytimeSection.contains("Standup \u26A1low [[habits/standup]] <!-- id:h5 -->"))
 
-        // Custom section: 🔁3x/week + ⚡low + ratio 2/3 + wikilink
-        val customSection = extractSection(result, "Custom")
+        // Evening section
+        val eveningSection = extractSection(result, "🌙 Evening")
+        assertTrue(eveningSection.contains("Exercise \u26A1high \uD83D\uDD253 [[habits/exercise]] <!-- id:h2 -->"))
+
+        // Other section: 🔁3x/week + ⚡low + ratio 2/3 + wikilink
+        val otherSection = extractSection(result, "Other")
         assertTrue(
-            customSection.contains("Read tech blog \uD83D\uDD013x/week \u26A1low 2/3 [[habits/reading]] <!-- id:h3 -->"),
-            "Custom section format mismatch.\nActual custom section:\n$customSection",
+            otherSection.contains("Read tech blog \uD83D\uDD013x/week \u26A1low 2/3 [[habits/reading]] <!-- id:h3 -->"),
+            "Other section format mismatch.\nActual section:\n$otherSection",
         )
     }
 

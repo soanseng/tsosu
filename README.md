@@ -148,14 +148,14 @@ generated: true
 - [ ] Prepare presentation 📅 2026-03-25 ⚡high 🍅60m ⏫ <!-- id:ghi-789 -->
 ```
 
-**`habits.md`** — your habits, one line each, grouped by routine, with a weekly counter and streak:
+**`habits.md`** — your habits, one line each, grouped by routine (morning / anytime / evening / other), with a weekly counter and streak:
 ```markdown
 ---
 tsosu: v1
 generated: true
 ---
 
-## Daily
+## 🌅 Morning
 
 - [ ] Exercise (tiny: do 1 pushup) 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
 ```
@@ -220,19 +220,20 @@ Projects are `## Heading` sections. Tasks under the first section (or before any
 ### Habit line format (`habits.md`)
 
 ```markdown
-## Daily
+## 🌅 Morning
 
-- [ ] Exercise (tiny: do 1 pushup) 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
+- [ ] Exercise (tiny: do 1 pushup) ⏰ 07:30 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
 ```
 
 | Marker | Meaning | Example |
 |--------|---------|---------|
 | `🔁 Nx/week` | weekly target frequency | `🔁7x/week` |
+| `⏰ HH:MM` | daily reminder time | `⏰ 07:30` |
 | `3/5` | completions this week / target | `3/5` |
 | `🔥N` | current streak in days | `🔥7` |
 | `[[habits/...]]` | link to the full-history note | `[[habits/exercise-h1abcdef]]` |
 
-The index line carries only the counters above. Completion dates are stored in the per-habit note under `habits/` and in the daily notes.
+Sections are routines: `## 🌅 Morning`, `## ☀️ Anytime`, `## 🌙 Evening`, then `## Other`. The index line carries only the counters above; completion dates and settings live in the per-habit note under `habits/`, whose frontmatter also stores the routine (`routine: morning`) and reminder (`reminder: "07:30"`) — edit either side, Tsosu reconciles them on the next sync.
 
 ### Obsidian tips
 

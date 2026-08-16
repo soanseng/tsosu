@@ -1,6 +1,7 @@
 package app.tsosu.ui.widget
 
 import android.content.Context
+import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.TaskDao
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -11,6 +12,8 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
     fun taskDao(): TaskDao
+
+    fun vaultChangeWatcher(): VaultChangeWatcher
 
     companion object {
         fun get(context: Context): WidgetEntryPoint =

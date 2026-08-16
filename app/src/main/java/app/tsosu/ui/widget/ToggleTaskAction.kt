@@ -22,6 +22,7 @@ class ToggleTaskAction : ActionCallback {
         val newStatus = if (task.status == DONE_ORDINAL) TODO_ORDINAL else DONE_ORDINAL
         val completedDate = if (newStatus == DONE_ORDINAL) now else null
         dao.setStatus(taskId, newStatus, completedDate, null, now)
+        WidgetEntryPoint.get(context).vaultChangeWatcher().pushSoon()
         FocusWidget().update(context, glanceId)
     }
 }

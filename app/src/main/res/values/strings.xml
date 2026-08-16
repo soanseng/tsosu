@@ -76,6 +76,30 @@
     <!-- Reminder Notifications -->
     <string name="notif_reminder_title">Task Reminder</string>
     <string name="notif_action_complete">Complete</string>
+    <string name="notif_channel_habits">Habit Reminders</string>
+    <string name="notif_channel_habits_desc">Daily habit reminder nudges</string>
+    <string name="notif_habit_done">Done</string>
+
+    <!-- Habit Editor -->
+    <string name="habit_detail_title">Edit Habit</string>
+    <string name="habit_field_title">Habit name</string>
+    <string name="habit_field_tiny">2-minute version</string>
+    <string name="habit_field_routine">Routine</string>
+    <string name="habit_field_frequency">Frequency</string>
+    <string name="habit_field_energy">Energy</string>
+    <string name="habit_field_reminder">Reminder</string>
+    <string name="habit_freq_daily">Daily</string>
+    <string name="habit_freq_weekdays">Weekdays</string>
+    <string name="habit_freq_custom">Custom</string>
+    <string name="habit_target_days">Days per week</string>
+    <string name="habit_reminder_none">No reminder</string>
+    <string name="habit_save">Save</string>
+    <string name="habit_archive">Archive</string>
+    <string name="habit_archive_confirm_title">Archive habit?</string>
+    <string name="habit_archive_confirm_body">The habit moves out of your list. Its history stays in the vault.</string>
+    <string name="habit_ok">OK</string>
+    <string name="habit_cancel">Cancel</string>
+    <string name="quick_add_habit_reminder">Reminder</string>
 
     <plurals name="notif_overdue_count">
         <item quantity="one">%d overdue task</item>

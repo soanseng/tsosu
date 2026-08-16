@@ -155,6 +155,30 @@
     <string name="notif_channel_overdue_desc">逾期任務通知</string>
     <string name="notif_reminder_title">任務提醒</string>
     <string name="notif_action_complete">完成</string>
+    <string name="notif_channel_habits">習慣提醒</string>
+    <string name="notif_channel_habits_desc">每日習慣提醒督促</string>
+    <string name="notif_habit_done">完成</string>
+
+    <!-- Habit Editor -->
+    <string name="habit_detail_title">編輯習慣</string>
+    <string name="habit_field_title">習慣名稱</string>
+    <string name="habit_field_tiny">2 分鐘版本</string>
+    <string name="habit_field_routine">例行時段</string>
+    <string name="habit_field_frequency">頻率</string>
+    <string name="habit_field_energy">能量</string>
+    <string name="habit_field_reminder">提醒</string>
+    <string name="habit_freq_daily">每天</string>
+    <string name="habit_freq_weekdays">平日</string>
+    <string name="habit_freq_custom">自訂</string>
+    <string name="habit_target_days">每週天數</string>
+    <string name="habit_reminder_none">不提醒</string>
+    <string name="habit_save">儲存</string>
+    <string name="habit_archive">封存</string>
+    <string name="habit_archive_confirm_title">封存習慣？</string>
+    <string name="habit_archive_confirm_body">習慣會從清單移除，歷史紀錄保留在 vault 裡。</string>
+    <string name="habit_ok">確定</string>
+    <string name="habit_cancel">取消</string>
+    <string name="quick_add_habit_reminder">提醒</string>
     <string name="focus_filter_active">篩選已啟用</string>
     <string name="focus_vault_setup_title">設定你的 vault</string>
     <string name="focus_vault_setup_desc">連結 markdown 資料夾，與 Obsidian、nvim 或其他工具同步。</string>

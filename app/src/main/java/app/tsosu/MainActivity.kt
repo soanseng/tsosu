@@ -1,8 +1,12 @@
 package app.tsosu
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -33,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +56,7 @@ import app.tsosu.navigation.Screen
 import app.tsosu.navigation.TsosuNavHost
 import app.tsosu.ui.screens.filter.FilterSheet
 import app.tsosu.ui.screens.focus.FocusViewModel
+import app.tsosu.ui.screens.habitdetail.HabitDetailSheet
 import app.tsosu.ui.screens.habits.HabitsViewModel
 import app.tsosu.ui.screens.pickone.PickOneSheet
 import app.tsosu.ui.screens.quickadd.QuickAddHabitSheet
@@ -99,9 +105,25 @@ class MainActivity : AppCompatActivity() {
                 var showAddTask by remember { mutableStateOf(false) }
                 var showAddHabit by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
+                val notifPermissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                ) { }
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(
+                            this@MainActivity,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
                 var showFilter by remember { mutableStateOf(false) }
                 var editingTaskId by remember {
                     mutableStateOf(intent.getStringExtra("taskId") ?: null)
+                }
+                var editingHabitId by remember {
+                    mutableStateOf(intent.getStringExtra("habitId") ?: null)
                 }
                 val focusViewModel: FocusViewModel = hiltViewModel()
                 val habitsViewModel: HabitsViewModel = hiltViewModel()
@@ -247,6 +269,7 @@ class MainActivity : AppCompatActivity() {
                         modifier = Modifier.padding(innerPadding),
                         focusViewModel = focusViewModel,
                         onTaskClick = { taskId -> editingTaskId = taskId },
+                        onHabitClick = { habitId -> editingHabitId = habitId },
                         isVaultConfigured = isVaultConfigured,
                         onSelectFolder = { folderPicker.launch(null) },
                     )
@@ -259,8 +282,8 @@ class MainActivity : AppCompatActivity() {
                     ) {
                         QuickAddHabitSheet(
                             onDismiss = { showAddHabit = false },
-                            onAdd = { title, tinyVersion, routineTime ->
-                                habitsViewModel.createHabit(title, tinyVersion, routineTime)
+                            onAdd = { title, tinyVersion, routineTime, reminderTime ->
+                                habitsViewModel.createHabit(title, tinyVersion, routineTime, reminderTime)
                                 showAddHabit = false
                             },
                         )
@@ -291,6 +314,18 @@ class MainActivity : AppCompatActivity() {
                         TaskDetailSheet(
                             taskId = taskId,
                             onDismiss = { editingTaskId = null },
+                        )
+                    }
+                }
+
+                editingHabitId?.let { habitId ->
+                    ModalBottomSheet(
+                        onDismissRequest = { editingHabitId = null },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    ) {
+                        HabitDetailSheet(
+                            habitId = habitId,
+                            onDismiss = { editingHabitId = null },
                         )
                     }
                 }
@@ -335,20 +370,7 @@ class MainActivity : AppCompatActivity() {
                     lifecycleScope.launch(Dispatchers.IO) {
                         val isConfigured = syncRepository.isConfigured().first()
                         if (isConfigured) {
-                            snackbarHostState.showSnackbar("Syncing…")
-                            val result = vaultChangeWatcher.syncOnce()
-                            result.fold(
-                                onSuccess = { r ->
-                                    snackbarHostState.showSnackbar(
-                                        "Synced ${r.exported} tasks, ${r.imported} habits"
-                                    )
-                                },
-                                onFailure = { e ->
-                                    snackbarHostState.showSnackbar(
-                                        "Sync failed: ${e.message}"
-                                    )
-                                },
-                            )
+                            vaultChangeWatcher.pullOnce()
                         }
                     }
                 }

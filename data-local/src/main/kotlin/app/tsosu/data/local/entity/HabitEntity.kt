@@ -16,5 +16,6 @@ data class HabitEntity(
     val position: Double = 0.0,
     val color: String = "#4CAF50",
     val isArchived: Boolean = false,
+    val reminderMinutes: Int? = null,
     val createdAt: Long,
 )

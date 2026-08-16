@@ -2,8 +2,10 @@ package app.tsosu.data.markdown.habitnote
 
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -267,6 +269,83 @@ class HabitNoteParserTest {
 
         val result = parser.parse(content)
         assertTrue(result.completions.isEmpty())
+    }
+
+    @Test
+    fun `parses routine and reminder fields`() {
+        val content = """
+            |---
+            |id: h1
+            |frequency: daily
+            |routine: evening
+            |reminder: "07:30"
+            |energy: low
+            |created: 2026-01-15
+            |---
+            |
+            |# Evening stretch
+        """.trimMargin()
+
+        val result = parser.parse(content)
+
+        assertEquals(RoutineTime.EVENING, result.routineTime)
+        assertEquals(LocalTime(7, 30), result.habit.reminderTime)
+    }
+
+    @Test
+    fun `routine is case insensitive and unknown values become null`() {
+        val content = """
+            |---
+            |id: h1
+            |frequency: daily
+            |routine: Morning
+            |energy: low
+            |created: 2026-01-15
+            |---
+            |
+            |# Stretch
+        """.trimMargin()
+
+        assertEquals(RoutineTime.MORNING, parser.parse(content).routineTime)
+
+        val unknown = content.replace("routine: Morning", "routine: midnight")
+        assertNull(parser.parse(unknown).routineTime)
+    }
+
+    @Test
+    fun `missing routine and reminder parse as null`() {
+        val content = """
+            |---
+            |id: h1
+            |frequency: daily
+            |energy: low
+            |created: 2026-01-15
+            |---
+            |
+            |# Stretch
+        """.trimMargin()
+
+        val result = parser.parse(content)
+
+        assertNull(result.routineTime)
+        assertNull(result.habit.reminderTime)
+    }
+
+    @Test
+    fun `invalid reminder time parses as null`() {
+        val content = """
+            |---
+            |id: h1
+            |frequency: daily
+            |reminder: "25:99"
+            |energy: low
+            |created: 2026-01-15
+            |---
+            |
+            |# Stretch
+        """.trimMargin()
+
+        assertNull(parser.parse(content).habit.reminderTime)
     }
 
     @Test

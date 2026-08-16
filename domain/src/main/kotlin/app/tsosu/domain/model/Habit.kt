@@ -2,6 +2,7 @@ package app.tsosu.domain.model
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -17,6 +18,7 @@ data class Habit(
     val position: Double = 0.0,
     val color: String = "#4CAF50",
     val isArchived: Boolean = false,
+    val reminderTime: LocalTime? = null,
     val createdAt: Instant = Clock.System.now(),
 )
 

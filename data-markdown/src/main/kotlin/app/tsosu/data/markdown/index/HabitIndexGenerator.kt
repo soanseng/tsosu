@@ -4,6 +4,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -15,21 +16,35 @@ class HabitIndexGenerator {
         habits: List<Habit>,
         completions: List<HabitCompletion>,
         noteFilenames: Map<String, String> = emptyMap(),
+        routineTimeByHabitId: Map<String, RoutineTime> = emptyMap(),
     ): String = buildString {
         appendFrontmatter()
 
         val completionsByHabit = completions.groupBy { it.habitId }
-        val grouped = habits.groupBy { it.frequency }
 
-        for (frequency in listOf(HabitFrequency.DAILY, HabitFrequency.WEEKDAYS, HabitFrequency.CUSTOM)) {
-            val sectionHabits = grouped[frequency] ?: continue
-            appendLine()
-            appendLine("## ${sectionName(frequency)}")
-            appendLine()
-            sectionHabits.sortedBy { it.position }.forEach { habit ->
-                val habitCompletions = completionsByHabit[habit.id] ?: emptyList()
-                appendLine(formatHabitLine(habit, habitCompletions, noteFilenames))
-            }
+        for (routine in listOf(RoutineTime.MORNING, RoutineTime.AFTERNOON, RoutineTime.EVENING)) {
+            val sectionHabits = habits.filter { routineTimeByHabitId[it.id] == routine }
+            if (sectionHabits.isEmpty()) continue
+            appendSection(routine, sectionHabits, completionsByHabit, noteFilenames)
+        }
+
+        val otherHabits = habits.filter { routineTimeByHabitId[it.id] == null }
+        if (otherHabits.isNotEmpty()) {
+            appendSection(null, otherHabits, completionsByHabit, noteFilenames)
+        }
+    }
+
+    private fun StringBuilder.appendSection(
+        routine: RoutineTime?,
+        habits: List<Habit>,
+        completionsByHabit: Map<String, List<HabitCompletion>>,
+        noteFilenames: Map<String, String>,
+    ) {
+        appendLine()
+        appendLine("## ${sectionName(routine)}")
+        appendLine()
+        habits.sortedBy { it.position }.forEach { habit ->
+            appendLine(formatHabitLine(habit, completionsByHabit[habit.id] ?: emptyList(), noteFilenames))
         }
     }
 
@@ -43,6 +58,10 @@ class HabitIndexGenerator {
 
         if (habit.frequency == HabitFrequency.CUSTOM) {
             append(" \uD83D\uDD01${habit.targetDaysPerWeek}x/week")
+        }
+
+        habit.reminderTime?.let { reminder ->
+            append(" \u23F0 %02d:%02d".format(reminder.hour, reminder.minute))
         }
 
         append(" \u26A1${energyLabel(habit.energyLevel)}")
@@ -97,10 +116,11 @@ class HabitIndexGenerator {
             .trim('-')
     }
 
-    private fun sectionName(frequency: HabitFrequency): String = when (frequency) {
-        HabitFrequency.DAILY -> "Daily"
-        HabitFrequency.WEEKDAYS -> "Weekdays"
-        HabitFrequency.CUSTOM -> "Custom"
+    private fun sectionName(routine: RoutineTime?): String = when (routine) {
+        RoutineTime.MORNING -> "🌅 Morning"
+        RoutineTime.AFTERNOON -> "☀\uFE0F Anytime"
+        RoutineTime.EVENING -> "🌙 Evening"
+        null -> "Other"
     }
 
     private fun energyLabel(energy: EnergyLevel): String = when (energy) {

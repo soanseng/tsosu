@@ -148,14 +148,14 @@ generated: true
 - [ ] 準備簡報 📅 2026-03-25 ⚡high 🍅60m ⏫ <!-- id:ghi-789 -->
 ```
 
-**`habits.md`** — 你的習慣，每習慣一行，依例行時段分組，附每週計數與連續記錄：
+**`habits.md`** — 你的習慣，每習慣一行，依例行時段（早晨/隨時/晚間/其他）分組，附每週計數與連續記錄：
 ```markdown
 ---
 tsosu: v1
 generated: true
 ---
 
-## Daily
+## 🌅 Morning
 
 - [ ] 運動 (tiny: 做 1 個伏地挺身) 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
 ```
@@ -220,19 +220,20 @@ Tsosu 讀寫一組固定、有文件的 markdown 檔案。全部都是純文字�
 ### 習慣行格式（`habits.md`）
 
 ```markdown
-## Daily
+## 🌅 Morning
 
-- [ ] 運動 (tiny: 做 1 個伏地挺身) 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
+- [ ] 運動 (tiny: 做 1 個伏地挺身) ⏰ 07:30 🔁7x/week ⚡medium 3/5 🔥7 [[habits/exercise-h1abcdef]] <!-- id:h1 -->
 ```
 
 | 標記 | 意義 | 範例 |
 |------|------|------|
 | `🔁 Nx/week` | 每週目標次數 | `🔁7x/week` |
+| `⏰ HH:MM` | 每日提醒時間 | `⏰ 07:30` |
 | `3/5` | 本週完成次數 / 目標 | `3/5` |
 | `🔥N` | 目前連續天數 | `🔥7` |
 | `[[habits/...]]` | 連結到完整歷史 note | `[[habits/exercise-h1abcdef]]` |
 
-索引行只帶上面的計數。完成日期存放在 `habits/` 下的習慣 note 與每日 note 裡。
+分區即例行時段：`## 🌅 Morning`、`## ☀️ Anytime`、`## 🌙 Evening`，再來是 `## Other`。索引行只帶上面的計數；完成日期與設定存放在 `habits/` 下的習慣 note，其 frontmatter 也記錄例行時段（`routine: morning`）與提醒（`reminder: "07:30"`）——任一端修改，下次同步 Tsosu 會自動對齊。
 
 ### Obsidian 建議
 

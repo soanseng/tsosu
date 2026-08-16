@@ -100,6 +100,7 @@ fun HabitEntity.toDomain(): Habit = Habit(
     position = position,
     color = color,
     isArchived = isArchived,
+    reminderTime = reminderMinutes?.let { LocalTime(it / 60, it % 60) },
     createdAt = Instant.fromEpochMilliseconds(createdAt),
 )
 
@@ -115,8 +116,10 @@ fun Habit.toEntity(): HabitEntity = HabitEntity(
     position = position,
     color = color,
     isArchived = isArchived,
+    reminderMinutes = reminderTime?.let { it.hour * 60 + it.minute },
     createdAt = createdAt.toEpochMilliseconds(),
 )
+
 
 fun HabitCompletionEntity.toDomain(): HabitCompletion = HabitCompletion(
     habitId = habitId,

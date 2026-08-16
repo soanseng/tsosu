@@ -120,4 +120,55 @@ class ReminderTriggerCalculatorTest {
         val trigger = ReminderTriggerCalculator.triggerMillisForEntity(e, zone, now)
         assertEquals(expectedTrigger("2026-08-16", 14, 35), trigger)
     }
+
+    // --- habit ---
+
+    @Test
+    fun `habit trigger today when reminder time still ahead`() {
+        // now = 2026-08-14T00:00Z; reminder 09:30 today
+        val trigger = ReminderTriggerCalculator.triggerMillisForHabit(
+            reminderMinutes = 9 * 60 + 30,
+            isArchived = false,
+            zone = zone,
+            nowMillis = now,
+        )
+        assertEquals(expectedTrigger("2026-08-14", 9, 30), trigger)
+    }
+
+    @Test
+    fun `habit trigger rolls to tomorrow when time already passed`() {
+        // now = 2026-08-14T00:00Z, but reminder 23:30 the previous day already passed
+        val yesterdayEvening = Instant.parse("2026-08-14T23:31:00Z").toEpochMilliseconds()
+        val trigger = ReminderTriggerCalculator.triggerMillisForHabit(
+            reminderMinutes = 23 * 60 + 30,
+            isArchived = false,
+            zone = zone,
+            nowMillis = yesterdayEvening,
+        )
+        assertEquals(expectedTrigger("2026-08-15", 23, 30), trigger)
+    }
+
+    @Test
+    fun `habit trigger null when no reminder`() {
+        assertNull(
+            ReminderTriggerCalculator.triggerMillisForHabit(
+                reminderMinutes = null,
+                isArchived = false,
+                zone = zone,
+                nowMillis = now,
+            ),
+        )
+    }
+
+    @Test
+    fun `habit trigger null when archived`() {
+        assertNull(
+            ReminderTriggerCalculator.triggerMillisForHabit(
+                reminderMinutes = 9 * 60,
+                isArchived = true,
+                zone = zone,
+                nowMillis = now,
+            ),
+        )
+    }
 }

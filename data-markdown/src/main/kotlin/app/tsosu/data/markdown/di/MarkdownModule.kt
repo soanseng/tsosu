@@ -4,6 +4,7 @@ import android.content.Context
 import app.tsosu.data.local.TsosuDatabase
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
+import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.markdown.MarkdownFileAccess
 import app.tsosu.data.markdown.MarkdownHabitParser
@@ -74,12 +75,14 @@ object MarkdownModule {
         taskDao: TaskDao,
         habitDao: HabitDao,
         projectDao: ProjectDao,
+        routineDao: RoutineDao,
     ): SyncRepository = MarkdownSyncRepository(
         preferences = preferences,
         syncManager = syncManager,
         taskDao = taskDao,
         habitDao = habitDao,
         projectDao = projectDao,
+        routineDao = routineDao,
     )
 
     @Provides

@@ -3,18 +3,29 @@ package app.tsosu.data.markdown.habitnote
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
 import app.tsosu.domain.model.HabitFrequency
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class HabitNoteSerializer {
 
-    fun serialize(habit: Habit, completions: List<HabitCompletion>): String = buildString {
+    fun serialize(
+        habit: Habit,
+        completions: List<HabitCompletion>,
+        routineTime: RoutineTime? = null,
+    ): String = buildString {
         // YAML frontmatter
         appendLine("---")
         appendLine("id: ${habit.id}")
         appendLine("frequency: ${frequencyValue(habit.frequency)}")
         if (habit.frequency == HabitFrequency.CUSTOM) {
             appendLine("target_days: ${habit.targetDaysPerWeek}")
+        }
+        if (routineTime != null) {
+            appendLine("routine: ${routineTime.name.lowercase()}")
+        }
+        habit.reminderTime?.let { reminder ->
+            appendLine("reminder: \"%02d:%02d\"".format(reminder.hour, reminder.minute))
         }
         appendLine("energy: ${habit.energyLevel.name.lowercase()}")
         habit.tinyVersion?.let { tiny ->

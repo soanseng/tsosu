@@ -9,6 +9,7 @@ import app.tsosu.data.markdown.tasknote.TaskNoteParser
 import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitCompletion
+import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.Task
 import kotlinx.datetime.LocalDate
 
@@ -92,7 +93,11 @@ class MarkdownSyncManager(
         return ParsedTasks(allTasks, projectSections)
     }
 
-    suspend fun exportHabits(habits: List<Habit>, completions: List<HabitCompletion>) {
+    suspend fun exportHabits(
+        habits: List<Habit>,
+        completions: List<HabitCompletion>,
+        routineTimeByHabitId: Map<String, RoutineTime> = emptyMap(),
+    ) {
         fileAccess.ensureFolder("habits")
         val completionsByHabit = completions.groupBy { it.habitId }
         val noteFilenames = mutableMapOf<String, String>()
@@ -103,12 +108,13 @@ class MarkdownSyncManager(
             val content = habitNoteSerializer.serialize(
                 habit,
                 completionsByHabit[habit.id] ?: emptyList(),
+                routineTimeByHabitId[habit.id],
             )
             writeNoteIfChanged("habits", filename, content)
             noteFilenames[habit.id] = filename.removeSuffix(".md")
         }
 
-        val indexContent = habitIndexGenerator.generate(habits, completions, noteFilenames)
+        val indexContent = habitIndexGenerator.generate(habits, completions, noteFilenames, routineTimeByHabitId)
         if (fileAccess.readHabitsFile() != indexContent) {
             fileAccess.writeHabitsFile(indexContent)
         }
@@ -117,6 +123,7 @@ class MarkdownSyncManager(
     suspend fun importHabits(): ParsedHabits {
         val allHabits = mutableListOf<Habit>()
         val allCompletions = mutableListOf<HabitCompletion>()
+        val parsedNotes = mutableListOf<Pair<app.tsosu.data.markdown.habitnote.ParsedHabitNote, RoutineTime?>>()
 
         // Read individual HabitNote files
         val noteFiles = fileAccess.listFolder("habits")
@@ -131,6 +138,7 @@ class MarkdownSyncManager(
                 seenHabitIds.add(parsed.habit.id)
                 allHabits.add(parsed.habit)
                 allCompletions.addAll(parsed.completions)
+                parsedNotes.add(parsed to parsed.routineTime)
             } catch (_: Exception) {
                 // skip malformed files
             }
@@ -144,7 +152,7 @@ class MarkdownSyncManager(
             }
         }
 
-        return ParsedHabits(allHabits, allCompletions)
+        return ParsedHabits(allHabits, allCompletions, parsedNotes)
     }
 
     suspend fun exportDailyNote(

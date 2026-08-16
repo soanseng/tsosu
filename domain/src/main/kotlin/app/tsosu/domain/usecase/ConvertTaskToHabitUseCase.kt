@@ -12,7 +12,9 @@ class ConvertTaskToHabitUseCase(
     suspend operator fun invoke(taskId: String): Result<Habit> {
         val task = taskRepository.getTask(taskId).first()
             ?: return Result.failure(IllegalArgumentException("Task not found: $taskId"))
-        require(task.title.isNotBlank()) { "Task title must not be blank" }
+        if (task.title.isBlank()) {
+            return Result.failure(IllegalArgumentException("Task title must not be blank"))
+        }
 
         val habit = Habit(
             title = task.title,

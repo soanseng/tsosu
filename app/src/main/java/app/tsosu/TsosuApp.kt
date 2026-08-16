@@ -15,7 +15,6 @@ import javax.inject.Inject
 class TsosuApp : Application(), Configuration.Provider {
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
-    @Inject lateinit var vaultChangeWatcher: VaultChangeWatcher
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -24,7 +23,6 @@ class TsosuApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        vaultChangeWatcher.start()
         scheduleOverdueCheck()
     }
 

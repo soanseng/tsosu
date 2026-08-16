@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.TaskDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.first
 class OverdueCheckWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val vaultChangeWatcher: VaultChangeWatcher,
     private val taskDao: TaskDao,
     private val notificationHelper: NotificationHelper,
 ) : CoroutineWorker(appContext, workerParams) {
@@ -25,10 +23,6 @@ class OverdueCheckWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            // Refresh from the markdown vault first so overdue state is current.
-            // Failure here (e.g. concurrent sync) still lets us read Room state.
-            vaultChangeWatcher.syncOnce()
-
             val now = System.currentTimeMillis()
             val overdueTasks = taskDao.getOverdueTasks(now).first()
 
@@ -38,6 +32,8 @@ class OverdueCheckWorker @AssistedInject constructor(
                     titles = overdueTasks.map { it.title },
                     taskIds = overdueTasks.map { it.id },
                 )
+            } else {
+                notificationHelper.cancelOverdueSummary()
             }
 
             Result.success()

@@ -20,6 +20,7 @@ import kotlin.time.Duration.Companion.days
 
 class HabitRepositoryImpl(
     private val habitDao: HabitDao,
+    private val onHabitChanged: (suspend (habitId: String) -> Unit)? = null,
 ) : HabitRepository {
 
     override fun getActiveHabits(): Flow<List<Habit>> =
@@ -69,16 +70,19 @@ class HabitRepositoryImpl(
 
     override suspend fun createHabit(habit: Habit): Result<Habit> = runCatching {
         habitDao.insert(habit.toEntity())
+        onHabitChanged?.invoke(habit.id)
         habit
     }
 
     override suspend fun updateHabit(habit: Habit): Result<Habit> = runCatching {
         habitDao.update(habit.toEntity())
+        onHabitChanged?.invoke(habit.id)
         habit
     }
 
     override suspend fun archiveHabit(habitId: String): Result<Unit> = runCatching {
         habitDao.archive(habitId)
+        onHabitChanged?.invoke(habitId)
     }
 
     override suspend fun completeHabit(habitId: String, date: LocalDate): Result<HabitCompletion> =
@@ -86,6 +90,7 @@ class HabitRepositoryImpl(
             val now = Clock.System.now()
             val completion = HabitCompletion(habitId, date, now)
             habitDao.insertCompletion(completion.toEntity())
+            onHabitChanged?.invoke(habitId)
             completion
         }
 
@@ -93,6 +98,7 @@ class HabitRepositoryImpl(
         runCatching {
             val dateEpoch = date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
             habitDao.deleteCompletion(habitId, dateEpoch)
+            onHabitChanged?.invoke(habitId)
         }
 
     private fun todayEpoch(): Long {
