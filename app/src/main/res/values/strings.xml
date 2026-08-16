@@ -80,6 +80,7 @@
     <string name="notif_channel_habits_desc">Daily habit reminder nudges</string>
     <string name="notif_habit_done">Done</string>
     <string name="habits_buy_freeze">Buy freeze ⚡30</string>
+    <string name="habits_not_enough_energy">Not enough ⚡ yet — complete tasks and habits to earn energy</string>
 
     <!-- Habit Editor -->
     <string name="habit_detail_title">Edit Habit</string>

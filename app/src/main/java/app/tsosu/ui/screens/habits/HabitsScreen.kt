@@ -33,17 +33,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
-import app.tsosu.domain.model.HabitStreakInfo
+import app.tsosu.domain.model.Routine
 import app.tsosu.domain.model.RoutineTime
+import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.usecase.HabitWithStatus
 import app.tsosu.ui.components.KonfettiOverlay
 import app.tsosu.ui.util.rememberHaptic
@@ -59,10 +61,17 @@ fun HabitsScreen(
     val haptic = rememberHaptic()
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMsg = stringResource(R.string.habits_create_failed)
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.errorEvent.collect {
             snackbarHostState.showSnackbar(errorMsg)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.messageEvent.collect { res ->
+            snackbarHostState.showSnackbar(context.getString(res))
         }
     }
 

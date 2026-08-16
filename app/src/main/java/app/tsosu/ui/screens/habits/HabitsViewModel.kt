@@ -3,6 +3,7 @@ package app.tsosu.ui.screens.habits
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tsosu.R
 import app.tsosu.domain.model.Habit
 import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.model.Routine
@@ -58,6 +59,10 @@ class HabitsViewModel @Inject constructor(
     private val _errorEvent = MutableSharedFlow<String>()
     val errorEvent = _errorEvent.asSharedFlow()
 
+    /** Snackbar messages as string resource ids (localizable). */
+    private val _messageEvent = MutableSharedFlow<Int>()
+    val messageEvent = _messageEvent.asSharedFlow()
+
     private val _celebrateEvent = MutableSharedFlow<Unit>()
     val celebrateEvent = _celebrateEvent.asSharedFlow()
 
@@ -82,7 +87,7 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch {
             val ok = gamification.buyFreeze()
             if (!ok) {
-                _errorEvent.emit("Not enough energy")
+                _messageEvent.emit(R.string.habits_not_enough_energy)
             }
         }
     }
