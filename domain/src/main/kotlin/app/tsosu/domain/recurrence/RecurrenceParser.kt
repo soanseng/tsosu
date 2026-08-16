@@ -37,6 +37,19 @@ class RecurrenceParser {
             }
         }
 
+        // Todoist-style shorthand "… ev day / ev mon" at the end of the title
+        val evMatch = Regex(" ev[! ]").findAll(fullTitle).lastOrNull()
+        if (evMatch != null) {
+            val candidate = fullTitle.substring(evMatch.range.first + 1).trim()
+            val result = parse(candidate)
+            if (result is RecurrenceResult.Success) {
+                return TitleRecurrence(
+                    title = fullTitle.substring(0, evMatch.range.first).trim(),
+                    rrule = result.rrule,
+                )
+            }
+        }
+
         // Check if the entire string starts with "every"
         if (fullTitle.trim().startsWith("every", ignoreCase = true)) {
             val result = parse(fullTitle.trim())
@@ -44,6 +57,7 @@ class RecurrenceParser {
                 return TitleRecurrence(title = "", rrule = result.rrule)
             }
         }
+
 
         // Chinese: find 每 with a space before it
         val meiIndex = fullTitle.lastIndexOf(" 每")
@@ -73,40 +87,78 @@ class RecurrenceParser {
 
     private fun tryParseEnglish(input: String): RecurrenceResult.Success? {
         val normalized = input.lowercase().replace(Regex("\\s+"), " ").trim()
+            // Todoist-style shorthand: "ev day", "ev mon", "ev! daily" → treat as "every"
+            .replace(Regex("^ev[! ]\\s*"), "every ")
+            // "every! 30 days" = restart-from-completion; same schedule shape,
+            // flagged so callers can apply completion-based scheduling.
+            .replace(Regex("^every!\\s*"), "every ")
+
+        // "every daily/weekly/..." folds to the standalone word
+        val folded = when (normalized) {
+            "every daily" -> "daily"
+            "every weekly" -> "weekly"
+            "every monthly" -> "monthly"
+            "every yearly" -> "yearly"
+            "every quarterly" -> "quarterly"
+            else -> normalized
+        }
+
+        // Standalone words: daily / weekly / monthly / yearly / quarterly
+        when (folded) {
+            "daily" -> return success("FREQ=DAILY")
+            "weekly" -> return success("FREQ=WEEKLY")
+            "monthly" -> return success("FREQ=MONTHLY")
+            "yearly" -> return success("FREQ=YEARLY")
+            "quarterly" -> return success("FREQ=MONTHLY;INTERVAL=3")
+        }
+
+
+        // "every other day/week/month/year" (Todoist-style)
+        OTHER_EN.matchEntire(folded)?.let { match ->
+            val unit = match.groupValues[1]
+            val freq = when {
+                unit.startsWith("day") -> "DAILY"
+                unit.startsWith("week") -> "WEEKLY"
+                unit.startsWith("month") -> "MONTHLY"
+                unit.startsWith("year") -> "YEARLY"
+                else -> return null
+            }
+            return success("FREQ=$freq;INTERVAL=2")
+        }
 
         // "every day"
-        if (normalized == "every day") {
+        if (folded == "every day") {
             return success("FREQ=DAILY")
         }
 
         // "every weekday"
-        if (normalized == "every weekday") {
+        if (folded == "every weekday") {
             return success("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR")
         }
 
         // "every week"
-        if (normalized == "every week") {
+        if (folded == "every week") {
             return success("FREQ=WEEKLY")
         }
 
         // "every month on the Nth"
-        MONTHLY_DAY_EN.matchEntire(normalized)?.let { match ->
+        MONTHLY_DAY_EN.matchEntire(folded)?.let { match ->
             val day = match.groupValues[1].toInt()
             if (day in 1..31) return success("FREQ=MONTHLY;BYMONTHDAY=$day")
         }
 
         // "every month"
-        if (normalized == "every month") {
+        if (folded == "every month") {
             return success("FREQ=MONTHLY")
         }
 
         // "every year"
-        if (normalized == "every year") {
+        if (folded == "every year") {
             return success("FREQ=YEARLY")
         }
 
         // "every N days/weeks/months/years"
-        INTERVAL_EN.matchEntire(normalized)?.let { match ->
+        INTERVAL_EN.matchEntire(folded)?.let { match ->
             val n = match.groupValues[1].toInt()
             val unit = match.groupValues[2]
             val freq = when {
@@ -120,7 +172,7 @@ class RecurrenceParser {
         }
 
         // "every Monday", "every Mon, Wed, Fri", "every Tuesday and Thursday"
-        DAYS_EN.matchEntire(normalized)?.let { match ->
+        DAYS_EN.matchEntire(folded)?.let { match ->
             val daysStr = match.groupValues[1]
             val days = parseDayNamesEnglish(daysStr) ?: return null
             if (days.isNotEmpty()) {
@@ -218,8 +270,10 @@ class RecurrenceParser {
 
     companion object {
         private val MONTHLY_DAY_EN = Regex("""every month on the (\d+)(?:st|nd|rd|th)""")
-        private val INTERVAL_EN = Regex("""every (\d+) (days?|weeks?|months?|years?)""")
+        private val OTHER_EN = Regex("""every other (days?|weeks?|months?|years?)""")
         private val DAYS_EN = Regex("""every (.+)""")
+        private val INTERVAL_EN = Regex("""every (\d+) (days?|weeks?|months?|years?)""")
+
 
         private val MONTHLY_DAY_ZH = Regex("""每月(\d+)[號号]""")
         private val INTERVAL_ZH = Regex("""每([一二三四五六七八九十兩两\d]+)([天日週周月年])""")

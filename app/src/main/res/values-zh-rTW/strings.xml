@@ -179,6 +179,23 @@
     <string name="habit_ok">確定</string>
     <string name="habit_cancel">取消</string>
     <string name="quick_add_habit_reminder">提醒</string>
+
+    <!-- Recurrence keyword help -->
+    <string name="recurrence_help_title">重複任務關鍵字</string>
+    <string name="recurrence_help_intro">把重複關鍵字打在任務名稱結尾——App 或 Obsidian 裡都可以。儲存或同步時 Tsosu 會自動辨識。</string>
+    <string name="recurrence_help_basic_title">基本頻率</string>
+    <string name="recurrence_help_basic_body">"every day · daily · every weekday · every week · weekly · every month · monthly · every quarter · quarterly · every year · yearly · every 3 days · every 2 weeks · every hour · every 12 hours"</string>
+    <string name="recurrence_help_days_title">特定日子</string>
+    <string name="recurrence_help_days_body">"every monday · every mon · every mon, wed, fri · every tuesday and thursday · 每週一二三 · 每月15號 · 每天 · 每三天"</string>
+    <string name="recurrence_help_other_title">每隔系列</string>
+    <string name="recurrence_help_other_body">"every other day 每隔一天 · every other week 每隔一週 · every other month 每隔一個月 · every other year 每隔一年"</string>
+    <string name="recurrence_help_bang_title">every 與 every!</string>
+    <string name="recurrence_help_bang_body">"every" 按日曆走（漏了一天，下次仍照表）。"every!"（或 "ev!"）從完成日重新起算——適合「every! 30 days」這類循環。</string>
+    <string name="recurrence_help_short_title">縮寫</string>
+    <string name="recurrence_help_short_body">"ev = every——試試「澆花 ev mon」。中文關鍵字（每…）同樣可用。"</string>
+    <string name="recurrence_help_obsidian_title">在 Obsidian 裡</string>
+    <string name="recurrence_help_obsidian_body">同樣的關鍵字在 vault 裡也有效：任務行寫「買牛奶 every other week 🔁」——🔁 標記會帶著規則，下次同步 Tsosu 自動吃進來。</string>
+    <string name="recurrence_help_open">關鍵字</string>
     <string name="focus_filter_active">篩選已啟用</string>
     <string name="focus_vault_setup_title">設定你的 vault</string>
     <string name="focus_vault_setup_desc">連結 markdown 資料夾，與 Obsidian、nvim 或其他工具同步。</string>

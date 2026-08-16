@@ -411,6 +411,55 @@ class RecurrenceParserTest {
         assertEquals("Every day", RecurrenceParser.toDisplayLabel("FREQ=DAILY"))
     }
 
+    // ── Todoist-style shorthand ──
+
+    @Test
+    fun `ev day shorthand`() {
+        val result = parser.parse("ev day")
+        assertSuccess("RRULE:FREQ=DAILY", result)
+    }
+
+    @Test
+    fun `ev mon shorthand`() {
+        val result = parser.parse("ev mon")
+        assertSuccess("RRULE:FREQ=WEEKLY;BYDAY=MO", result)
+    }
+
+    @Test
+    fun `ev bang shorthand`() {
+        val result = parser.parse("ev! daily")
+        assertSuccess("RRULE:FREQ=DAILY", result)
+    }
+
+    @Test
+    fun `every other day`() {
+        val result = parser.parse("every other day")
+        assertSuccess("RRULE:FREQ=DAILY;INTERVAL=2", result)
+    }
+
+    @Test
+    fun `every other week`() {
+        val result = parser.parse("every other week")
+        assertSuccess("RRULE:FREQ=WEEKLY;INTERVAL=2", result)
+    }
+
+    @Test
+    fun `extract ev shorthand from title`() {
+        val result = parser.extractFromTitle("Water plants ev mon")
+        assertEquals("Water plants", result.title)
+        assertEquals("RRULE:FREQ=WEEKLY;BYDAY=MO", result.rrule)
+    }
+
+    @Test
+    fun `title containing ev-adjacent word does not false match`() {
+        // "level 3 checks" contains " ev " — candidate "level…" wait, we match LAST occurrence:
+        // last " ev " here is inside "level 3 checks"? No — regex requires space before ev.
+        // "level" has no space-ev boundary, so no match expected.
+        val result = parser.extractFromTitle("Check level 3 gauge")
+        assertEquals("Check level 3 gauge", result.title)
+        assertEquals(null, result.rrule)
+    }
+
     private fun assertSuccess(expectedRrule: String, result: RecurrenceResult) {
         assertTrue(result is RecurrenceResult.Success, "Expected Success but got $result")
         assertEquals(expectedRrule, (result as RecurrenceResult.Success).rrule)

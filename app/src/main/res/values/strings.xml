@@ -101,6 +101,23 @@
     <string name="habit_cancel">Cancel</string>
     <string name="quick_add_habit_reminder">Reminder</string>
 
+    <!-- Recurrence keyword help -->
+    <string name="recurrence_help_title">Recurring task keywords</string>
+    <string name="recurrence_help_intro">Type recurrence words at the end of a task title — in the app or in Obsidian. Tsosu detects them when you save or sync.</string>
+    <string name="recurrence_help_basic_title">Basic frequencies</string>
+    <string name="recurrence_help_basic_body">"every day · daily · every weekday · every week · weekly · every month · monthly · every quarter · quarterly · every year · yearly · every 3 days · every 2 weeks · every hour · every 12 hours"</string>
+    <string name="recurrence_help_days_title">Specific days</string>
+    <string name="recurrence_help_days_body">"every monday · every mon · every mon, wed, fri · every tuesday and thursday · 每週一二三 · 每月15號 · 每天 · 每三天"</string>
+    <string name="recurrence_help_other_title">Every other…</string>
+    <string name="recurrence_help_other_body">"every other day · every other week · every other month · every other year"</string>
+    <string name="recurrence_help_bang_title">every vs every!</string>
+    <string name="recurrence_help_bang_body">"every" follows the calendar (miss a day, next one is still on schedule). "every!" (or "ev!") restarts the cycle from when you complete the task — great for "every! 30 days" routines.</string>
+    <string name="recurrence_help_short_title">Shortcuts</string>
+    <string name="recurrence_help_short_body">"ev = every — try "Water plants ev mon". Chinese keywords (每…) work the same way."</string>
+    <string name="recurrence_help_obsidian_title">In Obsidian</string>
+    <string name="recurrence_help_obsidian_body">The same words work in your vault: write "Buy milk every other week 🔁" as the task line — the 🔁 marker carries the rule, and Tsosu picks it up on the next sync.</string>
+    <string name="recurrence_help_open">Keywords</string>
+
     <plurals name="notif_overdue_count">
         <item quantity="one">%d overdue task</item>
         <item quantity="other">%d overdue tasks</item>

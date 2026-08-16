@@ -23,11 +23,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.tsosu.ui.screens.recurrencehelp.RecurrenceHelpSheet
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -84,6 +87,7 @@ fun QuickAddTaskSheet(
     var customRecurrence by remember { mutableStateOf("") }
     var detectedRrule by remember { mutableStateOf<String?>(null) }
     var cleanTitle by remember { mutableStateOf("") }
+    var showRecurrenceHelp by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -273,7 +277,16 @@ fun QuickAddTaskSheet(
         Spacer(Modifier.height(12.dp))
 
         // Recurrence
-        Text("Recurrence", style = MaterialTheme.typography.labelLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Recurrence", style = MaterialTheme.typography.labelLarge)
+            TextButton(onClick = { showRecurrenceHelp = true }) {
+                Text(stringResource(R.string.recurrence_help_open))
+            }
+        }
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -301,6 +314,15 @@ fun QuickAddTaskSheet(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
+        }
+
+        if (showRecurrenceHelp) {
+            ModalBottomSheet(
+                onDismissRequest = { showRecurrenceHelp = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            ) {
+                RecurrenceHelpSheet()
+            }
         }
 
         Spacer(Modifier.height(16.dp))
