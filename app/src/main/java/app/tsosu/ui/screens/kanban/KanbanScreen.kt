@@ -20,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,11 +55,37 @@ fun KanbanScreen(
             onGroupBySelected = viewModel::setGroupBy,
         )
 
-        KanbanBoard(
-            columns = state.columns,
-            onTaskClick = onTaskClick,
-            habitsForColumn = viewModel::habitsForProjectByTitle,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = state.viewMode == KanbanViewMode.BOARD,
+                onClick = { viewModel.setViewMode(KanbanViewMode.BOARD) },
+                label = { Text(stringResource(R.string.kanban_view_board)) },
+            )
+            FilterChip(
+                selected = state.viewMode == KanbanViewMode.LIST,
+                onClick = { viewModel.setViewMode(KanbanViewMode.LIST) },
+                label = { Text(stringResource(R.string.kanban_view_list)) },
+            )
+        }
+
+        if (state.viewMode == KanbanViewMode.LIST) {
+            KanbanListView(
+                columns = state.columns,
+                onTaskClick = onTaskClick,
+                habitsForColumn = viewModel::habitsForProjectByTitle,
+            )
+        } else {
+            KanbanBoard(
+                columns = state.columns,
+                onTaskClick = onTaskClick,
+                habitsForColumn = viewModel::habitsForProjectByTitle,
+            )
+        }
     }
 }
 
@@ -100,6 +127,51 @@ private fun KanbanBoard(
                 onTaskClick = onTaskClick,
                 habits = habitsForColumn(column.title),
             )
+        }
+    }
+}
+
+@Composable
+private fun KanbanListView(
+    columns: List<KanbanColumnData>,
+    onTaskClick: (String) -> Unit,
+    habitsForColumn: (String) -> List<Habit>,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        columns.forEach { column ->
+            item(key = "header-${column.title}") {
+                Text(
+                    text = column.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            items(column.tasks, key = { it.id }) { task ->
+                KanbanCard(task = task, onClick = { onTaskClick(task.id) })
+            }
+            val habits = habitsForColumn(column.title)
+            items(habits, key = { "habit-${it.id}" }) { habit ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ),
+                ) {
+                    Text(
+                        text = "🔁 ${habit.title}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    )
+                }
+            }
         }
     }
 }

@@ -29,6 +29,8 @@ enum class GroupBy(val label: String) {
     ENERGY("Energy"),
 }
 
+enum class KanbanViewMode { BOARD, LIST }
+
 data class KanbanColumnData(
     val title: String,
     val tasks: List<Task>,
@@ -36,6 +38,7 @@ data class KanbanColumnData(
 
 data class KanbanUiState(
     val groupBy: GroupBy = GroupBy.STATUS,
+    val viewMode: KanbanViewMode = KanbanViewMode.BOARD,
     val columns: List<KanbanColumnData> = emptyList(),
 )
 
@@ -50,17 +53,20 @@ class KanbanViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val groupByFlow = MutableStateFlow(GroupBy.STATUS)
+    private val viewModeFlow = MutableStateFlow(KanbanViewMode.BOARD)
 
     val uiState: StateFlow<KanbanUiState> = combine(
         taskRepository.getAllActiveTasks(),
         habitRepository.getActiveHabits(),
         projectRepository.getAllProjects(),
         groupByFlow,
-    ) { tasks, habits, projects, groupBy ->
+        viewModeFlow,
+    ) { tasks, habits, projects, groupBy, viewMode ->
         currentProjectNames = projects.associate { it.id to it.title }
         currentHabits = habits
         KanbanUiState(
             groupBy = groupBy,
+            viewMode = viewMode,
             columns = groupTasks(tasks, groupBy),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), KanbanUiState())
@@ -83,6 +89,10 @@ class KanbanViewModel @Inject constructor(
 
     fun setGroupBy(group: GroupBy) {
         groupByFlow.value = group
+    }
+
+    fun setViewMode(mode: KanbanViewMode) {
+        viewModeFlow.value = mode
     }
 
     fun onToggleDone(taskId: String) {

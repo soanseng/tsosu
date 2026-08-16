@@ -82,6 +82,8 @@
     <string name="habits_buy_freeze">Buy freeze ⚡30</string>
     <string name="habits_not_enough_energy">Not enough ⚡ yet — complete tasks and habits to earn energy</string>
     <string name="kanban_habits_section">Habits</string>
+    <string name="kanban_view_board">Board</string>
+    <string name="kanban_view_list">List</string>
     <string name="habit_field_weekdays">Specific weekdays</string>
     <string name="habit_weekdays_every_day">Every day — pick days to limit the schedule</string>
     <string name="habit_field_project">Project</string>
