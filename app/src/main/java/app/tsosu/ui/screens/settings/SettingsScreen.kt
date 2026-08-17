@@ -35,6 +35,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,9 +60,11 @@ import app.tsosu.domain.repository.ImportTarget
 import app.tsosu.domain.repository.SyncState
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.LanguageOption
+import app.tsosu.ui.screens.recurrencehelp.RecurrenceHelpSheet
 import androidx.core.content.FileProvider
 import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,6 +72,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showRecurrenceHelp by remember { mutableStateOf(false) }
+    val versionName = remember {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "?"
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val todoistFilePicker = rememberLauncherForActivityResult(
@@ -154,6 +165,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     },
                 )
             }
+        }
+
+        OutlinedButton(
+            onClick = { showRecurrenceHelp = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.settings_recurrence_help))
         }
 
         HorizontalDivider()
@@ -415,6 +433,22 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         state.message?.let {
             Spacer(Modifier.height(4.dp))
             Text(it, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(
+            stringResource(R.string.settings_version, versionName),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+
+    if (showRecurrenceHelp) {
+        ModalBottomSheet(
+            onDismissRequest = { showRecurrenceHelp = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+            RecurrenceHelpSheet()
         }
     }
 }

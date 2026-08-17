@@ -259,6 +259,8 @@
     <string name="settings_language_system">System</string>
     <string name="settings_language_english">English</string>
     <string name="settings_language_zh_tw">繁體中文</string>
+    <string name="settings_recurrence_help">Recurrence &amp; quick-syntax help</string>
+    <string name="settings_version">Tsosu v%1$s</string>
     <string name="settings_markdown_sync">Markdown Sync</string>
     <string name="settings_syncing_to_folder">Syncing to folder</string>
     <string name="settings_select_folder">Select Folder</string>
