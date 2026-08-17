@@ -86,9 +86,12 @@ fun QuickAddTaskSheet(
     var showDatePicker by remember { mutableStateOf(false) }
     var reminderTime by remember { mutableStateOf<LocalTime?>(null) }
     var showTimePicker by remember { mutableStateOf(false) }
+    // True once the user set/cleared the reminder manually; keyword prefill
+    // ("every morning" → 08:00) never overwrites a manual choice.
+    var reminderPickedManually by remember { mutableStateOf(false) }
     var selectedRecurrence by remember { mutableStateOf(RecurrenceOption.NONE) }
-    var customRecurrence by remember { mutableStateOf("") }
     var detectedRrule by remember { mutableStateOf<String?>(null) }
+    var customRecurrence by remember { mutableStateOf("") }
     var cleanTitle by remember { mutableStateOf("") }
     var showRecurrenceHelp by remember { mutableStateOf(false) }
 
@@ -117,12 +120,18 @@ fun QuickAddTaskSheet(
                             dueDate = LocalDateTime(start, LocalTime(0, 0))
                         }
                     }
+                    // Time-of-day keyword ("every morning") prefills the
+                    // reminder unless the user already chose one.
+                    extraction.suggestedReminder?.let { preset ->
+                        if (!reminderPickedManually) {
+                            reminderTime = preset
+                        }
+                    }
                 } else {
                     detectedRrule = null
                     cleanTitle = newValue
                 }
             },
-            label = { Text(stringResource(R.string.quick_add_task_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = titleError,
@@ -284,7 +293,10 @@ fun QuickAddTaskSheet(
                 )
             }
             if (reminderTime != null) {
-                IconButton(onClick = { reminderTime = null }) {
+                IconButton(onClick = {
+                    reminderPickedManually = true
+                    reminderTime = null
+                }) {
                     Icon(Icons.Default.Close, contentDescription = "Clear reminder")
                 }
             }
@@ -422,6 +434,7 @@ fun QuickAddTaskSheet(
             },
             confirmButton = {
                 TextButton(onClick = {
+                    reminderPickedManually = true
                     reminderTime = LocalTime(timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
                 }) {

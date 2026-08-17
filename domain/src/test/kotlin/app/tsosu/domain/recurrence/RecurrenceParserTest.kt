@@ -461,6 +461,31 @@ class RecurrenceParserTest {
     }
 
     @Test
+    fun `time of day keyword sets daily and reminder preset`() {
+        val extraction = parser.extractFromTitle("Water plants every morning")
+        assertEquals("Water plants", extraction.title)
+        assertEquals("RRULE:FREQ=DAILY", extraction.rrule)
+        assertEquals(kotlinx.datetime.LocalTime(8, 0), extraction.suggestedReminder)
+    }
+
+    @Test
+    fun `time of day keyword evening with until`() {
+        val year = java.time.Year.now().value
+        val extraction = parser.extractFromTitle("Stretch every evening until 9/15")
+        assertEquals("Stretch", extraction.title)
+        assertEquals("RRULE:FREQ=DAILY;UNTIL=${year}0915T235959Z", extraction.rrule)
+        assertEquals(kotlinx.datetime.LocalTime(18, 0), extraction.suggestedReminder)
+    }
+
+    @Test
+    fun `chinese time of day keyword`() {
+        val extraction = parser.extractFromTitle("澆花 每天早上")
+        assertEquals("澆花", extraction.title)
+        assertEquals("RRULE:FREQ=DAILY", extraction.rrule)
+        assertEquals(kotlinx.datetime.LocalTime(8, 0), extraction.suggestedReminder)
+    }
+
+    @Test
     fun `until date becomes UNTIL in rrule`() {
         val year = java.time.Year.now().value
         assertSuccess("RRULE:FREQ=DAILY;UNTIL=${year}0831T235959Z", parser.parse("every day until 8/31"))

@@ -127,6 +127,8 @@
     <string name="recurrence_help_other_title">Every other…</string>
     <string name="recurrence_help_dates_title">Start and end dates</string>
     <string name="recurrence_help_dates_body">Add "until 8/31", "through aug 31" or "到 8月31" to stop a recurrence on a date — the schedule stores an end date. Add "starting 8/20" or "从 8月20 开始" to set the first due date; order doesn\'t matter: "every mon starting 8/20 until 9/30" works. Accepted date formats: 8/31, 2026-08-31, aug 31.</string>
+    <string name="recurrence_help_timeofday_title">Time of day</string>
+    <string name="recurrence_help_timeofday_body">"every morning · every afternoon · every evening · every night · 每天早上 · 每天下午 · 每天晚上 — daily recurrence plus a preset reminder (08:00 / 13:00 / 18:00 / 21:00). Combine with an end date: every morning until 8/31."</string>
     <string name="recurrence_help_other_body">"every other day · every other week · every other month · every other year"</string>
     <string name="recurrence_help_bang_title">every vs every!</string>
     <string name="recurrence_help_bang_body">"every" follows the calendar (miss a day, next one is still on schedule). "every!" (or "ev!") restarts the cycle from when you complete the task — great for "every! 30 days" routines.</string>

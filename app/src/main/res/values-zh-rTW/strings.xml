@@ -206,6 +206,8 @@
     <string name="recurrence_help_other_title">每隔系列</string>
     <string name="recurrence_help_dates_title">起訖日期</string>
     <string name="recurrence_help_dates_body">加上 "until 8/31"、"through aug 31" 或「到 8月31」可讓重複在指定日期結束——排程會儲存結束日。加上 "starting 8/20" 或「从 8月20 开始」可設定第一次到期日；順序不拘："every mon starting 8/20 until 9/30" 也可以。日期格式：8/31、2026-08-31、aug 31。</string>
+    <string name="recurrence_help_timeofday_title">時段關鍵字</string>
+    <string name="recurrence_help_timeofday_body">"every morning · every afternoon · every evening · every night · 每天早上 · 每天下午 · 每天晚上——每天重複外加預設提醒（08:00 / 13:00 / 18:00 / 21:00）。可與結束日合併：every morning until 8/31。"</string>
     <string name="recurrence_help_other_body">"every other day 每隔一天 · every other week 每隔一週 · every other month 每隔一個月 · every other year 每隔一年"</string>
     <string name="recurrence_help_bang_title">every 與 every!</string>
     <string name="recurrence_help_bang_body">"every" 按日曆走（漏了一天，下次仍照表）。"every!"（或 "ev!"）從完成日重新起算——適合「every! 30 days」這類循環。</string>

@@ -13,13 +13,17 @@ data class TitleRecurrence(
     val title: String,
     val rrule: String?,
     /** First occurrence date from a "starting <date>" modifier; null = none. */
-    val startDate: kotlinx.datetime.LocalDate? = null,
+    val startDate: LocalDate? = null,
+    /** Reminder preset from a time-of-day keyword ("every morning" etc.). */
+    val suggestedReminder: kotlinx.datetime.LocalTime? = null,
 )
 
 /** Modifier dates stripped from a recurrence phrase before the core parse. */
 private data class RecurrenceModifiers(
     val untilDate: kotlinx.datetime.LocalDate? = null,
     val startDate: kotlinx.datetime.LocalDate? = null,
+    /** Reminder preset from a time-of-day keyword ("every morning" etc.). */
+    val suggestedReminder: kotlinx.datetime.LocalTime? = null,
 )
 
 class RecurrenceParser {
@@ -35,7 +39,7 @@ class RecurrenceParser {
         return RecurrenceResult.Success(applyUntil(base.rrule, modifiers.untilDate))
     }
 
-    /** Full parse with modifiers; used by extractFromTitle for start-date prefill. */
+    /** Full parse with modifiers; used by extractFromTitle for prefills. */
     private fun parseWithModifiers(input: String): Pair<String, RecurrenceModifiers>? {
         val (core, modifiers) = stripModifiers(input)
         val base = tryParseEnglish(core) ?: tryParseChinese(core) ?: return null
@@ -54,6 +58,7 @@ class RecurrenceParser {
                     title = fullTitle.substring(0, everyIndex).trim(),
                     rrule = rrule,
                     startDate = modifiers.startDate,
+                    suggestedReminder = modifiers.suggestedReminder,
                 )
             }
         }
@@ -67,6 +72,7 @@ class RecurrenceParser {
                     title = fullTitle.substring(0, evMatch.range.first).trim(),
                     rrule = rrule,
                     startDate = modifiers.startDate,
+                    suggestedReminder = modifiers.suggestedReminder,
                 )
             }
         }
@@ -74,7 +80,12 @@ class RecurrenceParser {
         // Check if the entire string starts with "every"
         if (fullTitle.trim().startsWith("every", ignoreCase = true)) {
             parseWithModifiers(fullTitle.trim())?.let { (rrule, modifiers) ->
-                return TitleRecurrence(title = "", rrule = rrule, startDate = modifiers.startDate)
+                return TitleRecurrence(
+                    title = "",
+                    rrule = rrule,
+                    startDate = modifiers.startDate,
+                    suggestedReminder = modifiers.suggestedReminder,
+                )
             }
         }
 
@@ -87,6 +98,7 @@ class RecurrenceParser {
                     title = fullTitle.substring(0, meiIndex).trim(),
                     rrule = rrule,
                     startDate = modifiers.startDate,
+                    suggestedReminder = modifiers.suggestedReminder,
                 )
             }
         }
@@ -94,7 +106,12 @@ class RecurrenceParser {
         // Check if the entire string starts with 每
         if (fullTitle.trim().startsWith("每")) {
             parseWithModifiers(fullTitle.trim())?.let { (rrule, modifiers) ->
-                return TitleRecurrence(title = "", rrule = rrule, startDate = modifiers.startDate)
+                return TitleRecurrence(
+                    title = "",
+                    rrule = rrule,
+                    startDate = modifiers.startDate,
+                    suggestedReminder = modifiers.suggestedReminder,
+                )
             }
         }
 
@@ -112,14 +129,30 @@ class RecurrenceParser {
         var core = input.trim()
         var untilDate: kotlinx.datetime.LocalDate? = null
         var startDate: kotlinx.datetime.LocalDate? = null
+        var suggestedReminder: kotlinx.datetime.LocalTime? = null
 
-        // Repeat-stripping: both modifiers, any order, possibly repeated words.
+        // Repeat-stripping: all modifiers, any order, possibly repeated words.
         while (true) {
             val lower = core.lowercase()
 
+            // Time-of-day keyword ("every morning" → FREQ=DAILY + 08:00).
+            // Only meaningful on a daily core; strip and remember the preset.
+            val todMatch = TIME_OF_DAY.find(lower)
+            if (todMatch != null) {
+                val preset = TIME_OF_DAY_PRESETS[todMatch.value]
+                if (preset != null && suggestedReminder == null) suggestedReminder = preset
+                core = (core.substring(0, todMatch.range.first) + core.substring(todMatch.range.last + 1))
+                    .trim(' ', ',')
+                // "every " left dangling (e.g. "every morning" → "every")
+                core = core.replace(Regex("""\bevery\s*$"""), "").trim()
+                continue
+            }
+
+
             val untilMatch = UNTIL_EN.find(lower) ?: UNTIL_ZH.find(core)
             if (untilMatch != null) {
-                val date = parseFlexibleDate(untilMatch.groupValues[1]) ?: return core to RecurrenceModifiers(untilDate, startDate)
+                val date = parseFlexibleDate(untilMatch.groupValues[1])
+                    ?: return core to RecurrenceModifiers(untilDate, startDate, suggestedReminder)
                 if (untilDate == null) untilDate = date
                 core = (core.substring(0, untilMatch.range.first) + core.substring(untilMatch.range.last + 1))
                     .trim(' ', ',')
@@ -128,7 +161,8 @@ class RecurrenceParser {
 
             val startMatch = STARTING_EN.find(lower) ?: STARTING_ZH.find(core)
             if (startMatch != null) {
-                val date = parseFlexibleDate(startMatch.groupValues[1]) ?: return core to RecurrenceModifiers(untilDate, startDate)
+                val date = parseFlexibleDate(startMatch.groupValues[1])
+                    ?: return core to RecurrenceModifiers(untilDate, startDate, suggestedReminder)
                 if (startDate == null) startDate = date
                 core = (core.substring(0, startMatch.range.first) + core.substring(startMatch.range.last + 1))
                     .trim(' ', ',')
@@ -137,7 +171,7 @@ class RecurrenceParser {
             break
         }
 
-        return core to RecurrenceModifiers(untilDate, startDate)
+        return core to RecurrenceModifiers(untilDate, startDate, suggestedReminder)
     }
 
     /**
@@ -384,6 +418,21 @@ class RecurrenceParser {
         RecurrenceResult.Success("RRULE:$rule")
 
     companion object {
+        // Time-of-day keywords (Batch I): EN "morning/afternoon/evening/night",
+        // ZH 早上/上午/下午/晚上. Preset reminder times follow Todoist defaults.
+        private val TIME_OF_DAY = Regex("""\b(?:morning|afternoon|evening|night|早上|上午|下午|晚上|傍晚)\b""")
+        private val TIME_OF_DAY_PRESETS = mapOf(
+            "morning" to kotlinx.datetime.LocalTime(8, 0),
+            "早上" to kotlinx.datetime.LocalTime(8, 0),
+            "上午" to kotlinx.datetime.LocalTime(8, 0),
+            "afternoon" to kotlinx.datetime.LocalTime(13, 0),
+            "下午" to kotlinx.datetime.LocalTime(13, 0),
+            "evening" to kotlinx.datetime.LocalTime(18, 0),
+            "傍晚" to kotlinx.datetime.LocalTime(18, 0),
+            "night" to kotlinx.datetime.LocalTime(21, 0),
+            "晚上" to kotlinx.datetime.LocalTime(21, 0),
+        )
+
         private val MONTHLY_DAY_EN = Regex("""every month on the (\d+)(?:st|nd|rd|th)""")
         private val OTHER_EN = Regex("""every other (days?|weeks?|months?|years?)""")
         private val DAYS_EN = Regex("""every (.+)""")
