@@ -306,7 +306,7 @@ class MainActivity : AppCompatActivity() {
                         QuickAddHabitSheet(
                             onDismiss = { showAddHabit = false },
                             onAdd = { title, tinyVersion, routineTime, reminderTime ->
-                                habitsViewModel.createHabit(title, tinyVersion, routineTime, reminderTime)
+                                habitsViewModel.createRecurringTask(title, tinyVersion, routineTime, reminderTime)
                                 showAddHabit = false
                             },
                         )

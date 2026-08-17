@@ -44,6 +44,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE energyLevel = :level AND status < 4 ORDER BY position")
     fun getByEnergyLevel(level: Int): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE recurrenceRule IS NOT NULL AND status < 4 ORDER BY dueDate, position")
+    fun getRecurringTasks(): Flow<List<TaskEntity>>
+
     @Query("SELECT id FROM tasks WHERE status < 4 AND updatedAt < :threshold ORDER BY updatedAt")
     fun getStaleTaskIds(threshold: Long): Flow<List<String>>
 

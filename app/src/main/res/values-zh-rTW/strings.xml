@@ -26,6 +26,8 @@
     <string name="habits_anytime">隨時</string>
     <string name="habits_evening">晚間</string>
     <string name="habits_other">其他</string>
+    <string name="habits_recurring_section">循環任務</string>
+    <string name="habits_recurring_streak">🔥 連續 %d 天</string>
     <string name="habits_streak">過去 %2$d 天完成 %1$d 天</string>
     <string name="habits_month_count">這個月做了 %d 次！</string>
     <string name="habits_create_failed">建立習慣失敗</string>
@@ -310,6 +312,7 @@
     </plurals>
     <string name="task_edit">編輯</string>
     <string name="task_convert_to_habit">轉成習慣</string>
+    <string name="task_set_focus_today">設為今日 Focus</string>
     <string name="view_switcher">檢視</string>
     <string name="view_focus">專注</string>
     <string name="view_inbox">收件匣</string>

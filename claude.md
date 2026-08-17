@@ -194,7 +194,7 @@ fun extractEstimate(description: String): Int? {
 - **DI**: Hilt
 - **Async**: Kotlin Coroutines + Flow
 - **CalDAV**: ical4j + OkHttp
-- **Testing**: JUnit 5, Turbine, MockK, Robolectric, Compose UI tests
+- **Testing**: JUnit 5, Turbine, MockK, Robolectric, Compose UI tests, Roborazzi screenshots (JVM)
 - **Localization**: English, 繁體中文 (zh-TW)
 - **Min SDK**: 26 / **Target SDK**: 35
 
@@ -252,6 +252,10 @@ tsosu/
 ```
 
 ## Domain Layer
+### Habit = recurring task (unified model, 2026-08-17)
+
+A habit IS a task with a `recurrenceRule`. Quick-add habit creates a daily recurring task due today; `tiny`/`routine`/`completions` live in the task note frontmatter. Completing a recurring task resets it to TODO with the next occurrence (`RecurrenceExpander` — RRULE subset: FREQ/INTERVAL/BYDAY/BYMONTHDAY; next = first occurrence strictly after today, weekday-aligned) and appends the date to `completions`, which is the streak source shown on the Habits tab. Legacy `Habit` entities (habits/ notes) are still read, listed and editable — the Habits tab shows both during transition. Focus 3 now reads/writes the `daily_focus` table (task card menu → "Set as today's Focus"); `Task.isFocus` is no longer the UI source of truth.
+
 
 ### Models
 
@@ -725,6 +729,22 @@ class HabitSyncManagerTest {
     @Test fun `new occurrence from Vikunja creates next habit entry`()
 }
 ```
+
+## UI Verification — Robolectric / Roborazzi (JVM, no emulator)
+
+The dev box is a headless Debian server **without KVM** (BIOS SVM disabled), so the Android emulator cannot run there (x86_64 emulator hard-requires KVM). UI verification happens on the JVM instead:
+
+```bash
+./gradlew :app:recordRoborazziDebug   # screenshot tests; PNGs in app/build/outputs/roborazzi/
+./gradlew :app:testDebugUnitTest      # unit + Robolectric behavior tests
+```
+
+- Screenshot tests render real composables (`TsosuTheme` + components/sheets) via Robolectric native graphics; the agent then reads the PNGs (vision/pixel analysis) to "see" the UI.
+- Conventions: `@RunWith(AndroidJUnit4::class)` + `@GraphicsMode(NATIVE)` + `@Config(sdk = [35], qualifiers = RobolectricDeviceQualifiers.Pixel6)`. JUnit4 tests run on the JUnit Platform via the vintage engine. Host activity: `ComponentActivity` declared in `app/src/debug/AndroidManifest.xml` (AGP does not merge `ui-test-manifest` into unit tests).
+- **Roborazzi is pinned to 1.60.0**: 1.61+ ships Kotlin 2.3 metadata which the project's Kotlin 2.1 compiler cannot read. Bump Roborazzi together with Kotlin.
+- Scrollability of sheets is tested with short-screen qualifiers (`w411dp-h500dp-420dpi`) + `swipeUp()` assertions — see `QuickAddTaskSheetScreenshotTest`.
+- **Sheet rule**: every bottom-sheet body must be `.verticalScroll(rememberScrollState()).imePadding()` so the keyboard never hides inputs (QuickAddTask/Habit, Task/HabitDetail, Filter, Settings fixed 2026-08-17).
+- Not coverable on JVM: IME visuals, animations, notifications, widget — those need the emulator (possible after enabling SVM in BIOS: `sudo apt install qemu-kvm; sudo usermod -aG kvm $USER`; AVD `tsosu35` and SDK at `~/Android/Sdk` are already staged) or a real device.
 
 ## Coding Conventions
 

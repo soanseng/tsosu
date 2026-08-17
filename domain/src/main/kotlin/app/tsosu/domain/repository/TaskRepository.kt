@@ -16,6 +16,7 @@ interface TaskRepository {
     fun getFocusTasks(date: LocalDate): Flow<List<Task>>
     fun getTasksByEnergy(level: EnergyLevel): Flow<List<Task>>
     fun getAllActiveTasks(): Flow<List<Task>>
+    fun getRecurringTasks(): Flow<List<Task>>
     fun getStaleTaskIds(olderThanDays: Int = 14): Flow<List<String>>
     suspend fun createTask(task: Task): Result<Task>
     suspend fun updateTask(task: Task): Result<Task>

@@ -7,9 +7,11 @@ import app.tsosu.domain.model.SortSpec
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
+import app.tsosu.domain.repository.FocusRepository
 import app.tsosu.domain.usecase.ConvertTaskToHabitUseCase
 import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
+import app.tsosu.domain.usecase.SetDailyFocusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
 import app.tsosu.notification.ReminderScheduler
 import kotlinx.datetime.Clock
@@ -47,6 +49,8 @@ class FocusViewModel @Inject constructor(
     private val setTaskStatus: SetTaskStatusUseCase,
     private val convertTaskToHabit: ConvertTaskToHabitUseCase,
     private val taskRepository: TaskRepository,
+    private val focusRepository: FocusRepository,
+    private val setDailyFocus: SetDailyFocusUseCase,
 ) : ViewModel() {
 
     private val _filterSpec = MutableStateFlow(FilterSpec())
@@ -58,13 +62,17 @@ class FocusViewModel @Inject constructor(
     val uiState: StateFlow<FocusUiState> = combine(
         getTodayOverview(),
         taskRepository.getInboxTasks(),
+        focusRepository.getDailyFocus(
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+        ),
         _filterSpec,
         _sortSpec,
-    ) { overview, inbox, filter, sort ->
+    ) { overview, inbox, dailyFocus, filter, sort ->
         val isFiltered = filter != FilterSpec()
+        val focusIds = dailyFocus?.taskIds?.toSet() ?: emptySet()
 
-        val focusRaw = overview.tasks.filter { it.isFocus && !it.done }
-        val otherRaw = overview.tasks.filter { !it.isFocus && !it.done }
+        val focusRaw = overview.tasks.filter { it.id in focusIds && !it.done }
+        val otherRaw = overview.tasks.filter { it.id !in focusIds && !it.done }
         val inboxRaw = inbox.filter { !it.done }
 
         FocusUiState(
@@ -77,6 +85,16 @@ class FocusViewModel @Inject constructor(
             isFiltered = isFiltered,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FocusUiState())
+
+    /** Adds a task to today's Focus 3 (kept to at most 3 by the use case contract). */
+    fun setFocusToday(taskId: String) {
+        viewModelScope.launch {
+            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val current = focusRepository.getDailyFocus(today).first()?.taskIds.orEmpty()
+            if (taskId in current) return@launch
+            setDailyFocus(today, current + taskId)
+        }
+    }
 
     fun applyFilter(filter: FilterSpec, sort: SortSpec) {
         _filterSpec.value = filter

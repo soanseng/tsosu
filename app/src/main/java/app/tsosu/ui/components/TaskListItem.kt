@@ -84,6 +84,7 @@ fun TaskListItem(
     onClick: (Task) -> Unit,
     onLongClick: ((Task) -> Unit)? = null,
     onPostpone: ((String) -> Unit)? = null,
+    onSetFocus: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptic = rememberHaptic()
@@ -95,6 +96,7 @@ fun TaskListItem(
             onStatusChange = onStatusChange,
             onClick = onClick,
             onLongClick = onLongClick,
+            onSetFocus = onSetFocus,
             modifier = modifier,
         )
         return
@@ -166,6 +168,7 @@ fun TaskListItem(
             onStatusChange = onStatusChange,
             onClick = onClick,
             onLongClick = onLongClick,
+            onSetFocus = onSetFocus,
         )
     }
 }
@@ -178,6 +181,7 @@ private fun TaskListItemContent(
     onStatusChange: (String, TaskStatus) -> Unit,
     onClick: (Task) -> Unit,
     onLongClick: ((Task) -> Unit)? = null,
+    onSetFocus: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptic = rememberHaptic()
@@ -276,6 +280,16 @@ private fun TaskListItemContent(
                             showActionMenu = false
                             haptic.confirm()
                             onLongClick(task)
+                        },
+                    )
+                }
+                if (onSetFocus != null && !task.isFocus) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.task_set_focus_today)) },
+                        onClick = {
+                            showActionMenu = false
+                            haptic.tick()
+                            onSetFocus(task.id)
                         },
                     )
                 }

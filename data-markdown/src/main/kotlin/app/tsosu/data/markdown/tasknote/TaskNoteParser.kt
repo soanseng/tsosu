@@ -5,6 +5,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import app.tsosu.domain.model.RoutineTime
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -53,8 +54,13 @@ class TaskNoteParser {
             completedDate = fm["completed"]?.let { LocalDate.parse(it).atTime(0, 0) },
             cancelledDate = fm["cancelled"]?.let { LocalDate.parse(it).atTime(0, 0) },
             energyLevel = energy,
-            estimatedMinutes = fm["estimate"]?.removeSuffix("m")?.toIntOrNull(),
             recurrenceRule = fm["recurrence"],
+            tinyVersion = fm["tiny"],
+            routineTime = fm["routine"]?.let { parseRoutineTime(it) },
+            completions = fm["completions"].orEmpty()
+                .split(",")
+                .mapNotNull { it.trim().takeIf(String::isNotEmpty) }
+                .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() },
             createdAt = fm["created"]?.let {
                 LocalDate.parse(it).atStartOfDayIn(TimeZone.UTC)
             } ?: Clock.System.now(),
@@ -92,5 +98,12 @@ class TaskNoteParser {
     private fun parseTime(s: String): LocalTime {
         val parts = s.split(":")
         return LocalTime(parts[0].toInt(), parts[1].toInt())
+    }
+
+    private fun parseRoutineTime(s: String): RoutineTime? = when (s.lowercase()) {
+        "morning" -> RoutineTime.MORNING
+        "afternoon" -> RoutineTime.AFTERNOON
+        "evening" -> RoutineTime.EVENING
+        else -> null
     }
 }

@@ -1,6 +1,7 @@
 package app.tsosu.domain.model
 
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -29,6 +30,11 @@ data class Task(
     val estimatedMinutes: Int? = null,
     val energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
     val isFocus: Boolean = false,
+    // Habit metadata when this task represents a recurring habit (unified model).
+    val tinyVersion: String? = null,
+    val routineTime: RoutineTime? = null,
+    /** Dates of completed occurrences, oldest first — the streak source for recurring tasks. */
+    val completions: List<LocalDate> = emptyList(),
     val createdAt: Instant = Clock.System.now(),
     val updatedAt: Instant = Clock.System.now(),
 ) {

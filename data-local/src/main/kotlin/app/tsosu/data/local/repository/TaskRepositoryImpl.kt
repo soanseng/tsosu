@@ -1,6 +1,7 @@
 package app.tsosu.data.local.repository
 
 import app.tsosu.data.local.dao.TaskDao
+import app.tsosu.data.local.entity.TaskEntity
 import app.tsosu.data.local.mapper.toDomain
 import app.tsosu.data.local.mapper.toEntity
 import app.tsosu.domain.model.EnergyLevel
@@ -8,10 +9,15 @@ import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.TaskRepository
+import app.tsosu.domain.recurrence.RecurrenceExpander
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -61,6 +67,9 @@ class TaskRepositoryImpl(
             entities.map { it.toDomain() }.filter { !it.status.isTerminal }
         }
 
+    override fun getRecurringTasks(): Flow<List<Task>> =
+        taskDao.getRecurringTasks().map { it.map { e -> e.toDomain() } }
+
     override fun getStaleTaskIds(olderThanDays: Int): Flow<List<String>> {
         val threshold = (Clock.System.now() - olderThanDays.days).toEpochMilliseconds()
         return taskDao.getStaleTaskIds(threshold)
@@ -91,6 +100,9 @@ class TaskRepositoryImpl(
         val now = Clock.System.now().toEpochMilliseconds()
         val currentStatus = TaskStatus.fromOrdinal(entity.status)
         val newStatus = if (currentStatus.isDone) TaskStatus.TODO else TaskStatus.DONE
+        if (newStatus.isDone) {
+            completeRecurrenceIfAny(entity, now)?.let { return@runCatching it }
+        }
         val completedDate = if (newStatus.isDone) now else null
         taskDao.setStatus(taskId, newStatus.ordinal, completedDate, null, now)
         if (newStatus.isDone) gamification?.awardEnergy(ENERGY_PER_TASK)
@@ -107,6 +119,9 @@ class TaskRepositoryImpl(
         val entity = taskDao.getById(taskId).first()
             ?: throw NoSuchElementException("Task $taskId not found")
         val now = Clock.System.now().toEpochMilliseconds()
+        if (status.isDone) {
+            completeRecurrenceIfAny(entity, now)?.let { return@runCatching it }
+        }
         val completedDate = if (status.isDone) now else null
         val cancelledDate = if (status == TaskStatus.CANCELLED) now else null
         taskDao.setStatus(taskId, status.ordinal, completedDate, cancelledDate, now)
@@ -146,6 +161,36 @@ class TaskRepositoryImpl(
 
     override suspend fun archiveTasks(taskIds: List<String>): Result<Int> = runCatching {
         taskDao.deleteAll(taskIds)
+    }
+
+    /**
+     * Completing a recurring task records the completion date and immediately resets
+     * the task to TODO with its next occurrence due date, so one task note carries the
+     * whole series. Returns the updated task, or null when the task is not recurring
+     * or its rule cannot be expanded.
+     */
+    private suspend fun completeRecurrenceIfAny(entity: TaskEntity, now: Long): Task? {
+        val rule = entity.recurrenceRule ?: return null
+        val task = entity.toDomain()
+        val tz = TimeZone.currentSystemDefault()
+        val completedOn = Instant.fromEpochMilliseconds(now).toLocalDateTime(tz).date
+        val nextDate = RecurrenceExpander.nextDueDate(rule, task.dueDate?.date, completedOn)
+            ?: return null
+        val nextTime = task.dueDate?.time ?: task.scheduledDate?.time ?: LocalTime(0, 0)
+        val updated = entity.copy(
+            status = TaskStatus.TODO.ordinal,
+            done = false,
+            doneAt = null,
+            completedDate = null,
+            cancelledDate = null,
+            dueDate = LocalDateTime(nextDate, nextTime).toInstant(tz).toEpochMilliseconds(),
+            completionsCsv = (task.completions + completedOn).distinct().joinToString(","),
+            updatedAt = now,
+        )
+        taskDao.update(updated)
+        gamification?.awardEnergy(ENERGY_PER_TASK)
+        onTaskChanged?.invoke(entity.id, "UPDATE", null)
+        return updated.toDomain()
     }
 
     private fun todayRange(): Pair<Long, Long> {

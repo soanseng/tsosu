@@ -56,8 +56,13 @@ fun TaskEntity.toDomain(): Task = Task(
     recurrenceRule = recurrenceRule,
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
-    energyLevel = EnergyLevel.fromOrdinal(energyLevel),
     isFocus = isFocus,
+    tinyVersion = tinyVersion,
+    routineTime = routineTime?.let { RoutineTime.fromOrdinal(it) },
+    completions = completionsCsv.orEmpty()
+        .split(",")
+        .mapNotNull { it.trim().takeIf(String::isNotEmpty) }
+        .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() },
     createdAt = Instant.fromEpochMilliseconds(createdAt),
     updatedAt = Instant.fromEpochMilliseconds(updatedAt),
 )
@@ -82,8 +87,11 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     recurrenceRule = recurrenceRule,
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
-    energyLevel = energyLevel.ordinal,
     isFocus = isFocus,
+    tinyVersion = tinyVersion,
+    routineTime = routineTime?.ordinal,
+    completionsCsv = completions.takeIf { it.isNotEmpty() }
+        ?.joinToString(",") { it.toString() },
     createdAt = createdAt.toEpochMilliseconds(),
     updatedAt = updatedAt.toEpochMilliseconds(),
 )

@@ -67,7 +67,7 @@ fun TsosuNavHost(
             Screen.Habits.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
             exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
-        ) { HabitsScreen(onHabitClick = onHabitClick) }
+        ) { HabitsScreen(onHabitClick = onHabitClick, onTaskClick = onTaskClick) }
         composable(
             Screen.Calendar.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },

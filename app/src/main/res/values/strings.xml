@@ -26,6 +26,8 @@
     <string name="habits_anytime">Anytime</string>
     <string name="habits_evening">Evening</string>
     <string name="habits_other">Other</string>
+    <string name="habits_recurring_section">Recurring Tasks</string>
+    <string name="habits_recurring_streak">🔥 %d-day streak</string>
     <string name="habits_streak">%1$d out of the last %2$d days</string>
     <string name="habits_month_count">%d times this month!</string>
     <string name="habits_create_failed">Failed to create habit</string>
@@ -332,6 +334,7 @@
     <string name="a11y_pick_time">Pick time</string>
     <string name="task_edit">Edit</string>
     <string name="task_convert_to_habit">Convert to habit</string>
+    <string name="task_set_focus_today">Set as today\'s Focus</string>
     <string name="view_switcher">Views</string>
     <string name="view_focus">Focus</string>
     <string name="view_inbox">Inbox</string>

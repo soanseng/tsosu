@@ -43,16 +43,24 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
+import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.Routine
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.HabitStreakInfo
+import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.domain.usecase.HabitWithStatus
 import app.tsosu.ui.components.KonfettiOverlay
 import app.tsosu.ui.util.rememberHaptic
-
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 @Composable
 fun HabitsScreen(
     onHabitClick: (String) -> Unit = {},
+    onTaskClick: (String) -> Unit = {},
     viewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -60,6 +68,9 @@ fun HabitsScreen(
     val konfettiTrigger = remember { mutableIntStateOf(0) }
     val haptic = rememberHaptic()
     val snackbarHostState = remember { SnackbarHostState() }
+    val today = remember {
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    }
     val errorMsg = stringResource(R.string.habits_create_failed)
     val context = LocalContext.current
 
@@ -181,7 +192,28 @@ fun HabitsScreen(
             }
         }
 
-        if (state.habits.isEmpty()) {
+        val recurring = state.recurringTasks
+        if (recurring.isNotEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.habits_recurring_section),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            items(recurring, key = { "recurring-${it.id}" }) { task ->
+                RecurringTaskRow(
+                    task = task,
+                    streak = streakDays(task.completions, today),
+                    onToggle = {
+                        haptic.confirm()
+                        viewModel.onToggleRecurringTask(task.id)
+                    },
+                    onOpen = { onTaskClick(task.id) },
+                    modifier = Modifier.animateItem(),
+                )
+            }
+        }
+        if (state.habits.isEmpty() && state.recurringTasks.isEmpty()) {
             item {
                 Text(
                     text = stringResource(R.string.habits_empty),
@@ -302,4 +334,64 @@ private fun WeekProgressBar(
             )
         }
     }
+}
+
+@Composable
+fun RecurringTaskRow(
+    task: Task,
+    streak: Int,
+    onToggle: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpen),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Checkbox(
+                checked = false,
+                onCheckedChange = { onToggle() },
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(task.title, style = MaterialTheme.typography.titleSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    task.recurrenceRule?.let {
+                        Text(
+                            text = "🔁 ${RecurrenceParser.toDisplayLabel(it)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (streak > 0) {
+                        Text(
+                            text = stringResource(R.string.habits_recurring_streak, streak),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Consecutive days of completion ending today (or yesterday if today is not done yet). */
+private fun streakDays(completions: List<LocalDate>, today: LocalDate): Int {
+    val done = completions.toSet()
+    var cursor = today
+    if (cursor !in done) cursor = cursor.minus(DatePeriod(days = 1))
+    var streak = 0
+    while (cursor in done) {
+        streak++
+        cursor = cursor.minus(DatePeriod(days = 1))
+    }
+    return streak
 }
