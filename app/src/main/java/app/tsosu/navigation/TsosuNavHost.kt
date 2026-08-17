@@ -29,6 +29,7 @@ fun TsosuNavHost(
     focusViewModel: FocusViewModel? = null,
     onTaskClick: (String) -> Unit = {},
     onHabitClick: (String) -> Unit = {},
+    onQuickAddDate: (java.time.LocalDate) -> Unit = {},
     isVaultConfigured: Boolean = true,
     onSelectFolder: () -> Unit = {},
 ) {
@@ -71,7 +72,7 @@ fun TsosuNavHost(
             Screen.Calendar.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
             exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
-        ) { CalendarScreen(onTaskClick = onTaskClick) }
+        ) { CalendarScreen(onTaskClick = onTaskClick, onQuickAddDate = onQuickAddDate) }
         composable(
             Screen.Upcoming.route,
             enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },

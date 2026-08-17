@@ -285,6 +285,7 @@
     <string name="settings_language_zh_tw">繁體中文</string>
     <string name="settings_recurrence_help">重複與速記語法教學</string>
     <string name="settings_version">Tsosu v%1$s</string>
+    <string name="calendar_add_task">在這天新增任務</string>
     <string name="settings_markdown_sync">Markdown 同步</string>
     <string name="settings_syncing_to_folder">同步至資料夾</string>
     <string name="settings_select_folder">選擇資料夾</string>

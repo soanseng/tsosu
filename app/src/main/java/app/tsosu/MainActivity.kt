@@ -109,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             TsosuTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
                 var showAddTask by remember { mutableStateOf(false) }
+                var quickAddInitialDate by remember { mutableStateOf<kotlinx.datetime.LocalDateTime?>(null) }
                 var showAddHabit by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
                 val notifPermissionLauncher = rememberLauncherForActivityResult(
@@ -255,7 +256,10 @@ class MainActivity : AppCompatActivity() {
                         FloatingActionButton(
                             onClick = {
                                 if (isOnHabitsTab) showAddHabit = true
-                                else showAddTask = true
+                                else {
+                                    quickAddInitialDate = null
+                                    showAddTask = true
+                                }
                             },
                             modifier = Modifier.pointerInput(isOnHabitsTab) {
                                 detectTapGestures(
@@ -282,6 +286,13 @@ class MainActivity : AppCompatActivity() {
                         focusViewModel = focusViewModel,
                         onTaskClick = { taskId -> editingTaskId = taskId },
                         onHabitClick = { habitId -> editingHabitId = habitId },
+                        onQuickAddDate = { javaDate ->
+                            quickAddInitialDate = kotlinx.datetime.LocalDateTime(
+                                kotlinx.datetime.LocalDate(javaDate.year, javaDate.monthValue, javaDate.dayOfMonth),
+                                kotlinx.datetime.LocalTime(0, 0),
+                            )
+                            showAddTask = true
+                        },
                         isVaultConfigured = isVaultConfigured,
                         onSelectFolder = { folderPicker.launch(null) },
                     )
@@ -309,7 +320,11 @@ class MainActivity : AppCompatActivity() {
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     ) {
                         QuickAddTaskSheet(
-                            onDismiss = { showAddTask = false },
+                            onDismiss = {
+                                showAddTask = false
+                                quickAddInitialDate = null
+                            },
+                            initialDueDate = quickAddInitialDate,
                             onAdd = { title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule ->
                                 quickAddViewModel.createTask(title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule)
                                 showAddTask = false

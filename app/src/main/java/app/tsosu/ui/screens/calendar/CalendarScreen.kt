@@ -22,6 +22,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +56,7 @@ import java.util.Locale
 fun CalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel(),
     onTaskClick: (String) -> Unit = {},
+    onQuickAddDate: (java.time.LocalDate) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val konfettiTrigger = remember { mutableIntStateOf(0) }
@@ -83,16 +87,26 @@ fun CalendarScreen(
                     LocalDate(javaDate.year, javaDate.monthValue, javaDate.dayOfMonth)
                 )
             },
+            onDateLongPress = onQuickAddDate,
         )
 
         if (state.selectedDate != null) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            Text(
-                text = formatSelectedDateHeader(state.selectedDate!!),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = formatSelectedDateHeader(state.selectedDate!!),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+                IconButton(onClick = { onQuickAddDate(toJavaDate(state.selectedDate!!)) }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.calendar_add_task))
+                }
+            }
 
             if (state.selectedDayTasks.isEmpty()) {
                 Text(
@@ -193,6 +207,7 @@ private fun MonthGrid(
     selectedDate: LocalDate?,
     tasksByDate: Map<java.time.LocalDate, List<app.tsosu.domain.model.Task>>,
     onDateSelected: (java.time.LocalDate) -> Unit,
+    onDateLongPress: (java.time.LocalDate) -> Unit,
 ) {
     val firstOfMonth = yearMonth.atDay(1)
     // Sunday = 0 offset for US-style calendar
@@ -226,17 +241,20 @@ private fun MonthGrid(
                 isSelected = isSelected,
                 hasTasks = hasTasks,
                 onClick = { onDateSelected(date) },
+                onLongClick = { onDateLongPress(date) },
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DayCell(
     day: Int,
     isSelected: Boolean,
     hasTasks: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -252,7 +270,10 @@ private fun DayCell(
                     Modifier
                 }
             )
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -283,6 +304,9 @@ private fun DayCell(
         }
     }
 }
+
+private fun toJavaDate(date: LocalDate): java.time.LocalDate =
+    java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)
 
 private fun formatSelectedDateHeader(date: LocalDate): String {
     val javaDate = java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)

@@ -72,6 +72,7 @@ private enum class RecurrenceOption(val label: String, val rrule: String?) {
 fun QuickAddTaskSheet(
     onDismiss: () -> Unit,
     onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?) -> Unit,
+    initialDueDate: LocalDateTime? = null,
 ) {
     val haptic = rememberHaptic()
     val recurrenceParser = remember { RecurrenceParser() }
@@ -80,10 +81,10 @@ fun QuickAddTaskSheet(
     var selectedPriority by remember { mutableStateOf(Priority.NONE) }
     var selectedEnergy by remember { mutableStateOf(EnergyLevel.MEDIUM) }
     var estimatedMinutes by remember { mutableIntStateOf(0) }
-    var dueDate by remember { mutableStateOf<LocalDateTime?>(null) }
-    // True once the user picked a date manually; a "starting <date>" prefill
-    // from the title never overwrites a manual pick.
-    var datePickedManually by remember { mutableStateOf(false) }
+    var dueDate by remember { mutableStateOf<LocalDateTime?>(initialDueDate) }
+    // True once the user picked a date manually (or a calendar screen passed
+    // one in); a "starting <date>" prefill from the title never overwrites it.
+    var datePickedManually by remember { mutableStateOf(initialDueDate != null) }
     var showDatePicker by remember { mutableStateOf(false) }
     var reminderTime by remember { mutableStateOf<LocalTime?>(null) }
     var showTimePicker by remember { mutableStateOf(false) }
