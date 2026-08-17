@@ -144,6 +144,16 @@
     <string name="quick_add_clear_priority">清除優先級</string>
     <string name="recurrence_help_priority_title">優先級速記</string>
     <string name="recurrence_help_priority_body">在標題任意處加 p1 到 p4：p1＝緊急、p2＝高、p3＝中、p4＝低。大小寫不拘（"P2" 可以），須為獨立詞（"ap1" 不算）；多個時取最後一個。存檔時會從標題移除並預選優先級。</string>
+    <string name="filter_saved_views">儲存檢視</string>
+    <string name="filter_view_name">檢視名稱</string>
+    <string name="filter_save_view">儲存</string>
+    <string name="filter_delete_view">刪除 %1$s</string>
+    <string name="filter_due">到期日</string>
+    <string name="filter_due_any">全部</string>
+    <string name="filter_due_overdue">逾期</string>
+    <string name="filter_due_today">今天</string>
+    <string name="filter_due_week">未來 7 天</string>
+    <string name="filter_projects">專案</string>
 
     <!-- Accessibility -->
     <string name="a11y_filter_active">篩選已啟用</string>

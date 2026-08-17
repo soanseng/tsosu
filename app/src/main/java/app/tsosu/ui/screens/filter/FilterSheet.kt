@@ -16,6 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.TextButton
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.plus
+import app.tsosu.ui.util.rememberHaptic
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,12 +44,16 @@ import app.tsosu.ui.util.rememberHaptic
 fun FilterSheet(
     currentFilter: FilterSpec,
     currentSort: SortSpec,
+    projects: List<app.tsosu.domain.model.Project> = emptyList(),
+    savedViews: List<SavedView> = emptyList(),
     onApply: (FilterSpec, SortSpec) -> Unit,
     onClear: () -> Unit,
     onDismiss: () -> Unit,
+    onSaveView: (String, FilterSpec, SortSpec) -> Unit = { _, _, _ -> },
+    onDeleteView: (String) -> Unit = {},
 ) {
-    val haptic = rememberHaptic()
 
+    val haptic = rememberHaptic()
     var selectedStatuses by remember {
         mutableStateOf(currentFilter.statuses ?: emptySet())
     }
@@ -54,6 +63,10 @@ fun FilterSheet(
     var selectedEnergyLevels by remember {
         mutableStateOf(currentFilter.energyLevels ?: emptySet())
     }
+    var selectedProjectIds by remember {
+        mutableStateOf(currentFilter.projectIds ?: emptySet())
+    }
+    var selectedDuePreset by remember { mutableStateOf("") }
     var titleSearch by remember {
         mutableStateOf(currentFilter.titleContains ?: "")
     }
@@ -63,6 +76,28 @@ fun FilterSheet(
     var sortAscending by remember {
         mutableStateOf(currentSort.ascending)
     }
+    var viewName by remember { mutableStateOf("") }
+
+    fun buildFilter(): FilterSpec {
+        val today = kotlinx.datetime.Clock.System.now()
+            .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        val (from, to) = when (selectedDuePreset) {
+            "overdue" -> null to today
+            "today" -> today to today
+            "week" -> today to today.plus(7, kotlinx.datetime.DateTimeUnit.DAY)
+            else -> null to null
+        }
+        return FilterSpec(
+            statuses = selectedStatuses.takeIf { it.isNotEmpty() },
+            minPriority = selectedMinPriority,
+            energyLevels = selectedEnergyLevels.takeIf { it.isNotEmpty() },
+            projectIds = selectedProjectIds.takeIf { it.isNotEmpty() },
+            dueDateFrom = from,
+            dueDateTo = to,
+            titleContains = titleSearch.takeIf { it.isNotBlank() },
+        )
+    }
+
 
     Column(
         modifier = Modifier
@@ -71,6 +106,46 @@ fun FilterSheet(
     ) {
         Text(stringResource(R.string.filter_title), style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(16.dp))
+
+        // -- Saved views --
+        if (savedViews.isNotEmpty()) {
+            Text(stringResource(R.string.filter_saved_views), style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(4.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                savedViews.forEach { view ->
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            haptic.tick()
+                            onApply(view.filter, view.sort)
+                            onDismiss()
+                        },
+                        label = { Text(view.name) },
+                        trailingIcon = {
+                            Text(
+                                "×",
+                                modifier = Modifier.padding(start = 2.dp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                }
+            }
+            // Tap × = delete: separate row of tiny delete affordances
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                savedViews.forEach { view ->
+                    TextButton(onClick = { onDeleteView(view.name) }) {
+                        Text(stringResource(R.string.filter_delete_view, view.name), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(12.dp))
+        }
 
         // -- Title search --
         OutlinedTextField(
@@ -117,6 +192,62 @@ fun FilterSheet(
         HorizontalDivider()
         Spacer(Modifier.height(12.dp))
 
+        // -- Due date presets --
+        Text(stringResource(R.string.filter_due), style = MaterialTheme.typography.labelLarge)
+        Spacer(Modifier.height(4.dp))
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            listOf(
+                "" to R.string.filter_due_any,
+                "overdue" to R.string.filter_due_overdue,
+                "today" to R.string.filter_due_today,
+                "week" to R.string.filter_due_week,
+            ).forEach { (preset, label) ->
+                FilterChip(
+                    selected = selectedDuePreset == preset,
+                    onClick = {
+                        haptic.tick()
+                        selectedDuePreset = preset
+                    },
+                    label = { Text(stringResource(label)) },
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(12.dp))
+
+        // -- Project filter --
+        if (projects.isNotEmpty()) {
+            Text(stringResource(R.string.filter_projects), style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(4.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                projects.forEach { project ->
+                    FilterChip(
+                        selected = project.id in selectedProjectIds,
+                        onClick = {
+                            haptic.tick()
+                            selectedProjectIds = if (project.id in selectedProjectIds) {
+                                selectedProjectIds - project.id
+                            } else {
+                                selectedProjectIds + project.id
+                            }
+                        },
+                        label = { Text(project.title) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(12.dp))
+        }
+
         // -- Priority filter (minimum priority) --
         Text(stringResource(R.string.filter_min_priority), style = MaterialTheme.typography.labelLarge)
         Spacer(Modifier.height(4.dp))
@@ -140,6 +271,7 @@ fun FilterSheet(
                 )
             }
         }
+
 
         Spacer(Modifier.height(12.dp))
         HorizontalDivider()
@@ -203,6 +335,33 @@ fun FilterSheet(
             }
         }
 
+        Spacer(Modifier.height(12.dp))
+
+        // -- Save current as view --
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedTextField(
+                value = viewName,
+                onValueChange = { viewName = it },
+                label = { Text(stringResource(R.string.filter_view_name)) },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+            )
+            TextButton(
+                onClick = {
+                    if (viewName.isNotBlank()) {
+                        haptic.confirm()
+                        onSaveView(viewName, buildFilter(), SortSpec(field = sortField, ascending = sortAscending))
+                        viewName = ""
+                    }
+                },
+            ) {
+                Text(stringResource(R.string.filter_save_view))
+            }
+        }
+
         Spacer(Modifier.height(20.dp))
 
         // -- Action buttons --
@@ -223,14 +382,7 @@ fun FilterSheet(
             Button(
                 onClick = {
                     haptic.confirm()
-                    val filter = FilterSpec(
-                        statuses = selectedStatuses.takeIf { it.isNotEmpty() },
-                        minPriority = selectedMinPriority,
-                        energyLevels = selectedEnergyLevels.takeIf { it.isNotEmpty() },
-                        titleContains = titleSearch.takeIf { it.isNotBlank() },
-                    )
-                    val sort = SortSpec(field = sortField, ascending = sortAscending)
-                    onApply(filter, sort)
+                    onApply(buildFilter(), SortSpec(field = sortField, ascending = sortAscending))
                     onDismiss()
                 },
                 modifier = Modifier.weight(1f),

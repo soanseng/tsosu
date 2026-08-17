@@ -309,6 +309,16 @@
     <string name="quick_add_clear_priority">Clear priority</string>
     <string name="recurrence_help_priority_title">Priority shorthand</string>
     <string name="recurrence_help_priority_body">Add p1 to p4 anywhere in the title: p1 = Urgent, p2 = High, p3 = Medium, p4 = Low. Case-insensitive ("P2" works), must be a standalone word ("ap1" doesn\'t match); the last token wins. The token is stripped from the saved title and pre-selects the priority chip.</string>
+    <string name="filter_saved_views">Saved views</string>
+    <string name="filter_view_name">View name</string>
+    <string name="filter_save_view">Save</string>
+    <string name="filter_delete_view">Delete %1$s</string>
+    <string name="filter_due">Due date</string>
+    <string name="filter_due_any">Any</string>
+    <string name="filter_due_overdue">Overdue</string>
+    <string name="filter_due_today">Today</string>
+    <string name="filter_due_week">Next 7 days</string>
+    <string name="filter_projects">Projects</string>
 
     <!-- Accessibility -->
     <string name="a11y_filter_active">Filter active</string>

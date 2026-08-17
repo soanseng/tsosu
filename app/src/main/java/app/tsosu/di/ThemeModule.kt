@@ -22,6 +22,12 @@ object ThemeModule {
 
     @Provides
     @Singleton
+    fun provideSavedViewPreferences(@ApplicationContext context: Context): app.tsosu.ui.screens.filter.SavedViewPreferences {
+        return app.tsosu.ui.screens.filter.SavedViewPreferences(context)
+    }
+
+    @Provides
+    @Singleton
     fun provideUxHintPreferences(@ApplicationContext context: Context): UxHintPreferences {
         return UxHintPreferences(context)
     }

@@ -86,6 +86,8 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var markdownPreferences: MarkdownPreferences
     @Inject lateinit var vaultChangeWatcher: VaultChangeWatcher
     @Inject lateinit var gamificationRepository: GamificationRepository
+    @Inject lateinit var savedViewPreferences: app.tsosu.ui.screens.filter.SavedViewPreferences
+    @Inject lateinit var projectRepository: app.tsosu.domain.repository.ProjectRepository
 
     private var lastSyncTime = 0L
     private val snackbarHostState = SnackbarHostState()
@@ -352,6 +354,10 @@ class MainActivity : AppCompatActivity() {
                 if (showFilter) {
                     val currentFilter by focusViewModel.filterSpec.collectAsState()
                     val currentSort by focusViewModel.sortSpec.collectAsState()
+                    val savedViews by savedViewPreferences.views.collectAsState(initial = emptyList())
+                    val projects by projectRepository.getAllProjects()
+                        .collectAsState(initial = emptyList())
+                    val scope = rememberCoroutineScope()
                     ModalBottomSheet(
                         onDismissRequest = { showFilter = false },
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -359,11 +365,19 @@ class MainActivity : AppCompatActivity() {
                         FilterSheet(
                             currentFilter = currentFilter,
                             currentSort = currentSort,
+                            projects = projects,
+                            savedViews = savedViews,
                             onApply = { filter, sort ->
                                 focusViewModel.applyFilter(filter, sort)
                             },
                             onClear = { focusViewModel.clearFilter() },
                             onDismiss = { showFilter = false },
+                            onSaveView = { name, filter, sort ->
+                                scope.launch { savedViewPreferences.save(name, filter, sort) }
+                            },
+                            onDeleteView = { name ->
+                                scope.launch { savedViewPreferences.delete(name) }
+                            },
                         )
                     }
                 }
