@@ -143,10 +143,9 @@ class RecurrenceParser {
                 if (preset != null && suggestedReminder == null) suggestedReminder = preset
                 core = (core.substring(0, todMatch.range.first) + core.substring(todMatch.range.last + 1))
                     .trim(' ', ',')
-                // "every " left dangling (e.g. "every morning" → "every")
-                core = core.replace(Regex("""\bevery\s*$"""), "").trim()
                 continue
             }
+
 
 
             val untilMatch = UNTIL_EN.find(lower) ?: UNTIL_ZH.find(core)
@@ -170,6 +169,10 @@ class RecurrenceParser {
             }
             break
         }
+        // Fold a dangling "every"/"每天" left after modifier stripping
+        // ("every morning until 9/15" → "every" → "daily").
+        core = core.replace(Regex("""每天\s*$"""), "daily").trim()
+        core = core.replace(Regex("""\bevery\s*$"""), "daily").trim()
 
         return core to RecurrenceModifiers(untilDate, startDate, suggestedReminder)
     }
@@ -419,8 +422,10 @@ class RecurrenceParser {
 
     companion object {
         // Time-of-day keywords (Batch I): EN "morning/afternoon/evening/night",
-        // ZH 早上/上午/下午/晚上. Preset reminder times follow Todoist defaults.
-        private val TIME_OF_DAY = Regex("""\b(?:morning|afternoon|evening|night|早上|上午|下午|晚上|傍晚)\b""")
+        // Time-of-day keywords (Batch I): EN "morning/afternoon/evening/night",
+        // ZH 早上/上午/下午/晚上. \b only guards the Latin alternatives —
+        // CJK chars are non-word chars so \b never fires between them.
+        private val TIME_OF_DAY = Regex("""(?:\b(?:morning|afternoon|evening|night)\b|早上|上午|下午|晚上|傍晚)""")
         private val TIME_OF_DAY_PRESETS = mapOf(
             "morning" to kotlinx.datetime.LocalTime(8, 0),
             "早上" to kotlinx.datetime.LocalTime(8, 0),
