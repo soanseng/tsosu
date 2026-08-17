@@ -21,6 +21,8 @@ import androidx.compose.material3.TextButton
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.plus
 import app.tsosu.ui.util.rememberHaptic
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -102,6 +104,7 @@ fun FilterSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
         Text(stringResource(R.string.filter_title), style = MaterialTheme.typography.titleLarge)
