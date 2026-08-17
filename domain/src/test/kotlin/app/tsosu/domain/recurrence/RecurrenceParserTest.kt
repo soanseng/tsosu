@@ -460,6 +460,42 @@ class RecurrenceParserTest {
         assertEquals(null, result.rrule)
     }
 
+    @Test
+    fun `until date becomes UNTIL in rrule`() {
+        val year = java.time.Year.now().value
+        assertSuccess("RRULE:FREQ=DAILY;UNTIL=${year}0831T235959Z", parser.parse("every day until 8/31"))
+    }
+
+    @Test
+    fun `until with iso date`() {
+        assertSuccess("RRULE:FREQ=WEEKLY;BYDAY=MO;UNTIL=20270831T235959Z", parser.parse("every mon until 2027-08-31"))
+    }
+
+    @Test
+    fun `starting date surfaced separately`() {
+        val year = java.time.Year.now().value
+        val extraction = parser.extractFromTitle("Meditate every day starting 8/20 until 9/30")
+        assertEquals("Meditate", extraction.title)
+        assertEquals("RRULE:FREQ=DAILY;UNTIL=${year}0930T235959Z", extraction.rrule)
+        assertEquals(kotlinx.datetime.LocalDate(year, 8, 20), extraction.startDate)
+    }
+
+    @Test
+    fun `modifiers work with chinese`() {
+        val year = java.time.Year.now().value
+        assertSuccess("RRULE:FREQ=DAILY;UNTIL=${year}0831T235959Z", parser.parse("每天 到 8月31"))
+    }
+
+    @Test
+    fun `no modifiers unchanged behavior`() {
+        assertSuccess("RRULE:FREQ=DAILY", parser.parse("every day"))
+    }
+
+    @Test
+    fun `display label appends until`() {
+        assertEquals("Every day until Aug 31", RecurrenceParser.toDisplayLabel("RRULE:FREQ=DAILY;UNTIL=20260831T235959Z"))
+    }
+
     private fun assertSuccess(expectedRrule: String, result: RecurrenceResult) {
         assertTrue(result is RecurrenceResult.Success, "Expected Success but got $result")
         assertEquals(expectedRrule, (result as RecurrenceResult.Success).rrule)

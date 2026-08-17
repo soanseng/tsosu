@@ -80,6 +80,9 @@ fun QuickAddTaskSheet(
     var selectedEnergy by remember { mutableStateOf(EnergyLevel.MEDIUM) }
     var estimatedMinutes by remember { mutableIntStateOf(0) }
     var dueDate by remember { mutableStateOf<LocalDateTime?>(null) }
+    // True once the user picked a date manually; a "starting <date>" prefill
+    // from the title never overwrites a manual pick.
+    var datePickedManually by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var reminderTime by remember { mutableStateOf<LocalTime?>(null) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -107,6 +110,13 @@ fun QuickAddTaskSheet(
                 if (extraction.rrule != null) {
                     detectedRrule = extraction.rrule
                     cleanTitle = extraction.title
+                    // "starting <date>" prefills the first due date unless the
+                    // user already picked one manually.
+                    extraction.startDate?.let { start ->
+                        if (!datePickedManually) {
+                            dueDate = LocalDateTime(start, LocalTime(0, 0))
+                        }
+                    }
                 } else {
                     detectedRrule = null
                     cleanTitle = newValue
@@ -209,6 +219,7 @@ fun QuickAddTaskSheet(
                 selected = dueDate?.date == todayDate,
                 onClick = {
                     haptic.tick()
+                    datePickedManually = true
                     dueDate = LocalDateTime(todayDate, LocalTime(0, 0))
                 },
                 label = { Text(stringResource(R.string.quick_add_today)) },
@@ -217,6 +228,7 @@ fun QuickAddTaskSheet(
                 selected = dueDate?.date == todayDate.plus(1, DateTimeUnit.DAY),
                 onClick = {
                     haptic.tick()
+                    datePickedManually = true
                     val tomorrowDate = todayDate.plus(1, DateTimeUnit.DAY)
                     dueDate = LocalDateTime(tomorrowDate, LocalTime(0, 0))
                 },
@@ -226,6 +238,7 @@ fun QuickAddTaskSheet(
                 selected = dueDate?.date == todayDate.plus(7, DateTimeUnit.DAY),
                 onClick = {
                     haptic.tick()
+                    datePickedManually = true
                     val nextWeekDate = todayDate.plus(7, DateTimeUnit.DAY)
                     dueDate = LocalDateTime(nextWeekDate, LocalTime(0, 0))
                 },
@@ -245,7 +258,10 @@ fun QuickAddTaskSheet(
                 )
             }
             if (dueDate != null) {
-                IconButton(onClick = { dueDate = null }) {
+                IconButton(onClick = {
+                    datePickedManually = true
+                    dueDate = null
+                }) {
                     Icon(Icons.Default.Close, contentDescription = stringResource(R.string.quick_add_clear_date))
                 }
             }

@@ -1,5 +1,9 @@
 package app.tsosu.domain.recurrence
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 sealed class RecurrenceResult {
     data class Success(val rrule: String) : RecurrenceResult()
     data class Unrecognized(val original: String) : RecurrenceResult()
@@ -8,6 +12,14 @@ sealed class RecurrenceResult {
 data class TitleRecurrence(
     val title: String,
     val rrule: String?,
+    /** First occurrence date from a "starting <date>" modifier; null = none. */
+    val startDate: kotlinx.datetime.LocalDate? = null,
+)
+
+/** Modifier dates stripped from a recurrence phrase before the core parse. */
+private data class RecurrenceModifiers(
+    val untilDate: kotlinx.datetime.LocalDate? = null,
+    val startDate: kotlinx.datetime.LocalDate? = null,
 )
 
 class RecurrenceParser {
@@ -16,9 +28,18 @@ class RecurrenceParser {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) return RecurrenceResult.Unrecognized(input)
 
-        return tryParseEnglish(trimmed)
-            ?: tryParseChinese(trimmed)
-            ?: RecurrenceResult.Unrecognized(input)
+        val (core, modifiers) = stripModifiers(trimmed)
+        val base = tryParseEnglish(core)
+            ?: tryParseChinese(core)
+            ?: return RecurrenceResult.Unrecognized(input)
+        return RecurrenceResult.Success(applyUntil(base.rrule, modifiers.untilDate))
+    }
+
+    /** Full parse with modifiers; used by extractFromTitle for start-date prefill. */
+    private fun parseWithModifiers(input: String): Pair<String, RecurrenceModifiers>? {
+        val (core, modifiers) = stripModifiers(input)
+        val base = tryParseEnglish(core) ?: tryParseChinese(core) ?: return null
+        return applyUntil(base.rrule, modifiers.untilDate) to modifiers
     }
 
     fun extractFromTitle(fullTitle: String): TitleRecurrence {
@@ -28,11 +49,11 @@ class RecurrenceParser {
         val everyIndex = fullTitle.lastIndexOf(" every ", ignoreCase = true)
         if (everyIndex >= 0) {
             val candidate = fullTitle.substring(everyIndex + 1).trim()
-            val result = parse(candidate)
-            if (result is RecurrenceResult.Success) {
+            parseWithModifiers(candidate)?.let { (rrule, modifiers) ->
                 return TitleRecurrence(
                     title = fullTitle.substring(0, everyIndex).trim(),
-                    rrule = result.rrule,
+                    rrule = rrule,
+                    startDate = modifiers.startDate,
                 )
             }
         }
@@ -41,47 +62,141 @@ class RecurrenceParser {
         val evMatch = Regex(" ev[! ]").findAll(fullTitle).lastOrNull()
         if (evMatch != null) {
             val candidate = fullTitle.substring(evMatch.range.first + 1).trim()
-            val result = parse(candidate)
-            if (result is RecurrenceResult.Success) {
+            parseWithModifiers(candidate)?.let { (rrule, modifiers) ->
                 return TitleRecurrence(
                     title = fullTitle.substring(0, evMatch.range.first).trim(),
-                    rrule = result.rrule,
+                    rrule = rrule,
+                    startDate = modifiers.startDate,
                 )
             }
         }
 
         // Check if the entire string starts with "every"
         if (fullTitle.trim().startsWith("every", ignoreCase = true)) {
-            val result = parse(fullTitle.trim())
-            if (result is RecurrenceResult.Success) {
-                return TitleRecurrence(title = "", rrule = result.rrule)
+            parseWithModifiers(fullTitle.trim())?.let { (rrule, modifiers) ->
+                return TitleRecurrence(title = "", rrule = rrule, startDate = modifiers.startDate)
             }
         }
-
 
         // Chinese: find 每 with a space before it
         val meiIndex = fullTitle.lastIndexOf(" 每")
         if (meiIndex >= 0) {
             val candidate = fullTitle.substring(meiIndex + 1).trim()
-            val result = parse(candidate)
-            if (result is RecurrenceResult.Success) {
+            parseWithModifiers(candidate)?.let { (rrule, modifiers) ->
                 return TitleRecurrence(
                     title = fullTitle.substring(0, meiIndex).trim(),
-                    rrule = result.rrule,
+                    rrule = rrule,
+                    startDate = modifiers.startDate,
                 )
             }
         }
 
         // Check if the entire string starts with 每
         if (fullTitle.trim().startsWith("每")) {
-            val result = parse(fullTitle.trim())
-            if (result is RecurrenceResult.Success) {
-                return TitleRecurrence(title = "", rrule = result.rrule)
+            parseWithModifiers(fullTitle.trim())?.let { (rrule, modifiers) ->
+                return TitleRecurrence(title = "", rrule = rrule, startDate = modifiers.startDate)
             }
         }
 
         return TitleRecurrence(title = fullTitle, rrule = null)
     }
+
+    // ── Start/end modifiers (Batch H) ──
+
+    /**
+     * Strips trailing "until/starting <date>" modifiers (EN) or
+     * "到/直到 <date>" / "从 <date> 开始" (ZH). Returns the core phrase
+     * plus whatever dates were found. Modifier order is free.
+     */
+    private fun stripModifiers(input: String): Pair<String, RecurrenceModifiers> {
+        var core = input.trim()
+        var untilDate: kotlinx.datetime.LocalDate? = null
+        var startDate: kotlinx.datetime.LocalDate? = null
+
+        // Repeat-stripping: both modifiers, any order, possibly repeated words.
+        while (true) {
+            val lower = core.lowercase()
+
+            val untilMatch = UNTIL_EN.find(lower) ?: UNTIL_ZH.find(core)
+            if (untilMatch != null) {
+                val date = parseFlexibleDate(untilMatch.groupValues[1]) ?: return core to RecurrenceModifiers(untilDate, startDate)
+                if (untilDate == null) untilDate = date
+                core = (core.substring(0, untilMatch.range.first) + core.substring(untilMatch.range.last + 1))
+                    .trim(' ', ',')
+                continue
+            }
+
+            val startMatch = STARTING_EN.find(lower) ?: STARTING_ZH.find(core)
+            if (startMatch != null) {
+                val date = parseFlexibleDate(startMatch.groupValues[1]) ?: return core to RecurrenceModifiers(untilDate, startDate)
+                if (startDate == null) startDate = date
+                core = (core.substring(0, startMatch.range.first) + core.substring(startMatch.range.last + 1))
+                    .trim(' ', ',')
+                continue
+            }
+            break
+        }
+
+        return core to RecurrenceModifiers(untilDate, startDate)
+    }
+
+    /**
+     * Flexible date: 8/31, 2026/8/31, 2026-08-31, aug 31, august 31 2027,
+     * and Chinese 8月31 / 2026年8月31日. No year → current year.
+     */
+    internal fun parseFlexibleDate(raw: String): kotlinx.datetime.LocalDate? {
+        val text = raw.trim()
+
+        ZH_DATE.matchEntire(text)?.let { match ->
+            val year = match.groupValues[1].toIntOrNull() ?: currentYear()
+            val month = match.groupValues[2].toIntOrNull() ?: return null
+            val day = match.groupValues[3].toIntOrNull() ?: return null
+            return safeDate(year, month, day)
+        }
+
+        ISO_DATE.matchEntire(text)?.let { match ->
+            val year = match.groupValues[1].toIntOrNull() ?: return null
+            val month = match.groupValues[2].toIntOrNull() ?: return null
+            val day = match.groupValues[3].toIntOrNull() ?: return null
+            return safeDate(year, month, day)
+        }
+
+        val lower = text.lowercase()
+        MONTH_NAME_DATE.matchEntire(lower)?.let { match ->
+            val month = MONTHS_EN.indexOf(match.groupValues[1].take(3)) + 1
+            if (month == 0) return null
+            val day = match.groupValues[2].toIntOrNull() ?: return null
+            val year = match.groupValues[3].toIntOrNull() ?: currentYear()
+            return safeDate(year, month, day)
+        }
+
+        NUMERIC_DATE.matchEntire(text)?.let { match ->
+            val month = match.groupValues[1].toIntOrNull() ?: return null
+            val day = match.groupValues[2].toIntOrNull() ?: return null
+            val year = match.groupValues[3].toIntOrNull() ?: currentYear()
+            return safeDate(year, month, day)
+        }
+
+        return null
+    }
+    private fun applyUntil(rrule: String, until: kotlinx.datetime.LocalDate?): String {
+        if (until == null) return rrule
+        val rule = rrule.removePrefix("RRULE:")
+        return "RRULE:$rule;UNTIL=${until.year.toString().padStart(4, '0')}" +
+            "${until.monthNumber.toString().padStart(2, '0')}" +
+            "${until.dayOfMonth.toString().padStart(2, '0')}T235959Z"
+    }
+
+    private fun currentYear(): Int =
+        kotlinx.datetime.Clock.System.now()
+            .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).year
+
+    private fun safeDate(year: Int, month: Int, day: Int): kotlinx.datetime.LocalDate? = try {
+        kotlinx.datetime.LocalDate(year, month, day)
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
 
     // ── English ──
 
@@ -274,6 +389,28 @@ class RecurrenceParser {
         private val DAYS_EN = Regex("""every (.+)""")
         private val INTERVAL_EN = Regex("""every (\d+) (days?|weeks?|months?|years?)""")
 
+        // Start/end modifiers (Batch H). Date alternation: ISO, M/d[/yyyy], month-name day [year], ZH 月日.
+        private const val DATE_ALT = """(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}/\d{1,2}(?:/\d{2,4})?|[a-z]{3,9}\.?\s+\d{1,2}(?:\s+\d{4})?|(?:\d{4}年)?\d{1,2}月\d{1,2}[日号]?)"""
+        private val UNTIL_EN = Regex("""\b(?:until|through|till)\s+$DATE_ALT""")
+        private val STARTING_EN = Regex("""\b(?:starting|from)\s+$DATE_ALT""")
+        private val UNTIL_ZH = Regex("""(?:直到|到|至)\s*((?:\d{4}年)?\d{1,2}月\d{1,2}[日号]?)""")
+        private val STARTING_ZH = Regex("""(?:从|自)\s*((?:\d{4}年)?\d{1,2}月\d{1,2}[日号]?)(?:\s*开始)?""")
+
+        private val ISO_DATE = Regex("""(\d{4})-(\d{1,2})-(\d{1,2})""")
+        private val NUMERIC_DATE = Regex("""(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?""")
+        private val MONTH_NAME_DATE = Regex("""([a-z]{3,9})\.?\s+(\d{1,2})(?:\s+(\d{4}))?""")
+        private val ZH_DATE = Regex("""(?:(\d{4})年)?(\d{1,2})月(\d{1,2})[日号]?""")
+
+        private val MONTHS_EN = listOf(
+            "jan", "feb", "mar", "apr", "may", "jun",
+            "jul", "aug", "sep", "oct", "nov", "dec",
+        )
+
+        private val MONTHS_EN_DISPLAY = listOf(
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        )
+
 
         private val MONTHLY_DAY_ZH = Regex("""每月(\d+)[號号]""")
         private val INTERVAL_ZH = Regex("""每([一二三四五六七八九十兩两\d]+)([天日週周月年])""")
@@ -345,11 +482,26 @@ class RecurrenceParser {
                 else -> return rrule
             }
 
-            return if (interval != null && interval > 1) {
+            val baseLabel = if (interval != null && interval > 1) {
                 "Every $interval ${freqLabel}s"
             } else {
                 "Every $freqLabel"
             }
+
+            // "until <date>" suffix (Batch H)
+            val until = parts["UNTIL"]
+            val untilLabel = until?.take(8)?.let { digits ->
+                val year = digits.substring(0, 4).toIntOrNull()
+                val month = digits.substring(4, 6).toIntOrNull()
+                val day = digits.substring(6, 8).toIntOrNull()
+                if (year != null && month != null && day != null && month in 1..12) {
+                    " until ${MONTHS_EN_DISPLAY[month - 1]} $day"
+                } else {
+                    ""
+                }
+            } ?: ""
+
+            return baseLabel + untilLabel
         }
     }
 }
