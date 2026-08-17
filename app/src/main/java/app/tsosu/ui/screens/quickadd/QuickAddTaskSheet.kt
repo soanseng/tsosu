@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import app.tsosu.R
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.domain.recurrence.RecurrenceResult
+import app.tsosu.domain.recurrence.TitlePriority
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.ui.util.rememberHaptic
@@ -91,6 +92,7 @@ fun QuickAddTaskSheet(
     var reminderPickedManually by remember { mutableStateOf(false) }
     var selectedRecurrence by remember { mutableStateOf(RecurrenceOption.NONE) }
     var detectedRrule by remember { mutableStateOf<String?>(null) }
+    var detectedPriority by remember { mutableStateOf<Priority?>(null) }
     var customRecurrence by remember { mutableStateOf("") }
     var cleanTitle by remember { mutableStateOf("") }
     var showRecurrenceHelp by remember { mutableStateOf(false) }
@@ -108,8 +110,17 @@ fun QuickAddTaskSheet(
             onValueChange = { newValue ->
                 title = newValue
                 if (newValue.isNotBlank()) titleError = false
+                // Detect p1-p4 priority token first, then the recurrence pattern.
+                var working = newValue
+                val prio = TitlePriority.extract(working)
+                if (prio.priority != null) {
+                    detectedPriority = prio.priority
+                    working = prio.title
+                } else {
+                    detectedPriority = null
+                }
                 // Detect trailing recurrence pattern
-                val extraction = recurrenceParser.extractFromTitle(newValue)
+                val extraction = recurrenceParser.extractFromTitle(working)
                 if (extraction.rrule != null) {
                     detectedRrule = extraction.rrule
                     cleanTitle = extraction.title
@@ -129,7 +140,7 @@ fun QuickAddTaskSheet(
                     }
                 } else {
                     detectedRrule = null
-                    cleanTitle = newValue
+                    cleanTitle = working
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -163,6 +174,29 @@ fun QuickAddTaskSheet(
                 }
             }
         }
+
+        val currentDetectedPriority = detectedPriority
+        if (currentDetectedPriority != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FilterChip(
+                    selected = true,
+                    onClick = { detectedPriority = null },
+                    label = {
+                        Text(
+                            "${currentDetectedPriority.emoji} ${currentDetectedPriority.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                            color = Color(currentDetectedPriority.color),
+                        )
+                    },
+                )
+                IconButton(onClick = { detectedPriority = null }) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.quick_add_clear_priority))
+                }
+            }
+        }
+
 
         Spacer(Modifier.height(12.dp))
 
@@ -357,10 +391,15 @@ fun QuickAddTaskSheet(
 
         Button(
             onClick = {
-                val finalTitle = if (detectedRrule != null) cleanTitle else title
+                val finalTitle = when {
+                    detectedRrule != null || detectedPriority != null -> cleanTitle
+                    else -> title
+                }
                 if (finalTitle.isNotBlank()) {
                     haptic.confirm()
-                    // Priority: detected from title > manual custom > preset
+                    // Priority: detected from title > preset chips
+                    val priority = detectedPriority ?: selectedPriority
+                    // Recurrence: detected from title > manual custom > preset
                     val recurrenceRule = detectedRrule ?: when (selectedRecurrence) {
                         RecurrenceOption.CUSTOM -> {
                             val parsed = recurrenceParser.parse(customRecurrence)
@@ -373,7 +412,7 @@ fun QuickAddTaskSheet(
                     }
                     onAdd(
                         finalTitle,
-                        selectedPriority,
+                        priority,
                         selectedEnergy,
                         estimatedMinutes.takeIf { it > 0 },
                         dueDate,

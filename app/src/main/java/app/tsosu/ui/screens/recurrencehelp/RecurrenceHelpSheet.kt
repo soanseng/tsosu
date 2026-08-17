@@ -45,6 +45,7 @@ fun RecurrenceHelpSheet() {
         HelpSection(R.string.recurrence_help_timeofday_title, R.string.recurrence_help_timeofday_body)
         HelpSection(R.string.recurrence_help_other_title, R.string.recurrence_help_other_body)
         HelpSection(R.string.recurrence_help_short_title, R.string.recurrence_help_short_body)
+        HelpSection(R.string.recurrence_help_priority_title, R.string.recurrence_help_priority_body)
         HelpSection(R.string.recurrence_help_obsidian_title, R.string.recurrence_help_obsidian_body)
 
         Spacer(Modifier.height(16.dp))
