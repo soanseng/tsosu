@@ -12,6 +12,14 @@ Most task managers are designed for neurotypical brains. They punish you with ov
 
 Tsosu is different. It's built on clinical understanding of ADHD and the principles of Atomic Habits — **make it small, make it easy, celebrate progress.**
 
+## What's New in 1.1.0
+
+- **⚡ Energy & streak freezes (Duolingo-style)** — completing tasks and habits earns energy; spend ⚡30 on a streak freeze that automatically bridges a missed day.
+- **✍️ Quick-add syntax** — type `every mon`, `daily`, `every morning until 8/31`, or `p1`–`p4` right in the task title; the same words work in Obsidian.
+- **🗂 Board view & saved views** — kanban columns per project with attached habits, list/board toggle, filter presets you can save as named views.
+- **🔁 Habit editor** — per-habit reminders, specific weekdays (Mon/Wed/Fri), habit↔project links, task→habit conversion.
+- **🌐 Language picker** — English / 繁體中文 in-app, plus a recurrence-keyword reference under Settings.
+
 ## Install
 
 ### Via Obtainium (recommended)
@@ -50,6 +58,9 @@ Inspired by Atomic Habits: start with something so small you can't say no. Tsosu
 - **7-day progress bar**: Each habit shows a visual bar of your last 7 days — see the trend, not just the number.
 - **Morning, Anytime & Evening routines**: Group habits by time of day. Create new habits right from the FAB.
 - **Gentle accountability**: a weekly counter (`3/5`) and streak (`🔥7`) on every habit — progress shown, missed days not counted
+- **Habit editor**: set frequency, energy, reminder, linked project, and specific weekdays (`Mon/Wed/Fri` style) — the habit only appears on those days
+- **Real streaks**: 🔥 counts genuinely consecutive days, and each habit can carry its own reminder time
+- Convert any task into a habit straight from the task menu
 
 ### 😌 No Shame UI — "Still on your list."
 
@@ -58,6 +69,30 @@ Every pixel is reviewed for shame and anxiety triggers.
 - Overdue tasks carry a small "Overdue" tag — no red counter badges screaming how many are late
 - No streak penalties that punish breaks — streaks pause, not reset
 - Weekly review shows what you **completed**, not what you didn't
+
+### ⚡ Energy & Streak Freezes — "Bank your momentum."
+
+Duolingo-style motivation, minus the guilt.
+
+- Completing tasks and habits earns **⚡ energy**
+- Spend ⚡30 on a **streak freeze** — miss a day and the freeze bridges the gap automatically, so your streak survives
+- Frozen days count toward the streak; no red screens, just insurance
+
+### ✍️ Quick-Add Syntax — "Type it like you say it."
+
+Todoist-style keywords parsed straight from the task title — in the app or in your vault. The full reference lives in Settings → *Recurrence & quick-syntax help*.
+
+- **Recurrence**: `every day`, `weekly`, `every mon, wed, fri`, `every other week`, `每週一二三` — stored as a `🔁` rule
+- **Time of day**: `every morning` / `every afternoon` / `every evening` — daily recurrence plus a preset reminder (08:00 / 13:00 / 18:00 / 21:00)
+- **Start & end dates**: `starting 8/20 until 8/31` bounds the schedule; order doesn't matter
+- **Priority shorthand**: `p1`–`p4` anywhere in the title (Urgent → Low); the token is stripped from the saved title and pre-selects the priority chip
+- Works identically in Obsidian — write `Buy milk every other week` in the vault and the next sync carries the rule
+
+### 🗂 Projects, Board & Saved Views
+
+- **Board view**: kanban columns per project — real project names, with each project's attached habits shown in the column
+- **List/Board toggle** on the same screen
+- **Filter presets & saved views**: filter by project, due date, status, priority, or energy — save the combination as a named view and jump back anytime
 
 ### ⏱ Time Awareness — "That's a lot for one day."
 
@@ -113,6 +148,7 @@ Tasks with dates automatically appear on your calendar. No double entry.
 - Change the date → event moves
 - Complete the task → event removed
 - Time estimate → calendar event duration
+- **Quick-add from the calendar** pre-fills the tapped day — tap any date, type the task, it's scheduled
 - Works with **CalDAV** (Fastmail, Nextcloud) and **Google Calendar**
 
 ### 📥 Todoist Import — "Bring your list with you."
@@ -121,7 +157,7 @@ Import your Todoist CSV export from Settings — tasks are deduplicated by id, w
 
 ### 📝 Markdown Vault — "Your tasks are your files."
 
-Everything lives as plain markdown files in a folder you own — view and edit them in Obsidian, nvim, or any text editor, on any device. See [How It Syncs](#how-it-syncs).
+Everything lives as plain markdown files in a folder you own — view and edit them in Obsidian, nvim, or any text editor, on any device. Vault changes are auto-detected, so edits flow back into the app without a manual sync. See [How It Syncs](#how-it-syncs).
 
 ## How It Syncs
 

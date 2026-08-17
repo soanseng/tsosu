@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tsosu 做事 — 為 ADHD 設計的任務管理器</title>
-<meta name="description" content="Tsosu 做事：台灣精神科醫師設計的 Android 任務管理器。Markdown 為資料來源，搭配 Obsidian 雙向同步、到期提醒、習慣追蹤。本地優先，無伺服器、無追蹤。">
+<meta name="description" content="Tsosu 做事：台灣精神科醫師設計的 Android 任務管理器。Markdown 為資料來源，搭配 Obsidian 雙向同步、到期提醒、習慣追蹤、能量與連續護盾。本地優先，無伺服器、無追蹤。">
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="apple-touch-icon" href="icon.png">
 <meta property="og:image" content="https://soanseng.github.io/tsosu/icon.png">
 <meta property="og:title" content="Tsosu 做事 — 為 ADHD 設計的任務管理器">
 <meta property="og:description" content="為 ADHD 設計的 Android 任務管理器。Markdown vault、Obsidian 雙向同步、到期提醒。本地優先，無伺服器、無追蹤。">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:locale:alternate" content="en_US">
 <style>
   :root {
     --bg: #faf9f7;
     --surface: #ffffff;
     --text: #1c1b1a;
     --muted: #6b6560;
-    --accent: #2e7d5b;
-    --accent-soft: #e6f2ec;
+    --accent: #6d28d9;
+    --accent-soft: #ede9fe;
     --border: #e5e1dc;
     --radius: 14px;
   }
@@ -33,8 +35,18 @@
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
+  /* Language toggle */
+  .lang-switch {
+    position: absolute; top: 20px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--accent); font-weight: 700; font-size: 14px;
+    padding: 6px 16px; border-radius: 999px; cursor: pointer;
+    transition: transform .1s ease;
+  }
+  .lang-switch:hover { transform: translateY(-1px); }
+
   /* Hero */
-  header { padding: 72px 0 48px; text-align: center; }
+  header { padding: 72px 0 48px; text-align: center; position: relative; }
   .logo {
     font-size: 20px; letter-spacing: 4px; color: var(--accent);
     font-weight: 700; text-transform: uppercase; margin-bottom: 12px;
@@ -43,7 +55,7 @@
   .logo img { width: 40px; height: 40px; border-radius: 10px; }
   h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.25; font-weight: 800; }
   h1 .sub { display: block; font-size: clamp(18px, 3vw, 24px); font-weight: 600; color: var(--muted); margin-top: 8px; }
-  .tagline { font-size: 18px; color: var(--muted); margin: 20px auto 32px; max-width: 560px; }
+  .tagline { font-size: 18px; color: var(--muted); margin: 20px auto 32px; max-width: 620px; }
   .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .btn {
     display: inline-block; padding: 14px 28px; border-radius: 999px;
@@ -53,6 +65,10 @@
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-secondary { background: var(--accent-soft); color: var(--accent); }
   .badges { margin-top: 20px; font-size: 14px; color: var(--muted); }
+  .badges .ver {
+    display: inline-block; background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; border-radius: 999px; padding: 1px 12px; margin-right: 8px;
+  }
 
   /* Sections */
   section { padding: 48px 0; }
@@ -62,11 +78,16 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
   .card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 22px;
+    border-radius: var(--radius); padding: 22px; position: relative;
   }
   .card h3 { font-size: 18px; margin-bottom: 8px; }
   .card p { font-size: 15px; color: var(--muted); }
   .card .icon { font-size: 26px; display: block; margin-bottom: 8px; }
+  .card .new {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+    letter-spacing: .5px; border-radius: 999px; padding: 1px 10px;
+  }
 
   /* Install */
   .install { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
@@ -97,7 +118,7 @@
 
   /* Privacy strip */
   .privacy {
-    background: var(--accent); color: #fff; border-radius: var(--radius);
+    background: linear-gradient(135deg, #3730a3, #7c3aed); color: #fff; border-radius: var(--radius);
     padding: 32px; text-align: center;
   }
   .privacy h2 { color: #fff; }
@@ -110,113 +131,291 @@
   @media (max-width: 600px) {
     header { padding-top: 48px; }
     .install { padding: 22px; }
+    .lang-switch { top: 12px; right: 16px; }
   }
 </style>
 </head>
 <body>
 
 <header class="wrap">
-  <div class="logo"><img src="icon.png" width="40" height="40" alt="">Tsosu 做事</div>
-  <h1>為 ADHD 設計的任務管理器
-    <span class="sub">你的任務就是你的 Markdown 檔案</span>
+  <button class="lang-switch" id="langSwitch" type="button" aria-label="Switch language">EN</button>
+  <div class="logo"><img src="icon.png" width="40" height="40" alt="Tsosu">Tsosu 做事</div>
+  <h1><span data-i18n="hero_h1"></span>
+    <span class="sub" data-i18n="hero_sub"></span>
   </h1>
-  <p class="tagline">由精神科醫師設計——把事情變小、變簡單、慶祝進度。本地優先、無帳號、無追蹤，直接同步你的 Obsidian vault。</p>
+  <p class="tagline" data-i18n="hero_tagline"></p>
   <div class="cta-row">
-    <a class="btn btn-primary" href="#install">立即安裝</a>
-    <a class="btn btn-secondary" href="https://github.com/soanseng/tsosu" target="_blank" rel="noopener">GitHub 原始碼</a>
+    <a class="btn btn-primary" href="#install" data-i18n="cta_install"></a>
+    <a class="btn btn-secondary" href="https://github.com/soanseng/tsosu" target="_blank" rel="noopener" data-i18n="cta_github"></a>
   </div>
-  <p class="badges">Android 原生（Kotlin + Compose）・免費・無廣告・無分析追蹤</p>
+  <p class="badges"><span class="ver">v1.1.0</span><span data-i18n="badges"></span></p>
 </header>
 
 <section class="wrap" id="features">
-  <h2>為什麼是 Tsosu？</h2>
-  <p class="section-sub">多數任務管理器是為神經典型大腦設計的——逾期數字、無盡選項、落後時的罪惡感。Tsosu 不一樣。</p>
+  <h2 data-i18n="features_title"></h2>
+  <p class="section-sub" data-i18n="features_sub"></p>
   <div class="grid">
     <div class="card">
       <span class="icon">🎯</span>
-      <h3>Focus 3——「只要挑三件。」</h3>
-      <p>每天只挑 3 件今日任務，其餘收進可摺疊的「無日期」區。完成 3 件就放煙火慶祝——其他都是加分。</p>
+      <h3 data-i18n="c1_t"></h3>
+      <p data-i18n="c1_p"></p>
     </div>
     <div class="card">
       <span class="icon">🔁</span>
-      <h3>每日習慣——「把事情變小。」</h3>
-      <p>兩分鐘習慣、彈性連續紀錄（中斷暫停不歸零 🔥）、7 天進度條、早晚例行分組。靈感來自《原子習慣》。</p>
+      <h3 data-i18n="c2_t"></h3>
+      <p data-i18n="c2_p"></p>
+    </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">⚡</span>
+      <h3 data-i18n="c3_t"></h3>
+      <p data-i18n="c3_p"></p>
+    </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">✍️</span>
+      <h3 data-i18n="c4_t"></h3>
+      <p data-i18n="c4_p"></p>
+    </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">🗂</span>
+      <h3 data-i18n="c5_t"></h3>
+      <p data-i18n="c5_p"></p>
     </div>
     <div class="card">
       <span class="icon">😌</span>
-      <h3>無羞愧 UI</h3>
-      <p>每個像素都檢視過羞愧與焦慮觸發點。週回顧只看你完成了什麼，絕口不提沒做的。</p>
+      <h3 data-i18n="c6_t"></h3>
+      <p data-i18n="c6_p"></p>
     </div>
     <div class="card">
       <span class="icon">🎲</span>
-      <h3>「幫我挑一件」</h3>
-      <p>選擇癱瘓是真的。選擇你現在的精力等級，骰子隨機挑一件符合的任務——「就做這件 ✓」。</p>
+      <h3 data-i18n="c7_t"></h3>
+      <p data-i18n="c7_p"></p>
     </div>
     <div class="card">
       <span class="icon">⏰</span>
-      <h3>任務提醒</h3>
-      <p>每個任務可設提醒時間，到期當天準時通知。點通知直接開任務、直接完成。重開機與同步後自動重排。</p>
+      <h3 data-i18n="c8_t"></h3>
+      <p data-i18n="c8_p"></p>
     </div>
     <div class="card">
       <span class="icon">📅</span>
-      <h3>日曆自動同步</h3>
-      <p>任務設日期 → 自動建日曆事件；改日期 → 事件跟著搬；完成 → 事件移除。支援 CalDAV（Fastmail、Nextcloud）與 Google 日曆。</p>
+      <h3 data-i18n="c9_t"></h3>
+      <p data-i18n="c9_p"></p>
     </div>
     <div class="card">
       <span class="icon">📝</span>
-      <h3>Markdown Vault</h3>
-      <p>一切皆純文字 Markdown，存在你自己的資料夾。在 Obsidian、nvim 或任何編輯器雙向編輯，Tsosu 下次同步自動接上。</p>
+      <h3 data-i18n="c10_t"></h3>
+      <p data-i18n="c10_p"></p>
     </div>
     <div class="card">
       <span class="icon">📥</span>
-      <h3>Todoist 匯入</h3>
-      <p>從設定匯入 Todoist CSV 匯出檔——任務自動去重、寫成 Markdown、推進你的 vault。</p>
+      <h3 data-i18n="c11_t"></h3>
+      <p data-i18n="c11_p"></p>
+    </div>
+    <div class="card">
+      <span class="icon">🌐</span>
+      <h3 data-i18n="c12_t"></h3>
+      <p data-i18n="c12_p"></p>
     </div>
   </div>
 </section>
 
 <section class="wrap" id="install">
-  <h2>安裝</h2>
-  <p class="section-sub">推薦使用 Obtainium——直接追蹤 GitHub Releases，新版自動通知更新。</p>
+  <h2 data-i18n="install_title"></h2>
+  <p class="section-sub" data-i18n="install_sub"></p>
   <div class="install">
-    <h3 style="margin-bottom:4px">透過 Obtainium 安裝（推薦）</h3>
+    <h3 style="margin-bottom:4px" data-i18n="install_h3"></h3>
     <ol class="steps">
-      <li>在 Google Play 或 F-Droid 安裝 <a href="https://github.com/ImranR98/Obtainium" target="_blank" rel="noopener">Obtainium</a>。</li>
-      <li>打開 Obtainium，點右下角 <strong>＋</strong> 新增應用程式。</li>
-      <li>App 來源選 <strong>GitHub</strong>，輸入 <span class="path">soanseng/tsosu</span></li>
-      <li>點<strong>新增</strong>——Obtainium 會自動下載最新版 APK；之後有新 Release 也會自動提醒更新。</li>
+      <li data-i18n-html="step1"></li>
+      <li data-i18n-html="step2"></li>
+      <li data-i18n-html="step3"></li>
+      <li data-i18n-html="step4"></li>
     </ol>
-    <p class="alt">不想用 Obtainium？直接到 <a href="https://github.com/soanseng/tsosu/releases">Releases 頁面</a>下載最新 <code>.apk</code> 安裝即可。Android 會詢問「安裝未知應用程式」權限，允許後即可安裝。</p>
+    <p class="alt" data-i18n-html="install_alt"></p>
   </div>
 </section>
 
 <section class="wrap" id="sync">
-  <h2>跨裝置同步</h2>
-  <p class="section-sub">本地優先——100% 離線可用、無帳號。資料是純 Markdown 檔案，用任何檔案同步工具帶到每台裝置。</p>
+  <h2 data-i18n="sync_title"></h2>
+  <p class="section-sub" data-i18n="sync_sub"></p>
   <table>
-    <tr><th>裝置</th><th>使用方式</th></tr>
-    <tr><td>📱 手機</td><td>Tsosu App（完整 UI、習慣追蹤、Focus 3、提醒）</td></tr>
-    <tr><td>💻 電腦</td><td>Obsidian + <a href="https://publish.obsidian.md/tasks/" target="_blank" rel="noopener">Tasks 外掛</a>——核取方塊、到期日、篩選器</td></tr>
-    <tr><td>⌨️ 終端機</td><td>nvim / 任何文字編輯器——就只是 Markdown</td></tr>
+    <tr><th data-i18n="sync_th1"></th><th data-i18n="sync_th2"></th></tr>
+    <tr><td>📱 <span data-i18n="sync_r1c1"></span></td><td data-i18n-html="sync_r1c2"></td></tr>
+    <tr><td>💻 <span data-i18n="sync_r2c1"></span></td><td data-i18n-html="sync_r2c2"></td></tr>
+    <tr><td>⌨️ <span data-i18n="sync_r3c1"></span></td><td data-i18n="sync_r3c2"></td></tr>
   </table>
-  <p style="margin-top:16px;font-size:15px;color:var(--muted)">資料夾用 <a href="https://syncthing.net/" target="_blank" rel="noopener">Syncthing</a> 或 Obsidian Sync 同步，任務就出現在每台裝置上。檔案格式完整文件見 <a href="https://github.com/soanseng/tsosu#vault-data-format">README</a>。</p>
+  <p style="margin-top:16px;font-size:15px;color:var(--muted)" data-i18n-html="sync_note"></p>
 </section>
 
 <section class="wrap">
   <div class="privacy">
-    <h2>隱私至上</h2>
-    <p>無帳號、無伺服器、無分析、無追蹤、不收集任何資料。你的任務只存在你自己的裝置與 vault 裡。</p>
+    <h2 data-i18n="privacy_t"></h2>
+    <p data-i18n="privacy_p"></p>
   </div>
 </section>
 
 <footer class="wrap">
   <p class="links">
     <a href="https://github.com/soanseng/tsosu">GitHub</a>
-    <a href="https://github.com/soanseng/tsosu/releases">下載</a>
-    <a href="#install">安裝</a>
+    <a href="https://github.com/soanseng/tsosu/releases" data-i18n="footer_download"></a>
+    <a href="#install" data-i18n="footer_install"></a>
+    <a href="#" id="langFooter" data-i18n="footer_lang"></a>
   </p>
-  <p>Tsosu 做事 — 做事，用你的方式。</p>
+  <p data-i18n="footer_tagline"></p>
 </footer>
+
+<script>
+(function () {
+  var I18N = {
+    zh: {
+      title: "Tsosu 做事 — 為 ADHD 設計的任務管理器",
+      hero_h1: "為 ADHD 設計的任務管理器",
+      hero_sub: "你的任務就是你的 Markdown 檔案",
+      hero_tagline: "由精神科醫師設計——把事情變小、變簡單、慶祝進度。本地優先、無帳號、無追蹤，直接同步你的 Obsidian vault。",
+      cta_install: "立即安裝",
+      cta_github: "GitHub 原始碼",
+      badges: "Android 原生（Kotlin + Compose）・免費・無廣告・無分析追蹤",
+      chip: "1.1.0 新",
+      features_title: "為什麼是 Tsosu？",
+      features_sub: "多數任務管理器是為神經典型大腦設計的——逾期數字、無盡選項、落後時的罪惡感。Tsosu 不一樣。",
+      c1_t: "Focus 3——「只要挑三件。」",
+      c1_p: "每天只挑 3 件今日任務，其餘收進可摺疊的「無日期」區。完成 3 件就放煙火慶祝——其他都是加分。",
+      c2_t: "每日習慣——「把事情變小。」",
+      c2_p: "兩分鐘習慣、彈性連續紀錄（中斷暫停不歸零 🔥）、7 天進度條、早晚例行分組、特定星期幾排程。靈感來自《原子習慣》。",
+      c3_t: "能量與連續護盾",
+      c3_p: "完成任務與習慣賺 ⚡ 能量；花 ⚡30 買護盾，漏掉的一天自動補上，連續紀錄照樣延續。Duolingo 式激勵，沒有罪惡感。",
+      c4_t: "速記語法",
+      c4_p: "標題直接打「Buy milk every mon」「p1」「every morning until 8/31」——重複規則、優先級、起訖日期自動解析。同樣的關鍵字在 Obsidian 也通。",
+      c5_t: "板面與儲存檢視",
+      c5_p: "看板依專案分欄，欄下顯示連結的習慣；清單/板面隨時切換。篩選條件（專案、到期日、優先級、能量）可存成具名檢視。",
+      c6_t: "無羞愧 UI",
+      c6_p: "每個像素都檢視過羞愧與焦慮觸發點。週回顧只看你完成了什麼，絕口不提沒做的。",
+      c7_t: "「幫我挑一件」",
+      c7_p: "選擇癱瘓是真的。選擇你現在的精力等級，骰子隨機挑一件符合的任務——「就做這件 ✓」。",
+      c8_t: "任務提醒",
+      c8_p: "每個任務可設提醒時間，到期當天準時通知。點通知直接開任務、直接完成。重開機與同步後自動重排。",
+      c9_t: "日曆自動同步",
+      c9_p: "任務設日期 → 自動建日曆事件；改日期 → 事件跟著搬；完成 → 事件移除。從日曆點日期快速新增，支援 CalDAV 與 Google 日曆。",
+      c10_t: "Markdown Vault",
+      c10_p: "一切皆純文字 Markdown，存在你自己的資料夾。在 Obsidian、nvim 或任何編輯器雙向編輯，變更自動偵測、自動回流。",
+      c11_t: "Todoist 匯入",
+      c11_p: "從設定匯入 Todoist CSV 匯出檔——任務自動去重、寫成 Markdown、推進你的 vault。",
+      c12_t: "English / 繁體中文",
+      c12_p: "App 內一鍵切換語言。設定裡附重複與速記語法教學、版本資訊。",
+      install_title: "安裝",
+      install_sub: "推薦使用 Obtainium——直接追蹤 GitHub Releases，新版自動通知更新。",
+      install_h3: "透過 Obtainium 安裝（推薦）",
+      step1: "在 Google Play 或 F-Droid 安裝 <a href=\"https://github.com/ImranR98/Obtainium\" target=\"_blank\" rel=\"noopener\">Obtainium</a>。",
+      step2: "打開 Obtainium，點右下角 <strong>＋</strong> 新增應用程式。",
+      step3: "App 來源選 <strong>GitHub</strong>，輸入 <span class=\"path\">soanseng/tsosu</span>",
+      step4: "點<strong>新增</strong>——Obtainium 會自動下載最新版 APK；之後有新 Release 也會自動提醒更新。",
+      install_alt: "不想用 Obtainium？直接到 <a href=\"https://github.com/soanseng/tsosu/releases\">Releases 頁面</a>下載最新 <code>.apk</code> 安裝即可。Android 會詢問「安裝未知應用程式」權限，允許後即可安裝。",
+      sync_title: "跨裝置同步",
+      sync_sub: "本地優先——100% 離線可用、無帳號。資料是純 Markdown 檔案，用任何檔案同步工具帶到每台裝置。",
+      sync_th1: "裝置", sync_th2: "使用方式",
+      sync_r1c1: "手機", sync_r1c2: "Tsosu App（完整 UI、習慣追蹤、Focus 3、提醒）",
+      sync_r2c1: "電腦", sync_r2c2: "Obsidian + <a href=\"https://publish.obsidian.md/tasks/\" target=\"_blank\" rel=\"noopener\">Tasks 外掛</a>——核取方塊、到期日、篩選器",
+      sync_r3c1: "終端機", sync_r3c2: "nvim / 任何文字編輯器——就只是 Markdown",
+      sync_note: "資料夾用 <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> 或 Obsidian Sync 同步，任務就出現在每台裝置上。檔案格式完整文件見 <a href=\"https://github.com/soanseng/tsosu#vault-data-format\">README</a>。",
+      privacy_t: "隱私至上",
+      privacy_p: "無帳號、無伺服器、無分析、無追蹤、不收集任何資料。你的任務只存在你自己的裝置與 vault 裡。",
+      footer_download: "下載", footer_install: "安裝", footer_lang: "English",
+      footer_tagline: "Tsosu 做事 — 做事，用你的方式。",
+      switch_to: "EN"
+    },
+    en: {
+      title: "Tsosu 做事 — A task manager designed for ADHD",
+      hero_h1: "A task manager designed for ADHD",
+      hero_sub: "Your tasks are your markdown files",
+      hero_tagline: "Designed by a psychiatrist — make it small, make it easy, celebrate progress. Local-first, no account, no tracking, syncing straight to your Obsidian vault.",
+      cta_install: "Get Tsosu",
+      cta_github: "Source on GitHub",
+      badges: "Native Android (Kotlin + Compose) · Free · No ads · No analytics",
+      chip: "NEW 1.1.0",
+      features_title: "Why Tsosu?",
+      features_sub: "Most task managers are designed for neurotypical brains — overdue counters, endless options, guilt when you fall behind. Tsosu is different.",
+      c1_t: "Focus 3 — “Just pick three.”",
+      c1_p: "Pick only 3 tasks for today; the rest folds into a collapsible “no date” section. Complete all 3 and the fireworks fly — everything else is bonus.",
+      c2_t: "Daily habits — “Make it small.”",
+      c2_p: "Two-minute habits, flexible streaks (they pause, not reset 🔥), a 7-day progress bar, morning/evening routines, and specific-weekday schedules. Inspired by Atomic Habits.",
+      c3_t: "Energy & streak freezes",
+      c3_p: "Completing tasks and habits earns ⚡ energy; spend ⚡30 on a freeze that automatically bridges a missed day so your streak survives. Duolingo-style motivation, minus the guilt.",
+      c4_t: "Quick-add syntax",
+      c4_p: "Type “Buy milk every mon”, “p1”, or “every morning until 8/31” right in the title — recurrence, priority, and date bounds are parsed automatically. The same words work in Obsidian.",
+      c5_t: "Board & saved views",
+      c5_p: "A kanban board with a column per project — real names, attached habits — plus a list/board toggle. Save any filter combination (project, due date, priority, energy) as a named view.",
+      c6_t: "No-shame UI",
+      c6_p: "Every pixel is reviewed for shame and anxiety triggers. The weekly review shows only what you completed — never what you didn't.",
+      c7_t: "“Pick one for me”",
+      c7_p: "Decision paralysis is real. Pick your current energy level and the dice chooses a matching task — “just do this one ✓”.",
+      c8_t: "Task reminders",
+      c8_p: "Set a reminder time per task; a notification fires on the due date. Tap to open, mark done straight from the notification. Resyncs after reboot and every vault sync.",
+      c9_t: "Calendar auto-sync",
+      c9_p: "Set a date → an event appears; change it → the event moves; complete the task → it's removed. Quick-add from the calendar carries the tapped day. CalDAV & Google Calendar.",
+      c10_t: "Markdown vault",
+      c10_p: "Everything is plain markdown in a folder you own. Edit from Obsidian, nvim, or any editor — changes are auto-detected and flow back in.",
+      c11_t: "Todoist import",
+      c11_p: "Import your Todoist CSV export from Settings — tasks are deduplicated, written as markdown, and pushed into your vault.",
+      c12_t: "English / 繁體中文",
+      c12_p: "Switch languages in-app. Settings includes a recurrence & quick-syntax reference and a version footer.",
+      install_title: "Install",
+      install_sub: "Obtainium is recommended — it tracks GitHub Releases directly and notifies you about updates.",
+      install_h3: "Via Obtainium (recommended)",
+      step1: "Install <a href=\"https://github.com/ImranR98/Obtainium\" target=\"_blank\" rel=\"noopener\">Obtainium</a> from Google Play or F-Droid.",
+      step2: "Open Obtainium and tap the <strong>＋</strong> button to add an app.",
+      step3: "Set the source to <strong>GitHub</strong> and enter <span class=\"path\">soanseng/tsosu</span>",
+      step4: "Tap <strong>Add</strong> — the latest APK downloads automatically, and future releases trigger update notifications.",
+      install_alt: "Prefer not to use Obtainium? Grab the latest <code>.apk</code> from the <a href=\"https://github.com/soanseng/tsosu/releases\">Releases page</a>. Android will ask for the “install unknown apps” permission — allow it and install.",
+      sync_title: "Cross-device sync",
+      sync_sub: "Local-first — 100% offline, no account. Your data is plain markdown files; carry it to every device with any file-sync tool.",
+      sync_th1: "Where", sync_th2: "How",
+      sync_r1c1: "Phone", sync_r1c2: "Tsosu app (full UI, habit tracking, Focus 3, reminders)",
+      sync_r2c1: "Desktop", sync_r2c2: "Obsidian + <a href=\"https://publish.obsidian.md/tasks/\" target=\"_blank\" rel=\"noopener\">Tasks plugin</a> — checkboxes, due dates, filters",
+      sync_r3c1: "Terminal", sync_r3c2: "nvim / any text editor — it's just markdown",
+      sync_note: "Sync the folder with <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> or Obsidian Sync and your tasks appear on every device. The full file-format documentation lives in the <a href=\"https://github.com/soanseng/tsosu#vault-data-format\">README</a>.",
+      privacy_t: "Privacy first",
+      privacy_p: "No account, no server, no analytics, no tracking, no data collection. Your tasks live only on your devices and in your vault.",
+      footer_download: "Download", footer_install: "Install", footer_lang: "中文",
+      footer_tagline: "Tsosu 做事 — getting things done, your way.",
+      switch_to: "中文"
+    }
+  };
+
+  function apply(lang) {
+    var dict = I18N[lang] || I18N.zh;
+    document.documentElement.lang = lang === "en" ? "en" : "zh-TW";
+    document.title = dict.title;
+    var els = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < els.length; i++) {
+      var k = els[i].getAttribute("data-i18n");
+      if (dict[k] !== undefined) els[i].textContent = dict[k];
+    }
+    els = document.querySelectorAll("[data-i18n-html]");
+    for (var j = 0; j < els.length; j++) {
+      var kh = els[j].getAttribute("data-i18n-html");
+      if (dict[kh] !== undefined) els[j].innerHTML = dict[kh];
+    }
+    document.getElementById("langSwitch").textContent = dict.switch_to;
+    try { localStorage.setItem("tsosu-lang", lang); } catch (e) {}
+  }
+
+  function current() {
+    try {
+      var saved = localStorage.getItem("tsosu-lang");
+      if (saved === "en" || saved === "zh") return saved;
+    } catch (e) {}
+    var n = (navigator.language || "").toLowerCase();
+    return n.indexOf("zh") === 0 ? "zh" : "en";
+  }
+
+  function toggle() { apply(current() === "zh" ? "en" : "zh"); }
+
+  document.getElementById("langSwitch").addEventListener("click", toggle);
+  document.getElementById("langFooter").addEventListener("click", function (e) { e.preventDefault(); toggle(); });
+  apply(current());
+})();
+</script>
 
 </body>
 </html>
