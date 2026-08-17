@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tsosu wordmark: capital T whose crossbar sweeps full-width like a roof over
+     the lowercase "so"; teal dot in the o marks focus. Stroke-built glyph. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.93"
+        android:scaleY="0.93"
+        android:pivotX="54"
+        android:pivotY="54">
+        <!-- T: crossbar (the roof) -->
+        <path
+            android:pathData="M 24.57 36.0 H 83.43"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="9.5"
+            android:strokeLineCap="round" />
+        <!-- T: stem -->
+        <path
+            android:pathData="M 31.82 36.0 V 63.5"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="9.5"
+            android:strokeLineCap="round" />
+        <!-- s -->
+        <path
+            android:pathData="M 55.72 51.18 C 53.32 49.48 41.92 51.75 41.92 55.16 C 41.92 57.43 53.72 56.58 54.92 59.42 C 55.92 62.54 43.92 65.67 42.52 64.67"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="6.8"
+            android:strokeLineCap="round" />
+        <!-- o -->
+        <path
+            android:pathData="M 63.12 58.00 a 7.2 7.2 0 1 0 14.40 0 a 7.2 7.2 0 1 0 -14.40 0"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="6.8"
+            android:strokeLineCap="round" />
+        <!-- focus dot -->
+        <path
+            android:pathData="M 70.33 58.0 m -1.7 0 a 1.7 1.7 0 1 0 3.4 0 a 1.7 1.7 0 1 0 -3.4 0"
+            android:fillColor="#FF5EEAD4" />
+    </group>
+</vector>
