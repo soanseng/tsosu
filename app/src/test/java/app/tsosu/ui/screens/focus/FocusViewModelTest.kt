@@ -4,7 +4,6 @@ import app.tsosu.domain.model.DailyFocus
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.repository.FocusRepository
 import app.tsosu.domain.repository.TaskRepository
-import app.tsosu.domain.usecase.ConvertTaskToHabitUseCase
 import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.SetDailyFocusUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
@@ -63,7 +62,6 @@ class FocusViewModelTest {
             toggleTaskDone = mockk(relaxed = true),
             reminderScheduler = mockk(relaxed = true),
             setTaskStatus = mockk(relaxed = true),
-            convertTaskToHabit = mockk(relaxed = true),
             taskRepository = taskRepository,
             focusRepository = focusRepository,
             setDailyFocus = setDailyFocus,

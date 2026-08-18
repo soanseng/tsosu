@@ -6,8 +6,6 @@ import app.tsosu.domain.repository.IcsExporter
 import app.tsosu.domain.repository.RoutineRepository
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.CompleteHabitUseCase
-import app.tsosu.domain.usecase.CreateHabitUseCase
-import app.tsosu.domain.usecase.ConvertTaskToHabitUseCase
 import app.tsosu.domain.usecase.CreateTaskUseCase
 import app.tsosu.domain.usecase.DeleteTaskUseCase
 import app.tsosu.domain.usecase.ExportIcsUseCase
@@ -38,12 +36,10 @@ object UseCaseModule {
     @Provides fun provideSetDailyFocus(focus: FocusRepository, task: TaskRepository) = SetDailyFocusUseCase(focus, task)
     @Provides fun provideGetStaleTaskIds(repo: TaskRepository) = GetStaleTaskIdsUseCase(repo)
     @Provides fun provideGetWeeklyReview(repo: FocusRepository) = GetWeeklyReviewUseCase(repo)
-    @Provides fun provideCreateHabit(repo: HabitRepository) = CreateHabitUseCase(repo)
     @Provides fun provideCompleteHabit(repo: HabitRepository) = CompleteHabitUseCase(repo)
     @Provides fun provideGetTodayHabits(repo: HabitRepository) = GetTodayHabitsUseCase(repo)
     @Provides fun provideGetRoutine(repo: RoutineRepository) = GetRoutineUseCase(repo)
     @Provides fun provideUpdateTask(repo: TaskRepository) = UpdateTaskUseCase(repo)
     @Provides fun provideDeleteTask(repo: TaskRepository) = DeleteTaskUseCase(repo)
-    @Provides fun provideConvertTaskToHabit(task: TaskRepository, habit: HabitRepository) = ConvertTaskToHabitUseCase(task, habit)
     @Provides fun provideExportIcs(repo: TaskRepository, icsExporter: IcsExporter) = ExportIcsUseCase(repo, icsExporter)
 }

@@ -7,7 +7,6 @@ import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
-import app.tsosu.domain.usecase.ConvertTaskToHabitUseCase
 import app.tsosu.domain.usecase.DeleteTaskUseCase
 import app.tsosu.domain.usecase.UpdateTaskUseCase
 import app.tsosu.notification.ReminderScheduler
@@ -39,7 +38,6 @@ data class TaskDetailState(
     val reminderTime: LocalTime? = null,
     val saved: Boolean = false,
     val deleted: Boolean = false,
-    val converted: Boolean = false,
 )
 
 @HiltViewModel
@@ -47,7 +45,6 @@ class TaskDetailViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val updateTaskUseCase: UpdateTaskUseCase,
     private val deleteTaskUseCase: DeleteTaskUseCase,
-    private val convertTaskToHabit: ConvertTaskToHabitUseCase,
     private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
@@ -60,7 +57,7 @@ class TaskDetailViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             _state.value = TaskDetailState()
             taskRepository.getTask(taskId).filterNotNull().collect { task ->
-                if (!_state.value.saved && !_state.value.deleted && !_state.value.converted) {
+                if (!_state.value.saved && !_state.value.deleted) {
                     _state.value = TaskDetailState(
                         task = task,
                         title = task.title,
@@ -160,16 +157,6 @@ class TaskDetailViewModel @Inject constructor(
             deleteTaskUseCase(task.id)
             reminderScheduler.cancel(task.id)
             _state.value = _state.value.copy(deleted = true)
-        }
-    }
-
-    fun convertToHabit() {
-        val task = _state.value.task ?: return
-        viewModelScope.launch {
-            convertTaskToHabit(task.id).onSuccess {
-                reminderScheduler.cancel(task.id)
-                _state.value = _state.value.copy(converted = true)
-            }
         }
     }
 }

@@ -8,7 +8,6 @@ import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.repository.FocusRepository
-import app.tsosu.domain.usecase.ConvertTaskToHabitUseCase
 import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.SetDailyFocusUseCase
@@ -47,7 +46,6 @@ class FocusViewModel @Inject constructor(
     private val toggleTaskDone: ToggleTaskDoneUseCase,
     private val reminderScheduler: ReminderScheduler,
     private val setTaskStatus: SetTaskStatusUseCase,
-    private val convertTaskToHabit: ConvertTaskToHabitUseCase,
     private val taskRepository: TaskRepository,
     private val focusRepository: FocusRepository,
     private val setDailyFocus: SetDailyFocusUseCase,
@@ -126,14 +124,6 @@ class FocusViewModel @Inject constructor(
             val task = taskRepository.getTask(taskId).first()
                 ?: return@launch
             taskRepository.updateTask(task.copy(dueDate = tomorrow.atTime(9, 0)))
-        }
-    }
-
-    fun convertToHabit(taskId: String) {
-        viewModelScope.launch {
-            convertTaskToHabit(taskId).onSuccess {
-                reminderScheduler.cancel(taskId)
-            }
         }
     }
 }

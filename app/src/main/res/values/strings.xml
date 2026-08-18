@@ -333,7 +333,6 @@
     <string name="a11y_pick_date">Pick date</string>
     <string name="a11y_pick_time">Pick time</string>
     <string name="task_edit">Edit</string>
-    <string name="task_convert_to_habit">Convert to habit</string>
     <string name="task_set_focus_today">Set as today\'s Focus</string>
     <string name="view_switcher">Views</string>
     <string name="view_focus">Focus</string>

@@ -82,7 +82,6 @@ fun TaskListItem(
     onToggleDone: (String) -> Unit,
     onStatusChange: (String, TaskStatus) -> Unit = { _, _ -> },
     onClick: (Task) -> Unit,
-    onLongClick: ((Task) -> Unit)? = null,
     onPostpone: ((String) -> Unit)? = null,
     onSetFocus: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -95,7 +94,6 @@ fun TaskListItem(
             onToggleDone = onToggleDone,
             onStatusChange = onStatusChange,
             onClick = onClick,
-            onLongClick = onLongClick,
             onSetFocus = onSetFocus,
             modifier = modifier,
         )
@@ -167,7 +165,6 @@ fun TaskListItem(
             onToggleDone = onToggleDone,
             onStatusChange = onStatusChange,
             onClick = onClick,
-            onLongClick = onLongClick,
             onSetFocus = onSetFocus,
         )
     }
@@ -180,7 +177,6 @@ private fun TaskListItemContent(
     onToggleDone: (String) -> Unit,
     onStatusChange: (String, TaskStatus) -> Unit,
     onClick: (Task) -> Unit,
-    onLongClick: ((Task) -> Unit)? = null,
     onSetFocus: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -273,16 +269,6 @@ private fun TaskListItemContent(
                         onClick(task)
                     },
                 )
-                if (onLongClick != null) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.task_convert_to_habit)) },
-                        onClick = {
-                            showActionMenu = false
-                            haptic.confirm()
-                            onLongClick(task)
-                        },
-                    )
-                }
                 if (onSetFocus != null && !task.isFocus) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.task_set_focus_today)) },

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EventAvailable
-import androidx.compose.material.icons.filled.Loop
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -84,8 +83,8 @@ fun TaskDetailSheet(
         viewModel.loadTask(taskId)
     }
 
-    LaunchedEffect(state.saved, state.deleted, state.converted) {
-        if (state.saved || state.deleted || state.converted) onDismiss()
+    LaunchedEffect(state.saved, state.deleted) {
+        if (state.saved || state.deleted) onDismiss()
     }
 
     if (state.task == null) return
@@ -315,21 +314,6 @@ fun TaskDetailSheet(
             enabled = state.title.isNotBlank(),
         ) {
             Text(stringResource(R.string.task_detail_save))
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedButton(
-            onClick = {
-                haptic.confirm()
-                viewModel.convertToHabit()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = state.title.isNotBlank(),
-        ) {
-            Icon(Icons.Default.Loop, contentDescription = null)
-            Spacer(Modifier.padding(start = 4.dp))
-            Text(stringResource(R.string.task_convert_to_habit))
         }
 
         Spacer(Modifier.height(8.dp))

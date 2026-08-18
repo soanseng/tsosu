@@ -311,7 +311,6 @@
         <item quantity="other">%d 個逾期任務</item>
     </plurals>
     <string name="task_edit">編輯</string>
-    <string name="task_convert_to_habit">轉成習慣</string>
     <string name="task_set_focus_today">設為今日 Focus</string>
     <string name="view_switcher">檢視</string>
     <string name="view_focus">專注</string>
