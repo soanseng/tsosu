@@ -26,8 +26,7 @@ object RecurrenceExpander {
         val parts = parseRule(rule) ?: return null
         val interval = parts.interval
         val anchor = anchorDue ?: today
-
-        return when (parts.freq) {
+        val next = when (parts.freq) {
             "DAILY" -> stepByPeriod(anchor, today) { it.plus(DatePeriod(days = interval)) }
             "WEEKLY" -> {
                 val byDay = parts.byDay
@@ -45,9 +44,14 @@ object RecurrenceExpander {
             }
             "YEARLY" -> stepByPeriod(anchor, today) { it.plus(DatePeriod(years = interval)) }
             else -> null
-        }
-    }
+        } ?: return null
 
+        // A bounded rule (`until <date>`) ends the series: the occurrence on the
+        // UNTIL date is the last one, so a next date past the bound means the task
+        // completes like a plain task instead of recurring.
+        val until = parts.until ?: return next
+        return next.takeIf { it <= until }
+    }
     /** Repeatedly steps from the anchor until the date is strictly after today. */
     private inline fun stepByPeriod(
         anchor: LocalDate,
@@ -105,13 +109,6 @@ object RecurrenceExpander {
         return LocalDate(year, monthNumber, 1).plus(DatePeriod(days = clamped - 1))
     }
 
-    private data class RuleParts(
-        val freq: String,
-        val interval: Int,
-        val byDay: Set<DayOfWeek>?,
-        val byMonthDay: Int?,
-    )
-
     private fun parseRule(rule: String): RuleParts? {
         val kv = rule.removePrefix("RRULE:")
             .split(";")
@@ -124,9 +121,21 @@ object RecurrenceExpander {
         val interval = kv["INTERVAL"]?.toIntOrNull()?.takeIf { it > 0 } ?: 1
         val byDay = kv["BYDAY"]?.split(",")?.mapNotNull { it.toDayOfWeek() }?.toSet()
         val byMonthDay = kv["BYMONTHDAY"]?.toIntOrNull()
-        return RuleParts(freq, interval, byDay, byMonthDay)
+        val until = kv["UNTIL"]?.take(8)?.let {
+            runCatching {
+                LocalDate(it.take(4).toInt(), it.substring(4, 6).toInt(), it.substring(6, 8).toInt())
+            }.getOrNull()
+        }
+        return RuleParts(freq, interval, byDay, byMonthDay, until)
     }
 
+    private data class RuleParts(
+        val freq: String,
+        val interval: Int,
+        val byDay: Set<DayOfWeek>?,
+        val byMonthDay: Int?,
+        val until: LocalDate?,
+    )
     private fun String.toDayOfWeek(): DayOfWeek? = when (uppercase()) {
         "MO" -> DayOfWeek.MONDAY
         "TU" -> DayOfWeek.TUESDAY

@@ -124,4 +124,29 @@ class RecurrenceExpanderTest {
             RecurrenceExpander.nextDueDate("RRULE:FREQ=DAILY", null, today),
         )
     }
+
+    @Test
+    fun `bounded rule recurs while next is within until`() {
+        // "daily until 8/19": completing today's instance still schedules tomorrow.
+        assertEquals(
+            LocalDate(2026, 8, 18),
+            RecurrenceExpander.nextDueDate(
+                "FREQ=DAILY;UNTIL=20260819T235959Z",
+                today,
+                today,
+            ),
+        )
+    }
+
+    @Test
+    fun `bounded rule ends when next passes until`() {
+        // "daily until 8/17" (today): the series is over -> plain completion.
+        assertNull(
+            RecurrenceExpander.nextDueDate(
+                "FREQ=DAILY;UNTIL=20260817T235959Z",
+                today,
+                today,
+            ),
+        )
+    }
 }
