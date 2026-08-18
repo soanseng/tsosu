@@ -17,7 +17,7 @@ Tsosu is different. It's built on clinical understanding of ADHD and the princip
 - **⚡ Energy & streak freezes (Duolingo-style)** — completing tasks and habits earns energy; spend ⚡30 on a streak freeze that automatically bridges a missed day.
 - **✍️ Quick-add syntax** — type `every mon`, `daily`, `every morning until 8/31`, or `p1`–`p4` right in the task title; the same words work in Obsidian.
 - **🗂 Board view & saved views** — kanban columns per project with attached habits, list/board toggle, filter presets you can save as named views.
-- **🔁 Habit editor** — per-habit reminders, specific weekdays (Mon/Wed/Fri), habit↔project links, task→habit conversion.
+- **🔁 Habit editor** — per-habit reminders, specific weekdays (Mon/Wed/Fri), habit↔project links.
 - **🌐 Language picker** — English / 繁體中文 in-app, plus a recurrence-keyword reference under Settings.
 
 ## Install
@@ -60,7 +60,7 @@ Inspired by Atomic Habits: start with something so small you can't say no. Tsosu
 - **Gentle accountability**: a weekly counter (`3/5`) and streak (`🔥7`) on every habit — progress shown, missed days not counted
 - **Habit editor**: set frequency, energy, reminder, linked project, and specific weekdays (`Mon/Wed/Fri` style) — the habit only appears on those days
 - **Real streaks**: 🔥 counts genuinely consecutive days, and each habit can carry its own reminder time
-- Convert any task into a habit straight from the task menu
+- Recurring tasks are habits — any task with a 🔁 rule shows up on the Habits tab
 
 ### 😌 No Shame UI — "Still on your list."
 
@@ -149,7 +149,7 @@ Tasks with dates automatically appear on your calendar. No double entry.
 - Complete the task → event removed
 - Time estimate → calendar event duration
 - **Quick-add from the calendar** pre-fills the tapped day — tap any date, type the task, it's scheduled
-- Works with **CalDAV** (Fastmail, Nextcloud) and **Google Calendar**
+- Works with **CalDAV** (Fastmail, Nextcloud) and **Google Calendar** — or publish `.ics` files to any plain **WebDAV** server
 
 ### 📥 Todoist Import — "Bring your list with you."
 

@@ -3,13 +3,20 @@ package app.tsosu.domain.usecase
 import app.tsosu.domain.repository.TaskRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class DeleteTaskUseCaseTest {
     private val taskRepository = mockk<TaskRepository>()
+
+    init {
+        every { taskRepository.getTask(any()) } returns flowOf(null)
+    }
+
     private val useCase = DeleteTaskUseCase(taskRepository)
 
     @Test

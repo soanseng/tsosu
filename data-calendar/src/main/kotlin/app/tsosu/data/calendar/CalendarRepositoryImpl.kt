@@ -2,6 +2,7 @@ package app.tsosu.data.calendar
 
 import app.tsosu.data.calendar.google.GoogleCalendarProvider
 import app.tsosu.data.calendar.google.GoogleCredentialStore
+import app.tsosu.data.calendar.google.GoogleCalendarCredentials
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.repository.CalendarInfo
 import app.tsosu.domain.repository.CalendarProvider
@@ -15,7 +16,6 @@ import com.google.auth.oauth2.GoogleCredentials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaType
@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit
 class CalendarRepositoryImpl(
     private val caldavCredentialStore: CalDavCredentialStore,
     private val googleCredentialStore: GoogleCredentialStore,
+    private val webDavCredentialStore: WebDavCredentialStore,
     private val vEventBuilder: VEventBuilder = VEventBuilder(),
     private val googleProvider: GoogleCalendarProvider = GoogleCalendarProvider(),
 ) : CalendarRepository {
@@ -39,15 +40,18 @@ class CalendarRepositoryImpl(
     override fun isConfigured(): Flow<Boolean> = combine(
         caldavCredentialStore.isConfigured(),
         googleCredentialStore.isConfigured(),
-    ) { caldav, google -> caldav || google }
+        webDavCredentialStore.isConfigured(),
+    ) { caldav, google, webdav -> caldav || google || webdav }
 
     override fun activeProvider(): Flow<CalendarProvider> = combine(
         caldavCredentialStore.isConfigured(),
         googleCredentialStore.isConfigured(),
-    ) { caldav, google ->
+        webDavCredentialStore.isConfigured(),
+    ) { caldav, google, webdav ->
         when {
             google -> CalendarProvider.GOOGLE
             caldav -> CalendarProvider.CALDAV
+            webdav -> CalendarProvider.WEBDAV
             else -> CalendarProvider.NONE
         }
     }
@@ -68,8 +72,9 @@ class CalendarRepositoryImpl(
             val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
             response.use {
                 if (it.isSuccessful || it.code == 207) {
-                    // Disconnect Google if switching
+                    // Disconnect the others when switching
                     googleCredentialStore.clear()
+                    webDavCredentialStore.clear()
                     caldavCredentialStore.save(
                         calendarUrl = serverUrl,
                         email = email,
@@ -78,6 +83,35 @@ class CalendarRepositoryImpl(
                     Result.success(Unit)
                 } else {
                     Result.failure(Exception("CalDAV error: ${it.code}"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun configureWebdav(
+        baseUrl: String,
+        username: String,
+        password: String,
+    ): Result<Unit> {
+        return try {
+            val request = Request.Builder()
+                .url(baseUrl)
+                .method("PROPFIND", "".toRequestBody("application/xml".toMediaType()))
+                .header("Authorization", Credentials.basic(username, password))
+                .header("Depth", "0")
+                .build()
+
+            val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
+            response.use {
+                if (it.isSuccessful || it.code == 207) {
+                    googleCredentialStore.clear()
+                    caldavCredentialStore.clear()
+                    webDavCredentialStore.save(baseUrl, username, password)
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception("WebDAV error: ${it.code}"))
                 }
             }
         } catch (e: Exception) {
@@ -96,8 +130,9 @@ class CalendarRepositoryImpl(
             withContext(Dispatchers.IO) {
                 calendarService.calendarList().list().setMaxResults(1).execute()
             }
-            // Disconnect CalDAV if switching
+            // Disconnect the others when switching
             caldavCredentialStore.clear()
+            webDavCredentialStore.clear()
             googleCredentialStore.save(
                 accessToken = accessToken,
                 refreshToken = refreshToken,
@@ -112,6 +147,7 @@ class CalendarRepositoryImpl(
     override suspend fun disconnect() {
         caldavCredentialStore.clear()
         googleCredentialStore.clear()
+        webDavCredentialStore.clear()
     }
 
     override suspend fun listCalendars(): Result<List<CalendarInfo>> {
@@ -151,7 +187,10 @@ class CalendarRepositoryImpl(
         }
 
         val caldavCreds = caldavCredentialStore.getCredentials()
-            ?: return Result.failure(IllegalStateException("No calendar configured"))
+        val webdavCreds = webDavCredentialStore.getCredentials()
+        if (caldavCreds == null && webdavCreds == null) {
+            return Result.failure(IllegalStateException("No calendar configured"))
+        }
 
         val dueDate = task.dueDate
             ?: return Result.failure(IllegalArgumentException("Task has no due date"))
@@ -165,7 +204,14 @@ class CalendarRepositoryImpl(
             estimatedMinutes = task.estimatedMinutes,
         )
 
-        return putCaldavEvent(caldavCreds, uid, ical)
+        return when {
+            caldavCreds != null -> putIcs(
+                caldavCreds.calendarUrl, caldavCreds.email, caldavCreds.password, uid, ical,
+            )
+            else -> putIcs(
+                webdavCreds!!.baseUrl, webdavCreds.username, webdavCreds.password, uid, ical,
+            )
+        }
     }
 
     override suspend fun updateCalendarEvent(task: Task): Result<Unit> {
@@ -188,26 +234,24 @@ class CalendarRepositoryImpl(
         }
 
         val caldavCreds = caldavCredentialStore.getCredentials()
-            ?: return Result.failure(IllegalStateException("No calendar configured"))
+        val webdavCreds = webDavCredentialStore.getCredentials()
+        if (caldavCreds == null && webdavCreds == null) {
+            return Result.failure(IllegalStateException("No calendar configured"))
+        }
 
-        return try {
-            val url = "${caldavCreds.calendarUrl.trimEnd('/')}/$eventId.ics"
-            val request = Request.Builder()
-                .url(url)
-                .delete()
-                .header("Authorization", Credentials.basic(caldavCreds.email, caldavCreds.password))
-                .build()
-
-            withContext(Dispatchers.IO) { client.newCall(request).execute() }.use {}
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+        return when {
+            caldavCreds != null -> deleteIcs(
+                caldavCreds.calendarUrl, caldavCreds.email, caldavCreds.password, eventId,
+            )
+            else -> deleteIcs(
+                webdavCreds!!.baseUrl, webdavCreds.username, webdavCreds.password, eventId,
+            )
         }
     }
 
     private suspend fun syncToGoogle(
         task: Task,
-        creds: app.tsosu.data.calendar.google.GoogleCalendarCredentials,
+        creds: GoogleCalendarCredentials,
     ): Result<String> {
         return try {
             val event = googleProvider.buildEvent(task)
@@ -237,18 +281,21 @@ class CalendarRepositoryImpl(
             .build()
     }
 
-    private suspend fun putCaldavEvent(
-        creds: CalDavCredentials,
+    /** PUTs `<base>/<uid>.ics` — works for both CalDAV servers and plain WebDAV. */
+    private suspend fun putIcs(
+        baseUrl: String,
+        username: String,
+        password: String,
         uid: String,
         ical: String,
     ): Result<String> {
         return try {
-            val url = "${creds.calendarUrl.trimEnd('/')}/$uid.ics"
+            val url = "${baseUrl.trimEnd('/')}/$uid.ics"
             val body = ical.toRequestBody("text/calendar; charset=utf-8".toMediaType())
             val request = Request.Builder()
                 .url(url)
                 .put(body)
-                .header("Authorization", Credentials.basic(creds.email, creds.password))
+                .header("Authorization", Credentials.basic(username, password))
                 .build()
 
             val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
@@ -256,9 +303,31 @@ class CalendarRepositoryImpl(
                 if (it.isSuccessful || it.code == 201 || it.code == 204) {
                     Result.success(uid)
                 } else {
-                    Result.failure(Exception("CalDAV PUT failed: ${it.code}"))
+                    Result.failure(Exception("WebDAV/CalDAV PUT failed: ${it.code}"))
                 }
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /** DELETEs `<base>/<eventId>.ics`. */
+    private suspend fun deleteIcs(
+        baseUrl: String,
+        username: String,
+        password: String,
+        eventId: String,
+    ): Result<Unit> {
+        return try {
+            val url = "${baseUrl.trimEnd('/')}/$eventId.ics"
+            val request = Request.Builder()
+                .url(url)
+                .delete()
+                .header("Authorization", Credentials.basic(username, password))
+                .build()
+
+            withContext(Dispatchers.IO) { client.newCall(request).execute() }.use {}
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

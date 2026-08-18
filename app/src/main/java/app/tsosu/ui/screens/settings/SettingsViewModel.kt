@@ -45,6 +45,9 @@ data class SettingsUiState(
     val caldavUrl: String = "",
     val caldavEmail: String = "",
     val caldavPassword: String = "",
+    val webdavUrl: String = "",
+    val webdavUsername: String = "",
+    val webdavPassword: String = "",
     val message: String? = null,
     val icsContent: String? = null,
     val pendingImportUri: Uri? = null,
@@ -265,6 +268,40 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateWebdavUrl(value: String) {
+        _uiState.value = _uiState.value.copy(webdavUrl = value)
+    }
+
+    fun updateWebdavUsername(value: String) {
+        _uiState.value = _uiState.value.copy(webdavUsername = value)
+    }
+
+    fun updateWebdavPassword(value: String) {
+        _uiState.value = _uiState.value.copy(webdavPassword = value)
+    }
+
+    fun connectWebdav() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val result = calendarRepository.configureWebdav(
+                state.webdavUrl, state.webdavUsername, state.webdavPassword,
+            )
+            result.fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        calendarProvider = CalendarProvider.WEBDAV,
+                        message = "WebDAV connected",
+                    )
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        message = "WebDAV error: ${e.message}",
+                    )
+                },
+            )
+        }
+    }
+
     fun disconnectCalendar() {
         viewModelScope.launch {
             calendarRepository.disconnect()
@@ -273,6 +310,9 @@ class SettingsViewModel @Inject constructor(
                 caldavUrl = "",
                 caldavEmail = "",
                 caldavPassword = "",
+                webdavUrl = "",
+                webdavUsername = "",
+                webdavPassword = "",
                 message = "Calendar disconnected",
             )
         }

@@ -34,6 +34,10 @@
 
     <!-- Inbox -->
     <string name="inbox_title">Inbox</string>
+    <string name="inbox_stale_title">🧹 %d tasks haven\'t moved in 2 weeks</string>
+    <string name="inbox_stale_body">Keeping them is completely fine — but if they no longer matter, you can clean them up in one tap.</string>
+    <string name="inbox_stale_clean">Clean up</string>
+    <string name="inbox_stale_later">Keep them</string>
     <string name="inbox_empty">Inbox zero! Nice work.</string>
 
     <!-- Upcoming -->
@@ -269,6 +273,11 @@
     <string name="settings_select_folder">Select Folder</string>
     <string name="settings_select_folder_desc">Select a folder to sync tasks and habits as markdown files. Use a Syncthing or Obsidian Sync folder for cross-device sync.</string>
     <string name="settings_caldav_placeholder">https://caldav.fastmail.com/dav/calendars/\u2026</string>
+    <string name="settings_webdav_title">WebDAV (publish .ics)</string>
+    <string name="settings_webdav_connected">WebDAV connected — dated tasks publish as .ics</string>
+    <string name="settings_webdav_user">Username</string>
+    <string name="settings_webdav_password">Password</string>
+    <string name="settings_webdav_placeholder">https://dav.example.com/tsosu/…</string>
 
     <!-- Task Status Display Names -->
     <string name="status_todo">To Do</string>

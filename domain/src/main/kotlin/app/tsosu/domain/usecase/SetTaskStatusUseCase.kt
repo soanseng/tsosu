@@ -6,8 +6,19 @@ import app.tsosu.domain.repository.TaskRepository
 
 class SetTaskStatusUseCase(
     private val taskRepository: TaskRepository,
+    private val calendarCoordinator: TaskCalendarCoordinator? = null,
 ) {
     suspend operator fun invoke(taskId: String, status: TaskStatus): Result<Task> {
-        return taskRepository.setStatus(taskId, status)
+        val result = taskRepository.setStatus(taskId, status)
+        result.getOrNull()?.let { task ->
+            calendarCoordinator?.let { coordinator ->
+                if (task.status.isTerminal) {
+                    coordinator.removeEvent(task)
+                } else {
+                    coordinator.syncTask(task)
+                }
+            }
+        }
+        return result
     }
 }

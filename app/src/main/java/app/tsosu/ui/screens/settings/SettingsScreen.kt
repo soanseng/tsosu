@@ -333,6 +333,20 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                 }
             }
+            CalendarProvider.WEBDAV -> {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            stringResource(R.string.settings_webdav_connected),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedButton(onClick = { viewModel.disconnectCalendar() }) {
+                            Text(stringResource(R.string.settings_calendar_disconnect))
+                        }
+                    }
+                }
+            }
             CalendarProvider.NONE -> {
                 var showCaldav by remember { mutableStateOf(false) }
 
@@ -383,6 +397,46 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     )
                     Button(
                         onClick = { viewModel.connectCaldav() },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.settings_caldav_connect))
+                    }
+                }
+
+                var showWebdav by remember { mutableStateOf(false) }
+                OutlinedButton(
+                    onClick = { showWebdav = !showWebdav },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.settings_webdav_title))
+                }
+
+                if (showWebdav) {
+                    OutlinedTextField(
+                        value = state.webdavUrl,
+                        onValueChange = { viewModel.updateWebdavUrl(it) },
+                        label = { Text(stringResource(R.string.settings_server_url)) },
+                        placeholder = { Text(stringResource(R.string.settings_webdav_placeholder)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = state.webdavUsername,
+                        onValueChange = { viewModel.updateWebdavUsername(it) },
+                        label = { Text(stringResource(R.string.settings_webdav_user)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = state.webdavPassword,
+                        onValueChange = { viewModel.updateWebdavPassword(it) },
+                        label = { Text(stringResource(R.string.settings_webdav_password)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                    )
+                    Button(
+                        onClick = { viewModel.connectWebdav() },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(stringResource(R.string.settings_caldav_connect))

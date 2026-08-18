@@ -34,6 +34,10 @@
 
     <!-- Inbox -->
     <string name="inbox_title">收件匣</string>
+    <string name="inbox_stale_title">🧹 有 %d 件任務兩週沒動了</string>
+    <string name="inbox_stale_body">留著也完全沒關係——如果已經不重要，一鍵清掉也可以。</string>
+    <string name="inbox_stale_clean">清掉它們</string>
+    <string name="inbox_stale_later">先留著</string>
     <string name="inbox_empty">收件匣清空了！做得好。</string>
 
     <!-- Upcoming -->
@@ -293,6 +297,11 @@
     <string name="settings_select_folder">選擇資料夾</string>
     <string name="settings_select_folder_desc">選擇資料夾，將任務與習慣以 markdown 檔案同步。使用 Syncthing 或 Obsidian Sync 資料夾可跨裝置同步。</string>
     <string name="settings_caldav_placeholder">https://caldav.fastmail.com/dav/calendars/…</string>
+    <string name="settings_webdav_title">WebDAV（發布 .ics）</string>
+    <string name="settings_webdav_connected">WebDAV 已連線——有日期的任務會發布成 .ics</string>
+    <string name="settings_webdav_user">使用者名稱</string>
+    <string name="settings_webdav_password">密碼</string>
+    <string name="settings_webdav_placeholder">https://dav.example.com/tsosu/…</string>
     <string name="status_todo">待辦</string>
     <string name="status_in_progress">進行中</string>
     <string name="status_on_hold">暫緩</string>

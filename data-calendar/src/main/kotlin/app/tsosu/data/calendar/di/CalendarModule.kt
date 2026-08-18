@@ -3,6 +3,7 @@ package app.tsosu.data.calendar.di
 import android.content.Context
 import app.tsosu.data.calendar.CalDavCredentialStore
 import app.tsosu.data.calendar.CalendarRepositoryImpl
+import app.tsosu.data.calendar.WebDavCredentialStore
 import app.tsosu.data.calendar.google.GoogleCredentialStore
 import app.tsosu.data.calendar.IcsExporterImpl
 import app.tsosu.domain.repository.CalendarRepository
@@ -32,6 +33,12 @@ object CalendarModule {
 
     @Provides
     @Singleton
+    fun provideWebDavCredentialStore(@ApplicationContext context: Context): WebDavCredentialStore {
+        return WebDavCredentialStore(context)
+    }
+
+    @Provides
+    @Singleton
     fun provideIcsExporter(): IcsExporter {
         return IcsExporterImpl()
     }
@@ -41,7 +48,8 @@ object CalendarModule {
     fun provideCalendarRepository(
         caldavCredentialStore: CalDavCredentialStore,
         googleCredentialStore: GoogleCredentialStore,
+        webDavCredentialStore: WebDavCredentialStore,
     ): CalendarRepository {
-        return CalendarRepositoryImpl(caldavCredentialStore, googleCredentialStore)
+        return CalendarRepositoryImpl(caldavCredentialStore, googleCredentialStore, webDavCredentialStore)
     }
 }

@@ -663,6 +663,9 @@ data class SyncQueueEntity(
 )
 ```
 
+
+Calendar auto-sync is wired through `TaskCalendarCoordinator` in the five task use cases (create/update/delete/toggle/setStatus): dated tasks upsert `tsosu-<id>` events, completion/deletion removes them, and failures never break the task flow. Providers: Google, CalDAV, and plain **WebDAV** (each dated task published as `<base>/tsosu-<id>.ics` via PUT/DELETE — no CalDAV needed).
+
 ## Data-Calendar
 
 Task → VEVENT: uses estimatedMinutes for DTEND.

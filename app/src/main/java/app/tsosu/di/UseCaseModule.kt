@@ -3,6 +3,8 @@ package app.tsosu.di
 import app.tsosu.domain.repository.FocusRepository
 import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.IcsExporter
+import app.tsosu.domain.repository.CalendarRepository
+import app.tsosu.domain.usecase.TaskCalendarCoordinator
 import app.tsosu.domain.repository.RoutineRepository
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.CompleteHabitUseCase
@@ -28,18 +30,23 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
 
-    @Provides fun provideCreateTask(repo: TaskRepository) = CreateTaskUseCase(repo)
-    @Provides fun provideToggleTaskDone(repo: TaskRepository) = ToggleTaskDoneUseCase(repo)
-    @Provides fun provideSetTaskStatus(repo: TaskRepository) = SetTaskStatusUseCase(repo)
+    @Provides fun provideCreateTask(repo: TaskRepository, calendar: CalendarRepository) =
+        CreateTaskUseCase(repo, TaskCalendarCoordinator(repo, calendar))
+    @Provides fun provideToggleTaskDone(repo: TaskRepository, calendar: CalendarRepository) =
+        ToggleTaskDoneUseCase(repo, TaskCalendarCoordinator(repo, calendar))
+    @Provides fun provideSetTaskStatus(repo: TaskRepository, calendar: CalendarRepository) =
+        SetTaskStatusUseCase(repo, TaskCalendarCoordinator(repo, calendar))
     @Provides fun provideGetTodayOverview(repo: TaskRepository) = GetTodayOverviewUseCase(repo)
     @Provides fun providePickOneTask(repo: TaskRepository) = PickOneTaskUseCase(repo)
     @Provides fun provideSetDailyFocus(focus: FocusRepository, task: TaskRepository) = SetDailyFocusUseCase(focus, task)
-    @Provides fun provideGetStaleTaskIds(repo: TaskRepository) = GetStaleTaskIdsUseCase(repo)
     @Provides fun provideGetWeeklyReview(repo: FocusRepository) = GetWeeklyReviewUseCase(repo)
     @Provides fun provideCompleteHabit(repo: HabitRepository) = CompleteHabitUseCase(repo)
+    @Provides fun provideGetStaleTaskIds(repo: TaskRepository) = GetStaleTaskIdsUseCase(repo)
     @Provides fun provideGetTodayHabits(repo: HabitRepository) = GetTodayHabitsUseCase(repo)
     @Provides fun provideGetRoutine(repo: RoutineRepository) = GetRoutineUseCase(repo)
-    @Provides fun provideUpdateTask(repo: TaskRepository) = UpdateTaskUseCase(repo)
-    @Provides fun provideDeleteTask(repo: TaskRepository) = DeleteTaskUseCase(repo)
     @Provides fun provideExportIcs(repo: TaskRepository, icsExporter: IcsExporter) = ExportIcsUseCase(repo, icsExporter)
+    @Provides fun provideUpdateTask(repo: TaskRepository, calendar: CalendarRepository) =
+        UpdateTaskUseCase(repo, TaskCalendarCoordinator(repo, calendar))
+    @Provides fun provideDeleteTask(repo: TaskRepository, calendar: CalendarRepository) =
+        DeleteTaskUseCase(repo, TaskCalendarCoordinator(repo, calendar))
 }
