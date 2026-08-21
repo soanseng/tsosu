@@ -83,19 +83,25 @@ class TodoistCsvParser(
     private fun parseDate(dateStr: String, taskTitle: String): DateParseResult {
         if (dateStr.isBlank()) return DateParseResult(null, null, null)
 
-        // Try as a concrete date: YYYY-MM-DD or YYYY-MM-DD at HH:MM
+        // Combined forms like "every day starting 2026-08-01" carry BOTH a
+        // due date and a recurrence rule. Parse the whole phrase first so the
+        // rule is kept alongside the date (the old date-first order dropped it
+        // silently). Unrecognized phrases with a date fall back to date-only,
+        // which keeps "2026-03-28 at 09:00" warning-free.
         val dateMatch = DATE_PATTERN.find(dateStr)
         if (dateMatch != null) {
-            val year = dateMatch.groupValues[1].toInt()
-            val month = dateMatch.groupValues[2].toInt()
-            val day = dateMatch.groupValues[3].toInt()
-            val dueDate = LocalDateTime(year, month, day, 0, 0)
-            return DateParseResult(dueDate, null, null)
+            return when (val result = recurrenceParser.parse(dateStr)) {
+                is RecurrenceResult.Success -> DateParseResult(
+                    buildDueDate(dateMatch),
+                    result.rrule,
+                    null,
+                )
+                is RecurrenceResult.Unrecognized -> DateParseResult(buildDueDate(dateMatch), null, null)
+            }
         }
 
-        // Try as recurrence
-        val result = recurrenceParser.parse(dateStr)
-        return when (result) {
+        // No concrete date: try as a pure recurrence phrase.
+        return when (val result = recurrenceParser.parse(dateStr)) {
             is RecurrenceResult.Success -> DateParseResult(null, result.rrule, null)
             is RecurrenceResult.Unrecognized -> DateParseResult(
                 null,
@@ -103,6 +109,13 @@ class TodoistCsvParser(
                 "Unrecognized recurrence for \"$taskTitle\": $dateStr",
             )
         }
+    }
+
+    private fun buildDueDate(dateMatch: MatchResult): LocalDateTime {
+        val year = dateMatch.groupValues[1].toInt()
+        val month = dateMatch.groupValues[2].toInt()
+        val day = dateMatch.groupValues[3].toInt()
+        return LocalDateTime(year, month, day, 0, 0)
     }
 
     private fun mapPriority(todoistPriority: Int): Priority = when (todoistPriority) {

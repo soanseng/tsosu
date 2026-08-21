@@ -1,6 +1,7 @@
 package app.tsosu.data.calendar
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class VEventBuilderTest {
@@ -146,5 +147,77 @@ class VEventBuilderTest {
             reminderMinutesBefore = 10,
         )
         assertTrue(ical.contains("DESCRIPTION:Call\\, Dr\\; Smith"))
+    }
+
+    // ── RFC 5545 compliance (added with the folding/DTSTAMP fix) ──
+
+    @Test
+    fun `long lines are folded at 75 octets with continuation prefix`() {
+        val title = "A very long summary " + "x".repeat(120)
+        val body = builder.buildVEventBody(
+            uid = "u1",
+            title = title,
+            description = "",
+            dueDate = "2026-08-21T09:00",
+            estimatedMinutes = 30,
+        )
+        val summaryLines = body.lineSequence()
+            .filter { it.startsWith("SUMMARY:") || it.startsWith(" ") }
+            .toList()
+        assertTrue(summaryLines.size > 1, "should have been folded into continuations")
+        // Every physical line must be <= 75 octets.
+        for (line in body.lineSequence()) {
+            assertTrue(
+                line.toByteArray(Charsets.UTF_8).size <= 75,
+                "line exceeds 75 octets: ${line.take(40)}…",
+            )
+        }
+        // Continuation lines start with a space; the logical text round-trips.
+        val logical = summaryLines.joinToString("") { line -> line.removePrefix("SUMMARY:").removePrefix(" ") }
+        assertEquals(title, logical)
+    }
+
+    @Test
+    fun `multi-byte characters are never split across fold boundary`() {
+        // Each CJK char is 3 bytes: 30 chars = 90 bytes, forcing a fold.
+        val title = "檢查一下這個很長的標題是否會被正確折疊".repeat(2)
+        val body = builder.buildVEventBody(
+            uid = "u1",
+            title = title,
+            description = "",
+            dueDate = "2026-08-21T09:00",
+            estimatedMinutes = 30,
+        )
+        // Every folded segment must decode to a full-width char boundary —
+        // joined logical line must equal the original title.
+        val logical = body.lineSequence()
+            .filter { it.startsWith("SUMMARY:") || it.startsWith(" ") }
+            .joinToString("") { line -> line.removePrefix("SUMMARY:").removePrefix(" ") }
+        assertEquals(title, logical)
+    }
+
+    @Test
+    fun `DTSTAMP is present and UTC-flagged`() {
+        val body = builder.buildVEventBody(
+            uid = "u1",
+            title = "t",
+            description = "",
+            dueDate = "2026-08-21T09:00",
+            estimatedMinutes = 30,
+            dtStampEpochMillis = 1_800_000_000_000,
+        )
+        assertTrue(body.contains("DTSTAMP:20270115T080000Z"), "expected UTC DTSTAMP, got:\n$body")
+    }
+
+    @Test
+    fun `text values escape CRLF and CR newlines`() {
+        val body = builder.buildVEventBody(
+            uid = "u1",
+            title = "t",
+            description = "line1\r\nline2\rline3\nline4",
+            dueDate = "2026-08-21T09:00",
+            estimatedMinutes = 30,
+        )
+        assertTrue(body.contains("DESCRIPTION:line1\\nline2\\nline3\\nline4"))
     }
 }

@@ -9,16 +9,24 @@ import app.tsosu.domain.model.HabitStreakInfo
 import app.tsosu.domain.repository.HabitRepository
 import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.usecase.HabitStreakCalculator
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 class HabitRepositoryImpl(
@@ -35,10 +43,12 @@ class HabitRepositoryImpl(
     override fun getHabit(habitId: String): Flow<Habit?> =
         habitDao.getById(habitId).map { it?.toDomain() }
 
-    override fun getTodayCompletions(): Flow<List<HabitCompletion>> {
-        val today = todayEpoch()
-        return habitDao.getCompletionsForDate(today).map { it.map { e -> e.toDomain() } }
-    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getTodayCompletions(): Flow<List<HabitCompletion>> =
+        localDayTicker().flatMapLatest { today ->
+            val epoch = today.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+            habitDao.getCompletionsForDate(epoch).map { it.map { e -> e.toDomain() } }
+        }
 
     override fun getStreakInfo(habitId: String): Flow<HabitStreakInfo> {
         return combine(
@@ -131,10 +141,20 @@ class HabitRepositoryImpl(
             onHabitChanged?.invoke(habitId)
         }
 
-    private fun todayEpoch(): Long {
-        val tz = TimeZone.currentSystemDefault()
-        val today = Clock.System.now().toLocalDateTime(tz).date
-        return today.atStartOfDayIn(tz).toEpochMilliseconds()
+    /**
+     * Emits the local date immediately, then again at every local midnight —
+     * "today" must roll over for flows collected across midnight.
+     */
+    private fun localDayTicker(): Flow<LocalDate> = flow {
+        while (currentCoroutineContext().isActive) {
+            val tz = TimeZone.currentSystemDefault()
+            val now = Clock.System.now()
+            val today = now.toLocalDateTime(tz).date
+            emit(today)
+            val nextMidnight = today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(tz)
+            val waitMillis = (nextMidnight - now).inWholeMilliseconds + 50
+            delay(waitMillis.coerceAtLeast(1))
+        }
     }
 
     companion object {

@@ -3,6 +3,7 @@ package app.tsosu.data.markdown.todoist
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.TaskStatus
+import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -296,6 +297,22 @@ class TodoistCsvParserTest {
         val result = parser.parse(csv)
 
         assertEquals("RRULE:FREQ=MONTHLY;INTERVAL=2", result.tasks[0].recurrenceRule)
+    }
+
+    @Test
+    fun `combined date and recurrence keeps both`() {
+        val csv = """
+            TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE
+            task,Water plants,,4,1,,,every day starting 2026-03-28,en,
+        """.trimIndent()
+
+        val result = parser.parse(csv)
+
+        assertEquals(1, result.tasks.size)
+        val task = result.tasks[0]
+        assertEquals(LocalDateTime(2026, 3, 28, 0, 0), task.dueDate)
+        assertEquals("RRULE:FREQ=DAILY", task.recurrenceRule)
+        assertTrue(result.warnings.isEmpty())
     }
 
     @Test

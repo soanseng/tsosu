@@ -7,13 +7,15 @@ import androidx.core.app.NotificationManagerCompat
 import app.tsosu.VaultChangeWatcher
 import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.TaskDao
+import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.GamificationRepository
+import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -29,7 +31,6 @@ class ReminderReceiver : BroadcastReceiver() {
         const val ACTION_HABIT_REMINDER = "app.tsosu.ACTION_HABIT_REMINDER"
         const val ACTION_HABIT_COMPLETE = "app.tsosu.ACTION_HABIT_COMPLETE"
         const val EXTRA_HABIT_ID = "extra_habit_id"
-        const val ENERGY_PER_TASK = 2
         const val ENERGY_PER_HABIT = 5
     }
 
@@ -39,6 +40,7 @@ class ReminderReceiver : BroadcastReceiver() {
     @Inject lateinit var reminderScheduler: ReminderScheduler
     @Inject lateinit var watcher: VaultChangeWatcher
     @Inject lateinit var gamificationRepository: GamificationRepository
+    @Inject lateinit var setTaskStatus: SetTaskStatusUseCase
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
@@ -66,27 +68,32 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 
+    /**
+     * Completes the task through the repository (SetTaskStatusUseCase) so the
+     * real completion semantics run: recurring tasks reset to TODO with their
+     * next occurrence, completions are recorded, energy is awarded once, and
+     * the calendar event is synced. A terminal task is a no-op (guards against
+     * double-awarding energy on repeated taps of a stale notification).
+     */
     private fun handleComplete(context: Context, taskId: String) {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val now = System.currentTimeMillis()
-                taskDao.setStatus(
-                    taskId = taskId,
-                    status = 4, // TaskStatus.DONE ordinal
-                    completedDate = now,
-                    cancelledDate = null,
-                    updatedAt = now,
-                )
-                gamificationRepository.awardEnergy(ENERGY_PER_TASK)
-                reminderScheduler.cancel(taskId)
-                NotificationManagerCompat.from(context).cancel(taskId.hashCode())
-                watcher.pushSoon()
+                val current = taskDao.getByIdSync(taskId) ?: return@launch
+                if (TaskStatus.fromOrdinal(current.status).isTerminal) return@launch
+                setTaskStatus(taskId, TaskStatus.DONE).onSuccess { task ->
+                    // schedule() arms the next reminder for a recurring task and
+                    // cancels for terminal ones.
+                    reminderScheduler.schedule(task)
+                    NotificationManagerCompat.from(context).cancel(taskId.hashCode())
+                    watcher.pushSoon()
+                }
             } finally {
                 pendingResult.finish()
             }
         }
     }
+
     private fun handleHabitReminder(habitId: String) {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {

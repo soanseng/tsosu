@@ -56,6 +56,11 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- Android clears alarms on APK replace: re-arm after updates. -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <!-- Alarm times are wall-clock: re-derive after tz/clock changes. -->
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
             </intent-filter>
         </receiver>
 

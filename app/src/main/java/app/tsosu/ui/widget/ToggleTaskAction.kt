@@ -5,6 +5,12 @@ import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 
+/**
+ * Widget checkbox toggle. Runs through [ToggleTaskDoneUseCase] so recurring
+ * tasks expand to their next occurrence, completions are recorded, energy is
+ * awarded, and the calendar event is kept in sync — identical semantics to the
+ * in-app toggle.
+ */
 class ToggleTaskAction : ActionCallback {
     companion object {
         val TaskIdKey = ActionParameters.Key<String>("taskId")
@@ -16,16 +22,10 @@ class ToggleTaskAction : ActionCallback {
         parameters: ActionParameters,
     ) {
         val taskId = parameters[TaskIdKey] ?: return
-        val dao = WidgetEntryPoint.get(context).taskDao()
-        val now = System.currentTimeMillis()
-        val task = dao.getByIdSync(taskId) ?: return
-        val newStatus = if (task.status == DONE_ORDINAL) TODO_ORDINAL else DONE_ORDINAL
-        val completedDate = if (newStatus == DONE_ORDINAL) now else null
-        dao.setStatus(taskId, newStatus, completedDate, null, now)
-        WidgetEntryPoint.get(context).vaultChangeWatcher().pushSoon()
+        val entry = WidgetEntryPoint.get(context)
+        entry.toggleTaskDone()(taskId).getOrNull()?.let { task ->
+            entry.reminderScheduler().schedule(task)
+        }
         FocusWidget().update(context, glanceId)
     }
 }
-
-private const val TODO_ORDINAL = 0
-private const val DONE_ORDINAL = 4
