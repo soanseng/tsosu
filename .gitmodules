@@ -1,0 +1,3 @@
+[submodule "vendor/Mindwtr"]
+	path = vendor/Mindwtr
+	url = https://github.com/dongdongbh/Mindwtr.git
