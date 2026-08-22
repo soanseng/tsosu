@@ -58,6 +58,17 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <service
+            android:name=".ui.widget.QuickAddTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_foreground"
+            android:label="@string/tile_quick_add"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".notification.ReminderReceiver"
             android:exported="false" />

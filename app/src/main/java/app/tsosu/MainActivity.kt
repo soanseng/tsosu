@@ -65,6 +65,7 @@ import app.tsosu.ui.screens.quickadd.QuickAddHabitSheet
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
 import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
+import app.tsosu.ui.widget.QuickAddTileService
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.ThemePreferences
 import app.tsosu.ui.theme.TsosuTheme
@@ -111,7 +112,12 @@ class MainActivity : AppCompatActivity() {
                 var sharedCaptureText by remember {
                     mutableStateOf(SharedCaptureText.fromIntent(intent))
                 }
-                var showAddTask by remember { mutableStateOf(sharedCaptureText != null) }
+                var showAddTask by remember {
+                    mutableStateOf(
+                        sharedCaptureText != null ||
+                            intent.getBooleanExtra(QuickAddTileService.EXTRA_OPEN_QUICK_ADD, false),
+                    )
+                }
                 var quickAddInitialDate by remember { mutableStateOf<kotlinx.datetime.LocalDateTime?>(null) }
                 var showAddHabit by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
