@@ -177,6 +177,12 @@
     <string name="notif_action_snooze">稍後 10 分</string>
     <string name="notif_start_title">開始時間到了</string>
     <string name="tile_quick_add">快速新增任務</string>
+    <string name="bulk_select">選取</string>
+    <string name="bulk_cancel">取消</string>
+    <string name="bulk_complete">完成</string>
+    <string name="bulk_someday">改天再說</string>
+    <string name="bulk_delete">刪除</string>
+    <string name="bulk_selected_count">已選 %d 項</string>
     <string name="digest_morning_title">晨間計畫 🌅</string>
     <string name="digest_evening_title">今天的收穫 🎉</string>
     <string name="digest_morning_body">今天：%1$s\n習慣 %3$d/%4$d</string>

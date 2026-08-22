@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,54 +36,125 @@ fun InboxScreen(
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val staleIds by viewModel.staleIds.collectAsStateWithLifecycle()
+    val selectedIds by viewModel.selectedIds.collectAsStateWithLifecycle()
+    var selectionMode by remember { mutableStateOf(false) }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        item {
-            Text(stringResource(R.string.inbox_title), style = MaterialTheme.typography.headlineMedium)
-        }
-
-        if (staleIds.isNotEmpty()) {
-            item(key = "stale-cleanup") {
-                var dismissed by remember { mutableStateOf(false) }
-                if (!dismissed) {
-                    StaleCleanupCard(
-                        count = staleIds.size,
-                        onCleanUp = {
-                            viewModel.cleanUpStale()
-                            dismissed = true
-                        },
-                        onLater = { dismissed = true },
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (selectionMode) {
+            // Bulk action bar
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        stringResource(R.string.bulk_selected_count, selectedIds.size),
+                        style = MaterialTheme.typography.titleSmall,
                     )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) {
+                        OutlinedButton(onClick = { viewModel.bulkComplete() }) {
+                            Text(stringResource(R.string.bulk_complete))
+                        }
+                        OutlinedButton(onClick = { viewModel.bulkSomeday() }) {
+                            Text(stringResource(R.string.bulk_someday))
+                        }
+                        OutlinedButton(onClick = { viewModel.bulkDelete() }) {
+                            Text(stringResource(R.string.bulk_delete))
+                        }
+                        Button(onClick = {
+                            selectionMode = false
+                            viewModel.clearSelection()
+                        }) {
+                            Text(stringResource(R.string.bulk_cancel))
+                        }
+                    }
                 }
             }
         }
 
-        if (tasks.isEmpty()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             item {
-                Text(
-                    "Inbox zero!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    "New tasks without a due date appear here.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.inbox_title), style = MaterialTheme.typography.headlineMedium)
+                    TextButton(onClick = {
+                        if (selectionMode) {
+                            viewModel.clearSelection()
+                        }
+                        selectionMode = !selectionMode
+                    }) {
+                        Text(
+                            if (selectionMode) {
+                                stringResource(R.string.bulk_cancel)
+                            } else {
+                                stringResource(R.string.bulk_select)
+                            },
+                        )
+                    }
+                }
             }
-        }
-        items(tasks, key = { it.id }) { task ->
-            TaskListItem(
-                task = task,
-                onToggleDone = { viewModel.toggleDone(it) },
-                onStatusChange = { id, status -> viewModel.setStatus(id, status) },
-                onClick = { onTaskClick(it.id) },
-            )
+
+            if (staleIds.isNotEmpty()) {
+                item(key = "stale-cleanup") {
+                    var dismissed by remember { mutableStateOf(false) }
+                    if (!dismissed) {
+                        StaleCleanupCard(
+                            count = staleIds.size,
+                            onCleanUp = {
+                                viewModel.cleanUpStale()
+                                dismissed = true
+                            },
+                            onLater = { dismissed = true },
+                        )
+                    }
+                }
+            }
+
+            if (tasks.isEmpty()) {
+                item {
+                    Text(
+                        "Inbox zero!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        "New tasks without a due date appear here.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            items(tasks, key = { it.id }) { task ->
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    if (selectionMode) {
+                        androidx.compose.material3.Checkbox(
+                            checked = task.id in selectedIds,
+                            onCheckedChange = { viewModel.toggleSelection(task.id) },
+                        )
+                    }
+                    TaskListItem(
+                        task = task,
+                        onToggleDone = { if (!selectionMode) viewModel.toggleDone(it) },
+                        onStatusChange = { id, status -> if (!selectionMode) viewModel.setStatus(id, status) },
+                        onClick = {
+                            if (selectionMode) {
+                                viewModel.toggleSelection(task.id)
+                            } else {
+                                onTaskClick(task.id)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
         }
     }
 }

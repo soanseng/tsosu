@@ -85,6 +85,12 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
+    <string name="bulk_select">Select</string>
+    <string name="bulk_cancel">Cancel</string>
+    <string name="bulk_complete">Complete</string>
+    <string name="bulk_someday">Someday</string>
+    <string name="bulk_delete">Delete</string>
+    <string name="bulk_selected_count">%d selected</string>
     <string name="digest_morning_title">Morning plan 🌅</string>
     <string name="digest_evening_title">Today’s wins 🎉</string>
     <string name="digest_morning_body">Today: %1$s\nHabits %3$d/%4$d</string>
