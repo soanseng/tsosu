@@ -177,6 +177,10 @@
     <string name="notif_action_snooze">稍後 10 分</string>
     <string name="notif_start_title">開始時間到了</string>
     <string name="tile_quick_add">快速新增任務</string>
+    <string name="ics_subscriptions">日曆訂閱 (%d)</string>
+    <string name="ics_add">新增</string>
+    <string name="ics_remove">移除</string>
+    <string name="ics_url_hint">日曆訂閱網址（.ics）</string>
     <string name="review_wizard_start">引導式回顧</string>
     <string name="review_wizard_next">下一步</string>
     <string name="review_wizard_step1_title">先慶祝 🎉</string>

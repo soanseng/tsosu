@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,6 +31,8 @@ data class CalendarUiState(
     val selectedDate: LocalDate? = null,
     val tasksByDate: Map<LocalDate, List<Task>> = emptyMap(),
     val selectedDayTasks: List<Task> = emptyList(),
+    val externalEventsByDate: Map<LocalDate, List<String>> = emptyMap(),
+    val subscriptions: Set<String> = emptySet(),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,10 +42,14 @@ class CalendarViewModel @Inject constructor(
     private val toggleTaskDone: ToggleTaskDoneUseCase,
     private val reminderScheduler: ReminderScheduler,
     private val setTaskStatus: SetTaskStatusUseCase,
+    private val icsSubscriptions: app.tsosu.data.calendar.IcsSubscriptionRepository,
 ) : ViewModel() {
 
     private val _yearMonth = MutableStateFlow(YearMonth.now())
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+
+    private val _externalEvents = MutableStateFlow<Map<LocalDate, List<String>>>(emptyMap())
+    val externalEvents: StateFlow<Map<LocalDate, List<String>>> = _externalEvents.asStateFlow()
 
     val uiState: StateFlow<CalendarUiState> = _yearMonth
         .flatMapLatest { ym ->
@@ -60,15 +67,58 @@ class CalendarViewModel @Inject constructor(
                 ym to grouped
             }
         }
-        .combine(_selectedDate) { (ym, grouped), selected ->
+        .combine(_selectedDate) { pair, selected ->
+            val (ym, grouped) = pair
+            ym to Triple(grouped, selected, _externalEvents.value)
+        }
+        .combine(_externalEvents) { (ym, triple), external ->
+            val (grouped, selected, _) = triple
             CalendarUiState(
                 yearMonth = ym,
                 selectedDate = selected,
                 tasksByDate = grouped,
                 selectedDayTasks = selected?.let { grouped[it] } ?: emptyList(),
+                externalEventsByDate = external,
+                subscriptions = subscriptionUrls.value,
             )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CalendarUiState())
+
+    private val _showExternal = MutableStateFlow(false)
+    val showExternal: StateFlow<Boolean> = _showExternal.asStateFlow()
+
+    init {
+        // Refetch the subscription overlay whenever it is visible and the
+        // visible month changes.
+        viewModelScope.launch {
+            combine(_showExternal, _yearMonth, icsSubscriptions.urls) { show, ym, _ -> show to ym }
+                .collect { (show, ym) ->
+                    if (show) {
+                        val first = LocalDate(ym.year, ym.monthValue, 1)
+                        val last = LocalDate(ym.year, ym.monthValue, ym.lengthOfMonth())
+                        val events = icsSubscriptions.fetchEvents(first, last)
+                        _externalEvents.value = events.groupBy({ it.start }, { it.summary })
+                    } else {
+                        _externalEvents.value = emptyMap()
+                    }
+                }
+        }
+    }
+
+    val subscriptionUrls: StateFlow<Set<String>> = icsSubscriptions.urls
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    fun setShowExternal(show: Boolean) {
+        _showExternal.value = show
+    }
+
+    fun addSubscription(url: String) {
+        viewModelScope.launch { icsSubscriptions.addUrl(url) }
+    }
+
+    fun removeSubscription(url: String) {
+        viewModelScope.launch { icsSubscriptions.removeUrl(url) }
+    }
 
     fun previousMonth() {
         _yearMonth.value = _yearMonth.value.minusMonths(1)

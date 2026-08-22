@@ -33,6 +33,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,11 +76,18 @@ fun CalendarScreen(
             onNext = viewModel::nextMonth,
         )
 
+        SubscriptionBar(
+            urls = state.subscriptions,
+            onAdd = viewModel::addSubscription,
+            onRemove = viewModel::removeSubscription,
+        )
+
         DayOfWeekHeaders()
 
         MonthGrid(
             yearMonth = state.yearMonth,
             selectedDate = state.selectedDate,
+            externalByDate = state.externalEventsByDate,
             tasksByDate = state.tasksByDate.mapKeys {
                 java.time.LocalDate.of(it.key.year, it.key.monthNumber, it.key.dayOfMonth)
             },
@@ -206,6 +215,7 @@ private fun MonthGrid(
     yearMonth: YearMonth,
     selectedDate: LocalDate?,
     tasksByDate: Map<java.time.LocalDate, List<app.tsosu.domain.model.Task>>,
+    externalByDate: Map<kotlinx.datetime.LocalDate, List<String>>? = null,
     onDateSelected: (java.time.LocalDate) -> Unit,
     onDateLongPress: (java.time.LocalDate) -> Unit,
 ) {
@@ -240,6 +250,9 @@ private fun MonthGrid(
                 day = day,
                 isSelected = isSelected,
                 hasTasks = hasTasks,
+                hasExternal = externalByDate?.containsKey(
+                    kotlinx.datetime.LocalDate(date.year, date.monthValue, date.dayOfMonth),
+                ) == true,
                 onClick = { onDateSelected(date) },
                 onLongClick = { onDateLongPress(date) },
             )
@@ -253,6 +266,7 @@ private fun DayCell(
     day: Int,
     isSelected: Boolean,
     hasTasks: Boolean,
+    hasExternal: Boolean = false,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
 ) {
@@ -301,6 +315,14 @@ private fun DayCell(
                         ),
                 )
             }
+
+            if (hasExternal) {
+                Box(
+                    modifier = Modifier
+                        .size(4.dp)
+                        .background(MaterialTheme.colorScheme.tertiary, CircleShape),
+                )
+            }
         }
     }
 }
@@ -312,4 +334,66 @@ private fun formatSelectedDateHeader(date: LocalDate): String {
     val javaDate = java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)
     val month = javaDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
     return "Tasks for $month ${date.dayOfMonth}"
+}
+
+
+@Composable
+private fun SubscriptionBar(
+    urls: Set<String>,
+    onAdd: (String) -> Unit,
+    onRemove: (String) -> Unit,
+) {
+    var showAdd by remember { mutableStateOf(false) }
+    var urlInput by remember { mutableStateOf("") }
+
+    Column {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.ics_subscriptions, urls.size),
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.weight(1f),
+            )
+            androidx.compose.material3.TextButton(onClick = { showAdd = !showAdd }) {
+                Text(stringResource(R.string.ics_add))
+            }
+        }
+        urls.forEach { url ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    url,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                androidx.compose.material3.TextButton(onClick = { onRemove(url) }) {
+                    Text(stringResource(R.string.ics_remove))
+                }
+            }
+        }
+        if (showAdd) {
+            androidx.compose.material3.OutlinedTextField(
+                value = urlInput,
+                onValueChange = { urlInput = it },
+                label = { Text(stringResource(R.string.ics_url_hint)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            androidx.compose.material3.Button(onClick = {
+                if (urlInput.isNotBlank()) {
+                    onAdd(urlInput)
+                    urlInput = ""
+                    showAdd = false
+                }
+            }) {
+                Text(stringResource(R.string.ics_add))
+            }
+        }
+    }
 }

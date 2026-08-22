@@ -85,6 +85,10 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
+    <string name="ics_subscriptions">Subscriptions (%d)</string>
+    <string name="ics_add">Add</string>
+    <string name="ics_remove">Remove</string>
+    <string name="ics_url_hint">Calendar feed URL (.ics)</string>
     <string name="review_wizard_start">Guided review</string>
     <string name="review_wizard_next">Next</string>
     <string name="review_wizard_step1_title">Celebrate 🎉</string>
