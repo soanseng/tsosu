@@ -236,6 +236,30 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun importTickTick(uri: Uri) {
+        viewModelScope.launch {
+            val result: Result<ImportResult> = withContext(Dispatchers.IO) {
+                runCatching {
+                    val bytes = appContext.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                        ?: error("Could not read file")
+                    if (bytes.size > MAX_IMPORT_SIZE) error("File too large (${bytes.size / 1024}KB). Max 10MB.")
+                    importRepository.importFromTickTick(bytes).getOrThrow()
+                }
+            }
+            result.fold(
+                onSuccess = { r ->
+                    _uiState.value = _uiState.value.copy(
+                        message = "Imported ${r.tasksImported} tasks from TickTick",
+                    )
+                    vaultChangeWatcher.syncOnce()
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(message = "Import error: ${e.message}")
+                },
+            )
+        }
+    }
+
     fun connectGoogle(accessToken: String, refreshToken: String?, email: String) {
         viewModelScope.launch {
             val result = calendarRepository.configureGoogle(accessToken, refreshToken, email)

@@ -6,6 +6,7 @@ import app.tsosu.data.local.dao.ProjectDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.mapper.toEntity
 import app.tsosu.domain.recurrence.RecurrenceParser
+import app.tsosu.data.markdown.ticktick.TickTickCsvParser
 import app.tsosu.data.markdown.todoist.TodoistCsvParser
 import app.tsosu.domain.model.Project
 import app.tsosu.domain.model.Task
@@ -23,6 +24,7 @@ class TodoistImportRepository(
 ) : ImportRepository {
 
     private val csvParser = TodoistCsvParser(RecurrenceParser())
+    private val tickTickParser = TickTickCsvParser()
 
     override suspend fun importFromTodoist(
         data: ByteArray,
@@ -64,6 +66,31 @@ class TodoistImportRepository(
             projectsImported = projectsCreated,
             labelsImported = 0,
             warnings = parseResult.warnings,
+        )
+    }
+
+    override suspend fun importFromTickTick(data: ByteArray): Result<ImportResult> = runCatching {
+        val parsed = tickTickParser.parse(data.toString(Charsets.UTF_8))
+        if (parsed.tasks.isEmpty()) {
+            return@runCatching ImportResult(
+                tasksImported = 0,
+                projectsImported = 0,
+                labelsImported = 0,
+                warnings = parsed.warnings,
+            )
+        }
+        var count = 0
+        database.withTransaction {
+            for (task in parsed.tasks) {
+                insertTaskWithSubtasks(task)
+                count++
+            }
+        }
+        ImportResult(
+            tasksImported = count,
+            projectsImported = 0,
+            labelsImported = 0,
+            warnings = parsed.warnings,
         )
     }
 

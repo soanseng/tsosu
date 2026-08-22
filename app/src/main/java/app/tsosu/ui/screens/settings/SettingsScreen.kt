@@ -90,6 +90,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         viewModel.stageTodoistImport(uri)
     }
 
+    val ticktickFilePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri ?: return@rememberLauncherForActivityResult
+        viewModel.importTickTick(uri)
+    }
+
     val alarmSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { viewModel.refreshAlarmPermission() }
@@ -306,6 +313,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.settings_import_todoist))
+        }
+
+        OutlinedButton(
+            onClick = { ticktickFilePicker.launch("text/*") },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.settings_import_ticktick))
         }
 
         if (state.pendingImportUri != null) {

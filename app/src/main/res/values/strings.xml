@@ -85,6 +85,7 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
+    <string name="settings_import_ticktick">Import from TickTick (CSV)</string>
     <string name="ics_subscriptions">Subscriptions (%d)</string>
     <string name="ics_add">Add</string>
     <string name="ics_remove">Remove</string>

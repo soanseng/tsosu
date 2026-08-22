@@ -21,4 +21,7 @@ interface ImportRepository {
         format: ImportFormat,
         target: ImportTarget = ImportTarget.Inbox,
     ): Result<ImportResult>
+
+    /** Imports a TickTick CSV export straight into the inbox. */
+    suspend fun importFromTickTick(data: ByteArray): Result<ImportResult>
 }
