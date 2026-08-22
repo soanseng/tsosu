@@ -16,6 +16,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
+import android.speech.RecognizerIntent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -144,6 +149,22 @@ fun QuickAddTaskSheet(
             applyTitleInput(initialTitle)
         }
     }
+    // Voice capture: speech recognition result lands in the title field and
+    // runs the same detection pass as typed input.
+    val voiceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        val text = result.data
+            ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+            ?.trim()
+        if (!text.isNullOrEmpty()) {
+            title = text
+            titleError = false
+            applyTitleInput(text)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,6 +185,21 @@ fun QuickAddTaskSheet(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = titleError,
+            trailingIcon = {
+                IconButton(onClick = {
+                    voiceLauncher.launch(
+                        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(
+                                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
+                            )
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW")
+                        },
+                    )
+                }) {
+                    Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.quick_add_voice))
+                }
+            },
             supportingText = if (titleError) {
                 { Text(stringResource(R.string.quick_add_title_required)) }
             } else null,
