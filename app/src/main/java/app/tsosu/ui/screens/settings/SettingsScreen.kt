@@ -71,6 +71,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
     val digestEnabled by viewModel.digestEnabled.collectAsStateWithLifecycle()
+    val appLockEnabled by viewModel.appLockEnabled.collectAsStateWithLifecycle()
     val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -163,6 +164,25 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             Switch(
                 checked = digestEnabled,
                 onCheckedChange = { viewModel.setDigestEnabled(it) },
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(stringResource(R.string.settings_applock), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.settings_applock_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = appLockEnabled,
+                onCheckedChange = { viewModel.setAppLockEnabled(it) },
             )
         }
 

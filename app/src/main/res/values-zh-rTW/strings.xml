@@ -177,6 +177,11 @@
     <string name="notif_action_snooze">稍後 10 分</string>
     <string name="notif_start_title">開始時間到了</string>
     <string name="tile_quick_add">快速新增任務</string>
+    <string name="applock_title">解鎖 tsosu</string>
+    <string name="applock_subtitle">保護你的任務隱私</string>
+    <string name="applock_unlock">解鎖</string>
+    <string name="settings_applock">應用程式鎖定</string>
+    <string name="settings_applock_desc">開啟時需要生物辨識或裝置密碼</string>
     <string name="settings_import_ticktick">從 TickTick 匯入（CSV）</string>
     <string name="ics_subscriptions">日曆訂閱 (%d)</string>
     <string name="ics_add">新增</string>

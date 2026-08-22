@@ -16,6 +16,7 @@ turbine = "1.2.0"
 robolectric = "4.16.1"
 roborazzi = "1.60.0"
 hilt-navigation-compose = "1.2.0"
+biometric = "1.1.0"
 glance = "1.1.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
@@ -67,6 +68,9 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+
+# Biometric
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 
 # Glance (Widget)
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }

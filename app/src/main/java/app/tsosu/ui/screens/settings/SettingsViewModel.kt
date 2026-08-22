@@ -25,6 +25,7 @@ import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.LanguageOption
 import app.tsosu.ui.theme.LocaleHelper
 import app.tsosu.data.local.BackupRepository
+import app.tsosu.ui.theme.AppLockPreferences
 import app.tsosu.notification.DigestPreferences
 import app.tsosu.notification.ReminderResync
 import app.tsosu.ui.theme.ThemePreferences
@@ -69,6 +70,7 @@ class SettingsViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val themePreferences: ThemePreferences,
     private val digestPreferences: DigestPreferences,
+    private val appLockPreferences: AppLockPreferences,
     private val backupRepository: BackupRepository,
     private val reminderResync: ReminderResync,
     private val exportIcsUseCase: ExportIcsUseCase,
@@ -361,6 +363,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setDigestEnabled(enabled: Boolean) {
         viewModelScope.launch { digestPreferences.setEnabled(enabled) }
+    }
+
+    val appLockEnabled: StateFlow<Boolean> = appLockPreferences.enabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setAppLockEnabled(enabled: Boolean) {
+        viewModelScope.launch { appLockPreferences.setEnabled(enabled) }
     }
 
     fun setLanguage(option: LanguageOption) {

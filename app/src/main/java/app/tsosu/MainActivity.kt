@@ -17,9 +17,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
@@ -85,6 +87,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     @Inject lateinit var themePreferences: ThemePreferences
+    @Inject lateinit var appLockPreferences: app.tsosu.ui.theme.AppLockPreferences
     @Inject lateinit var syncRepository: SyncRepository
     @Inject lateinit var markdownPreferences: MarkdownPreferences
     @Inject lateinit var vaultChangeWatcher: VaultChangeWatcher
@@ -107,6 +110,17 @@ class MainActivity : AppCompatActivity() {
                 DarkModeOption.SYSTEM -> isSystemInDarkTheme()
                 DarkModeOption.LIGHT -> false
                 DarkModeOption.DARK -> true
+            }
+
+            // Biometric gate: when enabled, keep the UI locked until the user
+            // authenticates (biometric or device credential).
+            val appLockEnabled by appLockPreferences.enabled.collectAsState(initial = false)
+            var unlocked by remember { mutableStateOf(!appLockEnabled) }
+            LaunchedEffect(appLockEnabled) { if (!appLockEnabled) unlocked = true }
+
+            if (appLockEnabled && !unlocked) {
+                LockScreen(onUnlocked = { unlocked = true })
+                return@setContent
             }
 
             TsosuTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
@@ -447,5 +461,49 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+}
+
+
+@androidx.compose.runtime.Composable
+private fun LockScreen(onUnlocked: () -> Unit) {
+    val activity = androidx.compose.ui.platform.LocalContext.current as? MainActivity
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) {
+        androidx.compose.foundation.layout.Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+            Icon(
+                Icons.Default.Lock,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+            )
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(16.dp))
+            androidx.compose.material3.Button(onClick = {
+                val fragmentActivity = activity ?: return@Button
+                val executor = androidx.core.content.ContextCompat.getMainExecutor(fragmentActivity)
+                val prompt = androidx.biometric.BiometricPrompt(
+                    fragmentActivity,
+                    executor,
+                    object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+                        override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
+                            onUnlocked()
+                        }
+                    },
+                )
+                val info = androidx.biometric.BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(fragmentActivity.getString(app.tsosu.R.string.applock_title))
+                    .setSubtitle(fragmentActivity.getString(app.tsosu.R.string.applock_subtitle))
+                    .setAllowedAuthenticators(
+                        androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                            androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL,
+                    )
+                    .build()
+                prompt.authenticate(info)
+            }) {
+                Text(stringResource(app.tsosu.R.string.applock_unlock))
+            }
+        }
     }
 }

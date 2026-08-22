@@ -85,6 +85,11 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
+    <string name="applock_title">Unlock tsosu</string>
+    <string name="applock_subtitle">Your tasks stay private</string>
+    <string name="applock_unlock">Unlock</string>
+    <string name="settings_applock">App lock</string>
+    <string name="settings_applock_desc">Require biometric or device credential to open</string>
     <string name="settings_import_ticktick">Import from TickTick (CSV)</string>
     <string name="ics_subscriptions">Subscriptions (%d)</string>
     <string name="ics_add">Add</string>

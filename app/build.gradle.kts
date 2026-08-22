@@ -87,6 +87,8 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+
+    implementation(libs.androidx.biometric)
     implementation(project(":data-local"))
     implementation(project(":data-markdown"))
     implementation(project(":data-calendar"))
