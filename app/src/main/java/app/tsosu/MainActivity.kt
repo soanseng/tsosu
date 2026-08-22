@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.Settings
@@ -64,6 +65,7 @@ import app.tsosu.ui.screens.pickone.PickOneSheet
 import app.tsosu.ui.screens.quickadd.QuickAddHabitSheet
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
+import app.tsosu.ui.screens.search.SearchSheet
 import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
 import app.tsosu.ui.widget.QuickAddTileService
 import app.tsosu.ui.theme.DarkModeOption
@@ -135,6 +137,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 var showFilter by remember { mutableStateOf(false) }
+                var showSearch by remember { mutableStateOf(false) }
                 var editingTaskId by remember {
                     mutableStateOf(intent.getStringExtra("taskId") ?: null)
                 }
@@ -243,6 +246,9 @@ class MainActivity : AppCompatActivity() {
                                         },
                                         contentDescription = "Filter",
                                     )
+                                }
+                                IconButton(onClick = { showSearch = true }) {
+                                    Icon(Icons.Default.Search, contentDescription = "Search")
                                 }
                                 IconButton(onClick = {
                                     navController.navigate(Screen.Settings.route)
@@ -374,6 +380,21 @@ class MainActivity : AppCompatActivity() {
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     ) {
                         PickOneSheet(onDismiss = { showPickOne = false })
+                    }
+                }
+
+                if (showSearch) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showSearch = false },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    ) {
+                        SearchSheet(
+                            onTaskClick = { task ->
+                                showSearch = false
+                                editingTaskId = task.id
+                            },
+                            onToggleDone = { taskId -> focusViewModel.onToggleDone(taskId) },
+                        )
                     }
                 }
 

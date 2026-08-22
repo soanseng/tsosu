@@ -10,6 +10,8 @@ import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.recurrence.RecurrenceExpander
+import app.tsosu.domain.usecase.SearchQueryParser
+import app.tsosu.domain.usecase.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -51,9 +53,45 @@ class TaskRepositoryImpl(
     override fun getTask(taskId: String): Flow<Task?> =
         taskDao.getById(taskId).map { it?.toDomain() }
 
-    override fun searchTasks(query: String): Flow<List<Task>> =
-        taskDao.search(query).map { it.map { e -> e.toDomain() } }
+    override fun searchTasks(query: String): Flow<List<Task>> {
+        val parsed = SearchQueryParser.parse(query)
+        // First text term narrows via SQL LIKE; everything else filters in
+        // Kotlin (personal-scale lists).
+        val base = parsed.textTerms.firstOrNull()
+            ?.let { taskDao.search(it) }
+            ?: taskDao.getAllTasks()
+        return base.map { entities ->
+            entities.asSequence()
+                .map { it.toDomain() }
+                .filter { task -> matchesSearch(task, parsed, Clock.System.now()) }
+                .toList()
+        }
+    }
 
+    private fun matchesSearch(task: Task, q: SearchQuery, now: Instant): Boolean {
+        if (q.status != null && task.status != q.status) return false
+        val haystack = (task.title + "\n" + task.description).lowercase()
+        if (q.textTerms.any { it.lowercase() !in haystack }) return false
+        if (q.tags.any { it.lowercase() !in task.title.lowercase() }) return false
+        val due = task.dueDate
+        val within = q.dueWithinDays
+        if (within != null) {
+            if (due == null || due.toInstant(tz()) > now + within.days) return false
+        }
+        val later = q.dueInDaysOrLater
+        if (later != null) {
+            if (due == null || due.toInstant(tz()) < now + later.days) return false
+        }
+        if (q.dueToday) {
+            if (due == null || due.date != now.toLocalDateTime(tz()).date) return false
+        }
+        if (q.overdue) {
+            if (due == null || due.toInstant(tz()) >= now || task.status.isDone) return false
+        }
+        return true
+    }
+
+    private fun tz(): TimeZone = TimeZone.currentSystemDefault()
     override fun getFocusTasks(date: LocalDate): Flow<List<Task>> {
         val (start, end) = dateRange(date)
         return taskDao.getFocusTasks(start, end).map { it.map { e -> e.toDomain() } }

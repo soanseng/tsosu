@@ -85,6 +85,7 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="tile_quick_add">Quick add task</string>
     <string name="quick_add_voice">Voice input</string>
+    <string name="search_result_count">%d results</string>
     <string name="notif_channel_habits">Habit Reminders</string>
     <string name="notif_channel_habits_desc">Daily habit reminder nudges</string>
     <string name="notif_habit_done">Done</string>
