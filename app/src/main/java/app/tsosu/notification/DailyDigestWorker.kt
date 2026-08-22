@@ -10,9 +10,8 @@ import androidx.work.WorkerParameters
 import app.tsosu.R
 import app.tsosu.domain.usecase.DigestFormatter
 import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.assisted.Assisted
-import dagger.hilt.android.qualifiers.ApplicationContextInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
