@@ -175,6 +175,7 @@
     <string name="notif_reminder_title">任務提醒</string>
     <string name="notif_action_complete">完成</string>
     <string name="notif_action_snooze">稍後 10 分</string>
+    <string name="notif_start_title">開始時間到了</string>
     <string name="tile_quick_add">快速新增任務</string>
     <string name="quick_add_voice">語音輸入</string>
     <string name="search_result_count">%d 筆結果</string>

@@ -83,6 +83,7 @@
     <string name="notif_reminder_title">Task Reminder</string>
     <string name="notif_action_complete">Complete</string>
     <string name="notif_action_snooze">Snooze 10m</string>
+    <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
     <string name="quick_add_voice">Voice input</string>
     <string name="search_result_count">%d results</string>

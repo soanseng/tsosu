@@ -21,14 +21,17 @@ class ReminderScheduler @Inject constructor(
         context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     /**
-     * Schedules (or cancels) the reminder for a single domain task.
-     * Terminal tasks, tasks without reminder/due date, and past triggers are cancelled.
+     * Schedules (or cancels) both reminder slots for a task: the due reminder
+     * and, when the task has a start date, the start reminder at the same
+     * wall-clock time on the start date.
      */
     fun schedule(task: Task) {
         val trigger = ReminderTriggerCalculator.triggerMillisFor(task)
         if (trigger != null) schedule(task.id, trigger) else cancel(task.id)
-    }
 
+        val startTrigger = ReminderTriggerCalculator.triggerStartMillisFor(task)
+        if (startTrigger != null) scheduleStart(task.id, startTrigger) else cancelStart(task.id)
+    }
     /**
      * Reconciles alarms with the current task set (e.g. after boot or after an
      * import/sync brought in changed due dates or reminders). Clears stale alarms.
@@ -37,9 +40,11 @@ class ReminderScheduler @Inject constructor(
         for (task in tasks) {
             val trigger = ReminderTriggerCalculator.triggerMillisForEntity(task)
             if (trigger != null) schedule(task.id, trigger) else cancel(task.id)
+
+            val startTrigger = ReminderTriggerCalculator.triggerStartMillisForEntity(task)
+            if (startTrigger != null) scheduleStart(task.id, startTrigger) else cancelStart(task.id)
         }
     }
-
     /**
      * Reconciles daily habit reminder alarms with the current habit set.
      * Habits without a reminder (or archived) get their alarm cancelled.
@@ -83,6 +88,19 @@ class ReminderScheduler @Inject constructor(
         alarmManager.cancel(pendingIntent)
     }
 
+    fun scheduleStart(taskId: String, triggerAtMillis: Long) {
+        val pendingIntent = buildStartPendingIntent(taskId)
+        if (canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        }
+    }
+
+    fun cancelStart(taskId: String) {
+        alarmManager.cancel(buildStartPendingIntent(taskId))
+    }
+
     fun scheduleHabit(habitId: String, triggerAtMillis: Long) {
         val pendingIntent = buildHabitPendingIntent(habitId)
 
@@ -114,6 +132,19 @@ class ReminderScheduler @Inject constructor(
         return PendingIntent.getBroadcast(
             context,
             taskId.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun buildStartPendingIntent(taskId: String): PendingIntent {
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            action = ReminderReceiver.ACTION_START_REMINDER
+            putExtra(ReminderReceiver.EXTRA_TASK_ID, taskId)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            "start:$taskId".hashCode(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

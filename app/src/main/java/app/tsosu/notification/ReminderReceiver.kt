@@ -27,6 +27,7 @@ class ReminderReceiver : BroadcastReceiver() {
         const val ACTION_REMINDER = "app.tsosu.ACTION_REMINDER"
         const val ACTION_COMPLETE = "app.tsosu.ACTION_COMPLETE"
         const val ACTION_SNOOZE = "app.tsosu.ACTION_SNOOZE"
+        const val ACTION_START_REMINDER = "app.tsosu.ACTION_START_REMINDER"
         const val EXTRA_TASK_ID = "extra_task_id"
         const val ACTION_HABIT_REMINDER = "app.tsosu.ACTION_HABIT_REMINDER"
         const val ACTION_HABIT_COMPLETE = "app.tsosu.ACTION_HABIT_COMPLETE"
@@ -48,6 +49,7 @@ class ReminderReceiver : BroadcastReceiver() {
             ACTION_REMINDER -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleReminder(it) }
             ACTION_COMPLETE -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleComplete(context, it) }
             ACTION_SNOOZE -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleSnooze(context, it) }
+            ACTION_START_REMINDER -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleStartReminder(it) }
             ACTION_HABIT_REMINDER -> intent.getStringExtra(EXTRA_HABIT_ID)?.let { handleHabitReminder(it) }
             ACTION_HABIT_COMPLETE -> intent.getStringExtra(EXTRA_HABIT_ID)?.let { handleHabitComplete(context, it) }
         }
@@ -90,6 +92,24 @@ class ReminderReceiver : BroadcastReceiver() {
                     NotificationManagerCompat.from(context).cancel(taskId.hashCode())
                     watcher.pushSoon()
                 }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    /** Start-time nudge: fires at the task's start date + reminder time. */
+    private fun handleStartReminder(taskId: String) {
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val task = taskDao.getByIdSync(taskId) ?: return@launch
+                if (task.status >= 4) return@launch
+                notificationHelper.showStartReminder(
+                    taskId = task.id,
+                    title = task.title,
+                    notificationId = "start:${task.id}".hashCode(),
+                )
             } finally {
                 pendingResult.finish()
             }

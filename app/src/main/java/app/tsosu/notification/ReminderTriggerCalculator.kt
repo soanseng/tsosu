@@ -54,6 +54,40 @@ object ReminderTriggerCalculator {
     }
 
     /**
+     * Start-time alarm: when a task has both a start date and a reminder
+     * time, the reminder fires at that wall-clock time on the START date
+     * ("time to begin"), independent of the due reminder.
+     */
+    fun triggerStartMillisFor(
+        task: Task,
+        zone: TimeZone = TimeZone.currentSystemDefault(),
+        nowMillis: Long = System.currentTimeMillis(),
+    ): Long? {
+        val startDate = task.startDate ?: return null
+        val reminder = task.reminderTime ?: return null
+        if (task.status.isTerminal) return null
+        val trigger = startDate.date.atTime(reminder)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+        return trigger.takeIf { it > nowMillis }
+    }
+
+    /** Entity variant of [triggerStartMillisFor] for boot/sync reconciliation. */
+    fun triggerStartMillisForEntity(
+        task: TaskEntity,
+        zone: TimeZone = TimeZone.currentSystemDefault(),
+        nowMillis: Long = System.currentTimeMillis(),
+    ): Long? {
+        val reminderMinutes = task.reminderTimeMinutes ?: return null
+        val startDateMillis = task.startDate ?: return null
+        if (task.status >= 4) return null
+        val startDate = Instant.fromEpochMilliseconds(startDateMillis).toLocalDateTime(zone).date
+        val reminder = LocalTime(reminderMinutes / 60, reminderMinutes % 60)
+        val trigger = startDate.atTime(reminder).toInstant(zone).toEpochMilliseconds()
+        return trigger.takeIf { it > nowMillis }
+    }
+
+    /**
      * Next occurrence of a daily habit reminder (today if still in the
      * future, else tomorrow). Null when the habit has no reminder or is
      * archived — the caller then cancels any stale alarm.

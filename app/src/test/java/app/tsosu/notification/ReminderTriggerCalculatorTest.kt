@@ -32,6 +32,48 @@ class ReminderTriggerCalculatorTest {
         Instant.parse("${date}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00Z")
             .toEpochMilliseconds()
 
+    // --- start-time reminders ---
+
+    private fun startTask(
+        start: kotlinx.datetime.LocalDateTime?,
+        due: kotlinx.datetime.LocalDateTime? = null,
+    ) = Task(
+        id = "t1",
+        title = "Task",
+        dueDate = due,
+        startDate = start,
+        reminderTime = LocalTime(9, 0),
+    )
+
+    @Test
+    fun `start trigger fires at reminder time on start date`() {
+        val trigger = ReminderTriggerCalculator.triggerStartMillisFor(
+            startTask(start = LocalDateTime.parse("2026-08-15T00:00")),
+            zone,
+            now,
+        )
+        assertEquals(expectedTrigger("2026-08-15", 9, 0), trigger)
+    }
+
+    @Test
+    fun `start trigger null without start date or reminder`() {
+        assertNull(ReminderTriggerCalculator.triggerStartMillisFor(startTask(start = null), zone, now))
+        val noReminder = startTask(start = LocalDateTime.parse("2026-08-15T00:00"))
+            .copy(reminderTime = null)
+        assertNull(ReminderTriggerCalculator.triggerStartMillisFor(noReminder, zone, now))
+    }
+
+    @Test
+    fun `start trigger null when already past`() {
+        assertNull(
+            ReminderTriggerCalculator.triggerStartMillisFor(
+                startTask(start = LocalDateTime.parse("2026-08-10T00:00")),
+                zone,
+                now,
+            ),
+        )
+    }
+
     // --- domain Task ---
 
     @Test
