@@ -148,7 +148,7 @@
     <a class="btn btn-primary" href="#install" data-i18n="cta_install"></a>
     <a class="btn btn-secondary" href="https://github.com/soanseng/tsosu" target="_blank" rel="noopener" data-i18n="cta_github"></a>
   </div>
-  <p class="badges"><span class="ver">v1.1.0</span><span data-i18n="badges"></span></p>
+  <p class="badges"><span class="ver">v1.2.0</span><span data-i18n="badges"></span></p>
 </header>
 
 <section class="wrap" id="features">
@@ -218,6 +218,49 @@
       <h3 data-i18n="c12_t"></h3>
       <p data-i18n="c12_p"></p>
     </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">🔗</span>
+      <h3 data-i18n="c13_t"></h3>
+      <p data-i18n="c13_p"></p>
+    </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">🔍</span>
+      <h3 data-i18n="c14_t"></h3>
+      <p data-i18n="c14_p"></p>
+    </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">🍅</span>
+      <h3 data-i18n="c15_t"></h3>
+      <p data-i18n="c15_p"></p>
+    </div>
+    <div class="card">
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">🔔</span>
+      <h3 data-i18n="c16_t"></h3>
+      <p data-i18n="c16_p"></p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="guide">
+  <h2 data-i18n="guide_title"></h2>
+  <p class="section-sub" data-i18n="guide_sub"></p>
+  <div class="install">
+    <ol class="steps">
+      <li data-i18n-html="g1"></li>
+      <li data-i18n-html="g2"></li>
+      <li data-i18n-html="g3"></li>
+      <li data-i18n-html="g4"></li>
+      <li data-i18n-html="g5"></li>
+      <li data-i18n-html="g6"></li>
+      <li data-i18n-html="g7"></li>
+      <li data-i18n-html="g8"></li>
+      <li data-i18n-html="g9"></li>
+      <li data-i18n-html="g10"></li>
+    </ol>
   </div>
 </section>
 
@@ -276,7 +319,7 @@
       cta_install: "立即安裝",
       cta_github: "GitHub 原始碼",
       badges: "Android 原生（Kotlin + Compose）・免費・無廣告・無分析追蹤",
-      chip: "1.1.0 新",
+      chip: "1.2.0 新",
       features_title: "為什麼是 Tsosu？",
       features_sub: "多數任務管理器是為神經典型大腦設計的——逾期數字、無盡選項、落後時的罪惡感。Tsosu 不一樣。",
       c1_t: "Focus 3——「只要挑三件。」",
@@ -303,6 +346,26 @@
       c11_p: "從設定匯入 Todoist CSV 匯出檔——任務自動去重、寫成 Markdown、推進你的 vault。",
       c12_t: "English / 繁體中文",
       c12_p: "App 內一鍵切換語言。設定裡附重複與速記語法教學、版本資訊。",
+      c13_t: "隨手捕獲",
+      c13_p: "從任何 App 用系統分享把文字送進速記；選字選單也能直接加。再把 Tsosu 磁貼拉進快捷設定，一鍵開始記。語音輸入也在速記裡。",
+      c14_t: "搜尋運算子與新語法",
+      c14_p: "頂欄搜尋支援 status:done、due:<=7d、due:overdue、#tag 等運算子；速記標題新增 @project（自動歸檔）與 due:今天 / due:下週。",
+      c15_t: "番茄鐘與完整備份",
+      c15_p: "Focus 頁內建番茄鐘（15/3、25/5、50/10），專注分鐘自動記到任務上；設定可一鍵完整 JSON 備份／還原所有資料。",
+      c16_t: "更體貼的提醒",
+      c16_p: "提醒通知可稍後 10 分；設了開始日期的任務會在開始時間獨立提醒；每天早晚各一次溫和摘要。另有 TickTick 匯入、ICS 日曆訂閱與生物辨識鎖。",
+      guide_title: "1.2.0 怎麼用",
+      guide_sub: "十六項新功能的快速上手指南。",
+      g1: "<strong>分享捕獲</strong>：任何 App 裡分享文字 → 選 Tsosu → 速記自動帶入並解析語法。",
+      g2: "<strong>快捷設定磁貼</strong>：下拉快捷設定 → 編輯 → 把「快速新增任務」拖進來，之後一鍵開速記。",
+      g3: "<strong>語音輸入</strong>：速記標題列點 🎤 說出任務，說完自動解析。",
+      g4: "<strong>速記語法</strong>：標題打「繳房租 @家裡 due:明天 p1」→ 自動歸檔專案、設到期日、優先級。",
+      g5: "<strong>搜尋運算子</strong>：頂欄 🔍 輸入「status:todo due:<=7d #errands」之類的查詢。",
+      g6: "<strong>批次操作</strong>：收件匣右上「選取」→ 勾多筆 → 完成／改天再說／刪除。",
+      g7: "<strong>番茄鐘</strong>：Focus 頁選預設、挑任務、開始；專注結束分鐘數自動累計到該任務。",
+      g8: "<strong>每日摘要</strong>：設定 → 開啟「每日摘要」，早 8 點看今天計畫、晚 8 點慶祝收穫。",
+      g9: "<strong>備份與還原</strong>：設定 → Backup 匯出 JSON；還原會置換全部資料（先備份再玩）。",
+      g10: "<strong>日曆訂閱</strong>：日曆頁 → 「新增」→ 貼上 .ics 網址（Google/Nextcloud 私人網址），外部事件以色點顯示。",
       install_title: "安裝",
       install_sub: "推薦使用 Obtainium——直接追蹤 GitHub Releases，新版自動通知更新。",
       install_h3: "透過 Obtainium 安裝（推薦）",
@@ -332,7 +395,7 @@
       cta_install: "Get Tsosu",
       cta_github: "Source on GitHub",
       badges: "Native Android (Kotlin + Compose) · Free · No ads · No analytics",
-      chip: "NEW 1.1.0",
+      chip: "NEW 1.2.0",
       features_title: "Why Tsosu?",
       features_sub: "Most task managers are designed for neurotypical brains — overdue counters, endless options, guilt when you fall behind. Tsosu is different.",
       c1_t: "Focus 3 — “Just pick three.”",
@@ -359,6 +422,26 @@
       c11_p: "Import your Todoist CSV export from Settings — tasks are deduplicated, written as markdown, and pushed into your vault.",
       c12_t: "English / 繁體中文",
       c12_p: "Switch languages in-app. Settings includes a recurrence & quick-syntax reference and a version footer.",
+      c13_t: "Capture from anywhere",
+      c13_p: "Share text into quick add from any app — or straight from the text-selection menu. Add the Quick Settings tile for one-tap capture; voice input lives in quick add too.",
+      c14_t: "Search operators & new syntax",
+      c14_p: "Top-bar search understands status:done, due:<=7d, due:overdue and #tag; quick-add titles gain @project (auto-filed) and due:today / due:next week.",
+      c15_t: "Pomodoro & full backup",
+      c15_p: "A built-in pomodoro in Focus (15/3, 25/5, 50/10) logs focused minutes onto the attached task; Settings exports/restores everything as JSON.",
+      c16_t: "Kinder reminders",
+      c16_p: "Snooze notifications 10 minutes; tasks with a start date get their own “time to begin” nudge; gentle morning and evening digests. Plus TickTick import, ICS calendar subscriptions and a biometric app lock.",
+      guide_title: "How to use 1.2.0",
+      guide_sub: "A quick guide to the sixteen new features.",
+      g1: "<strong>Share capture</strong>: share text from any app → pick Tsosu → quick add opens pre-parsed.",
+      g2: "<strong>Quick Settings tile</strong>: pull down Quick Settings → edit → drag in the Tsosu tile for one-tap quick add.",
+      g3: "<strong>Voice input</strong>: tap 🎤 in the quick-add title and speak your task.",
+      g4: "<strong>Quick-add syntax</strong>: type “pay rent @Home due:tomorrow p1” → project, due date and priority are set automatically.",
+      g5: "<strong>Search operators</strong>: tap 🔍 in the top bar and try “status:todo due:<=7d #errands”.",
+      g6: "<strong>Bulk actions</strong>: Inbox → Select → check several → complete / someday / delete.",
+      g7: "<strong>Pomodoro</strong>: Focus tab → pick a preset, attach a task, start; minutes accumulate on the task.",
+      g8: "<strong>Daily digest</strong>: Settings → enable Daily digest for an 8am plan and an 8pm celebration.",
+      g9: "<strong>Backup & restore</strong>: Settings → Backup exports JSON; restore replaces everything (backup first!).",
+      g10: "<strong>Calendar subscriptions</strong>: Calendar tab → Add → paste an .ics URL (Google/Nextcloud private address); external events show as colored dots.",
       install_title: "Install",
       install_sub: "Obtainium is recommended — it tracks GitHub Releases directly and notifies you about updates.",
       install_h3: "Via Obtainium (recommended)",

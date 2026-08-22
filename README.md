@@ -12,6 +12,17 @@ Most task managers are designed for neurotypical brains. They punish you with ov
 
 Tsosu is different. It's built on clinical understanding of ADHD and the principles of Atomic Habits — **make it small, make it easy, celebrate progress.**
 
+## What's New in 1.2.0
+
+- **🔗 Capture from anywhere** — share text from any app (or the selection menu) straight into quick add, plus a Quick Settings tile and voice input.
+- **✍️ New quick-add syntax** — `@project` files the task automatically; `due:today` / `due:下週` / `due:8/31` sets the date.
+- **🔍 Search operators** — top-bar search with `status:done`, `due:<=7d`, `due:overdue`, `#tag`.
+- **🍅 Pomodoro in Focus** — 15/3, 25/5, 50/10 presets; focused minutes log onto the attached task.
+- **🔔 Kinder reminders** — snooze 10m from the notification, separate start-time nudges, morning & evening digests.
+- **📦 Bulk actions & backup** — multi-select complete/someday/delete in Inbox; full JSON backup/restore in Settings.
+- **📅 ICS subscriptions** — overlay external calendars read-only; **TickTick CSV import**; biometric app lock.
+- **🛠 Reliability** — recurring tasks completed from notifications/widgets now expand correctly; reminders survive app updates and timezone changes; RFC-5545-compliant .ics; timezone-stable streaks (DB v12, auto-migrates).
+
 ## What's New in 1.1.0
 
 - **⚡ Energy & streak freezes (Duolingo-style)** — completing tasks and habits earns energy; spend ⚡30 on a streak freeze that automatically bridges a missed day.

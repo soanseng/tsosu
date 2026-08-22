@@ -35,3 +35,12 @@ Full English and Traditional Chinese (zh-TW) support.
 
 PRIVACY FIRST
 No analytics. No ads. No tracking. Your data lives in your own markdown files.
+
+NEW IN 1.2.0
+• Capture from anywhere: share text into quick add, Quick Settings tile, voice input
+• Quick-add syntax: @project and due: tokens
+• Search operators (status:, due:<=7d, #tag)
+• Pomodoro timer in Focus with per-task time logging
+• Snooze reminders, start-time nudges, morning & evening digests
+• Bulk actions, full JSON backup/restore
+• TickTick CSV import, ICS calendar subscriptions, biometric app lock
