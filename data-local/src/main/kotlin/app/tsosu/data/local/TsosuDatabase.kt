@@ -21,9 +21,7 @@ import app.tsosu.data.local.entity.ProjectEntity
 import app.tsosu.data.local.entity.RoutineEntity
 import app.tsosu.data.local.entity.StreakShieldEntity
 import app.tsosu.data.local.entity.TaskEntity
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -121,39 +119,29 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val tz = TimeZone.currentSystemDefault()
         for (table in listOf("habit_completions", "streak_shields")) {
-            // rowid -> converted epoch days
-            val converted = mutableListOf<Pair<Long, Long>>()
+            val rows = mutableListOf<EpochDateMigrationPlanner.MigrationRow>()
             db.query("SELECT rowid, habitId, date FROM $table").use { cursor ->
                 while (cursor.moveToNext()) {
-                    val days = Instant.fromEpochMilliseconds(cursor.getLong(2))
-                        .toLocalDateTime(tz).date.toEpochDays().toLong()
-                    converted.add(cursor.getLong(0) to days)
+                    rows.add(
+                        EpochDateMigrationPlanner.MigrationRow(
+                            rowId = cursor.getLong(0),
+                            habitId = cursor.getString(1),
+                            dateMillis = cursor.getLong(2),
+                        ),
+                    )
                 }
             }
-            // Collapse collisions (same habit + day) keeping the lowest rowid.
-            val habitIdByRow = db.query("SELECT rowid, habitId FROM $table").use { cursor ->
-                buildMap {
-                    while (cursor.moveToNext()) {
-                        put(cursor.getLong(0), cursor.getString(1))
-                    }
-                }
-            }
-            val winners = converted
-                .groupBy { habitIdByRow[it.first] to it.second }
-                .mapValues { (_, rows) -> rows.minBy { (rowId, _) -> rowId }.first }
-                .values.toSet()
-            val losers = converted.map { it.first }.filter { it !in winners }
+            val plan = EpochDateMigrationPlanner.plan(rows, tz)
 
             db.beginTransaction()
             try {
                 val delete = db.compileStatement("DELETE FROM $table WHERE rowid = ?")
-                for (rowId in losers) {
+                for (rowId in plan.deletes) {
                     delete.bindLong(1, rowId)
                     delete.executeUpdateDelete()
                 }
                 val update = db.compileStatement("UPDATE $table SET date = ? WHERE rowid = ?")
-                for ((rowId, days) in converted) {
-                    if (rowId !in winners) continue
+                for ((rowId, days) in plan.updates) {
                     update.bindLong(1, days)
                     update.bindLong(2, rowId)
                     update.executeUpdateDelete()

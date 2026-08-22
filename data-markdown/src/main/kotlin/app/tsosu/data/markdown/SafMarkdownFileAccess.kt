@@ -72,41 +72,36 @@ class SafMarkdownFileAccess(
     }
 
     /**
-     * Crash-safe write: the full content lands in a temp sibling first, then
-     * the target is replaced by rename. A process death mid-write can only
-     * orphan `<filename>.tmp` (overwritten next sync), never truncate the
-     * real note. If the provider refuses the rename, falls back to a direct
-     * write so the data still lands.
+     * Crash-safe write via [AtomicFileWriter] (temp + rename); see that
+     * class for the failure semantics.
      */
     private fun writeAtomically(folder: DocumentFile, filename: String, content: String) {
-        val tempName = "$filename.tmp"
-        val temp = folder.findFile(tempName)
-            ?: folder.createFile("text/markdown", tempName)
-            ?: return
+        AtomicFileWriter(DocumentFileFolder(context, folder)).write(filename, content)
+    }
 
-        val wroteTemp = context.contentResolver.openOutputStream(temp.uri, "wt")?.use { stream ->
-            stream.bufferedWriter().use { it.write(content) }
-            true
-        } ?: false
-        if (!wroteTemp) {
-            temp.delete()
-            return
-        }
+    private class DocumentFileFolder(
+        private val context: Context,
+        private val folder: DocumentFile,
+    ) : WritableFolder {
+        override fun findFile(name: String): WritableFile? =
+            folder.findFile(name)?.let { DocumentFileFile(context, it) }
 
-        val target = folder.findFile(filename)
-        target?.delete()
-        if (temp.renameTo(filename)) return
+        override fun createFile(name: String): WritableFile? =
+            folder.createFile("text/markdown", name)?.let { DocumentFileFile(context, it) }
+    }
 
-        // Rename refused (provider quirk): recreate the target (the old
-        // handle is dead after delete) and write through directly, then
-        // clean up the temp file.
-        val direct = folder.createFile("text/markdown", filename)
-        direct?.let { file ->
+    private class DocumentFileFile(
+        private val context: Context,
+        private val file: DocumentFile,
+    ) : WritableFile {
+        override fun writeText(content: String): Boolean =
             context.contentResolver.openOutputStream(file.uri, "wt")?.use { stream ->
                 stream.bufferedWriter().use { it.write(content) }
-            }
-        }
-        temp.delete()
+                true
+            } ?: false
+
+        override fun delete(): Boolean = file.delete()
+        override fun renameTo(name: String): Boolean = file.renameTo(name)
     }
 
     companion object {

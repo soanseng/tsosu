@@ -33,6 +33,7 @@ class HabitRepositoryImpl(
     private val habitDao: HabitDao,
     private val onHabitChanged: (suspend (habitId: String) -> Unit)? = null,
     private val gamification: GamificationRepository? = null,
+    private val now: () -> Instant = { Clock.System.now() },
 ) : HabitRepository {
     override fun getActiveHabits(): Flow<List<Habit>> =
         habitDao.getActiveHabits().map { it.map { e -> e.toDomain() } }
@@ -100,12 +101,12 @@ class HabitRepositoryImpl(
 
     override suspend fun completeHabit(habitId: String, date: LocalDate): Result<HabitCompletion> =
         runCatching {
-            val now = Clock.System.now()
-            val completion = HabitCompletion(habitId, date, now)
+            val timestamp = now()
+            val completion = HabitCompletion(habitId, date, timestamp)
             val inserted = habitDao.insertCompletionOnce(
                 habitId = habitId,
                 date = completion.toEntity().date,
-                completedAt = now.toEpochMilliseconds(),
+                completedAt = timestamp.toEpochMilliseconds(),
             )
             if (inserted > 0) {
                 // First completion of the day earns energy.
@@ -135,11 +136,11 @@ class HabitRepositoryImpl(
     private fun localDayTicker(): Flow<LocalDate> = flow {
         while (currentCoroutineContext().isActive) {
             val tz = TimeZone.currentSystemDefault()
-            val now = Clock.System.now()
-            val today = now.toLocalDateTime(tz).date
+            val current = now()
+            val today = current.toLocalDateTime(tz).date
             emit(today)
             val nextMidnight = today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(tz)
-            val waitMillis = (nextMidnight - now).inWholeMilliseconds + 50
+            val waitMillis = (nextMidnight - current).inWholeMilliseconds + 50
             delay(waitMillis.coerceAtLeast(1))
         }
     }
