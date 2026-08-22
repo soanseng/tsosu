@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,6 +55,8 @@ fun FocusScreen(
     onSelectFolder: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val pomodoro by viewModel.pomodoro.collectAsStateWithLifecycle()
+    val pomodoroTaskId by viewModel.pomodoroTaskId.collectAsStateWithLifecycle()
     val konfettiTrigger = remember { mutableIntStateOf(0) }
     var noDateExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -64,6 +68,18 @@ fun FocusScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        item(key = "pomodoro") {
+            PomodoroCard(
+                state = pomodoro,
+                selectedTaskId = pomodoroTaskId,
+                tasks = state.focusTasks + state.otherTasks,
+                onPresetSelected = viewModel::onPomodoroPresetSelected,
+                onTaskSelected = viewModel::onPomodoroTaskSelected,
+                onStart = viewModel::startPomodoro,
+                onReset = viewModel::resetPomodoro,
+            )
+        }
+
         if (!isVaultConfigured) {
             item {
                 Spacer(Modifier.height(8.dp))
@@ -238,5 +254,96 @@ fun FocusScreen(
         }
 
         item { Spacer(Modifier.height(80.dp)) }
+    }
+}
+
+
+@Composable
+private fun PomodoroCard(
+    state: app.tsosu.domain.usecase.PomodoroEngine.State,
+    selectedTaskId: String?,
+    tasks: List<app.tsosu.domain.model.Task>,
+    onPresetSelected: (app.tsosu.domain.usecase.PomodoroEngine.Preset) -> Unit,
+    onTaskSelected: (String?) -> Unit,
+    onStart: () -> Unit,
+    onReset: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(stringResource(R.string.pomodoro_title), style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                app.tsosu.domain.usecase.PomodoroEngine.PRESETS.forEach { preset ->
+                    androidx.compose.material3.FilterChip(
+                        selected = state.preset == preset,
+                        onClick = { onPresetSelected(preset) },
+                        label = { Text(preset.label) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            val minutes = state.secondsLeft / 60
+            val seconds = state.secondsLeft % 60
+            Text(
+                "%02d:%02d".format(minutes, seconds),
+                style = MaterialTheme.typography.displayMedium,
+            )
+            val phaseText = when (state.phase) {
+                app.tsosu.domain.usecase.PomodoroEngine.Phase.WORK -> stringResource(R.string.pomodoro_work)
+                app.tsosu.domain.usecase.PomodoroEngine.Phase.BREAK,
+                app.tsosu.domain.usecase.PomodoroEngine.Phase.FINISHED_BREAK,
+                -> stringResource(R.string.pomodoro_break)
+                app.tsosu.domain.usecase.PomodoroEngine.Phase.FINISHED_WORK -> stringResource(R.string.pomodoro_break_ready)
+                else -> stringResource(R.string.pomodoro_idle)
+            }
+            Text(phaseText, style = MaterialTheme.typography.bodySmall)
+            if (state.completedWorkSessions > 0) {
+                Text(
+                    stringResource(R.string.pomodoro_sessions, state.completedWorkSessions),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+
+            // Attach the session to one of today's tasks (optional).
+            var taskExpanded by remember { mutableStateOf(false) }
+            Box {
+                OutlinedButton(onClick = { taskExpanded = true }) {
+                    Text(
+                        tasks.firstOrNull { it.id == selectedTaskId }?.title
+                            ?: stringResource(R.string.pomodoro_pick_task),
+                    )
+                }
+                androidx.compose.material3.DropdownMenu(
+                    expanded = taskExpanded,
+                    onDismissRequest = { taskExpanded = false },
+                ) {
+                    tasks.forEach { t ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(t.title) },
+                            onClick = {
+                                onTaskSelected(t.id)
+                                taskExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onStart, enabled = state.phase != app.tsosu.domain.usecase.PomodoroEngine.Phase.WORK) {
+                    Text(
+                        when (state.phase) {
+                            app.tsosu.domain.usecase.PomodoroEngine.Phase.BREAK -> stringResource(R.string.pomodoro_break)
+                            app.tsosu.domain.usecase.PomodoroEngine.Phase.FINISHED_WORK -> stringResource(R.string.pomodoro_start_break)
+                            else -> stringResource(R.string.pomodoro_start)
+                        },
+                    )
+                }
+                OutlinedButton(onClick = onReset) {
+                    Text(stringResource(R.string.pomodoro_reset))
+                }
+            }
+        }
     }
 }

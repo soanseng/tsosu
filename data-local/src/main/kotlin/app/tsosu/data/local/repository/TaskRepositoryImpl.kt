@@ -53,6 +53,12 @@ class TaskRepositoryImpl(
     override fun getTask(taskId: String): Flow<Task?> =
         taskDao.getById(taskId).map { it?.toDomain() }
 
+    override suspend fun addTimeSpent(taskId: String, minutes: Int) {
+        if (minutes <= 0) return
+        taskDao.addTimeSpent(taskId, minutes, Clock.System.now().toEpochMilliseconds())
+        onTaskChanged?.invoke(taskId, "UPDATE", null)
+    }
+
     override fun searchTasks(query: String): Flow<List<Task>> {
         val parsed = SearchQueryParser.parse(query)
         // First text term narrows via SQL LIKE; everything else filters in

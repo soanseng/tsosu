@@ -10,6 +10,7 @@ import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.repository.FocusRepository
 import app.tsosu.domain.usecase.GetTodayOverviewUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
+import app.tsosu.domain.usecase.PomodoroEngine
 import app.tsosu.domain.usecase.SetDailyFocusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
 import app.tsosu.notification.ReminderScheduler
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -53,6 +56,61 @@ class FocusViewModel @Inject constructor(
 
     private val _filterSpec = MutableStateFlow(FilterSpec())
     val filterSpec: StateFlow<FilterSpec> = _filterSpec.asStateFlow()
+
+    // ── Pomodoro ──
+
+    private val _pomodoro = MutableStateFlow(PomodoroEngine.State())
+    val pomodoro: StateFlow<PomodoroEngine.State> = _pomodoro.asStateFlow()
+
+    private val _pomodoroTaskId = MutableStateFlow<String?>(null)
+    val pomodoroTaskId: StateFlow<String?> = _pomodoroTaskId.asStateFlow()
+
+    private var tickJob: Job? = null
+
+    fun onPomodoroPresetSelected(preset: PomodoroEngine.Preset) {
+        _pomodoro.value = PomodoroEngine.State(preset = preset)
+        stopTicking()
+    }
+
+    fun onPomodoroTaskSelected(taskId: String?) {
+        _pomodoroTaskId.value = taskId
+    }
+
+    fun startPomodoro() {
+        if (_pomodoro.value.isRunning) return
+        val next = when (_pomodoro.value.phase) {
+            PomodoroEngine.Phase.FINISHED_WORK -> PomodoroEngine.startBreak(_pomodoro.value)
+            PomodoroEngine.Phase.FINISHED_BREAK -> PomodoroEngine.startWork(_pomodoro.value)
+            else -> PomodoroEngine.start(_pomodoro.value)
+        }
+        _pomodoro.value = next
+        stopTicking()
+        tickJob = viewModelScope.launch {
+            while (true) {
+                delay(1_000)
+                val state = PomodoroEngine.tick(_pomodoro.value)
+                _pomodoro.value = state
+                if (state.phase == PomodoroEngine.Phase.FINISHED_WORK) {
+                    // Log the focused minutes onto the selected task.
+                    _pomodoroTaskId.value?.let { id ->
+                        taskRepository.addTimeSpent(id, _pomodoro.value.preset.workMinutes)
+                    }
+                    break
+                }
+                if (state.phase == PomodoroEngine.Phase.FINISHED_BREAK) break
+            }
+        }
+    }
+
+    fun resetPomodoro() {
+        stopTicking()
+        _pomodoro.value = PomodoroEngine.reset()
+    }
+
+    private fun stopTicking() {
+        tickJob?.cancel()
+        tickJob = null
+    }
 
     private val _sortSpec = MutableStateFlow(SortSpec())
     val sortSpec: StateFlow<SortSpec> = _sortSpec.asStateFlow()

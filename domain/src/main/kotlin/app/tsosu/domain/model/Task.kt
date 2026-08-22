@@ -30,6 +30,7 @@ data class Task(
     val estimatedMinutes: Int? = null,
     val energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
     val isFocus: Boolean = false,
+    val timeSpentMinutes: Int = 0,
     // Habit metadata when this task represents a recurring habit (unified model).
     val tinyVersion: String? = null,
     val routineTime: RoutineTime? = null,

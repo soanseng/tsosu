@@ -32,6 +32,7 @@ data class TaskEntity(
     val tinyVersion: String? = null,
     val routineTime: Int? = null,
     val completionsCsv: String? = null,
+    val timeSpentMinutes: Int = 0,
     val createdAt: Long,
     val updatedAt: Long,
     val syncStatus: Int = 0,

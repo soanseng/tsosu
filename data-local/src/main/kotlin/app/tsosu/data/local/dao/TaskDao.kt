@@ -77,6 +77,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     suspend fun getByIdSync(taskId: String): TaskEntity?
 
+    @Query("UPDATE tasks SET timeSpentMinutes = timeSpentMinutes + :minutes, updatedAt = :updatedAt WHERE id = :taskId")
+    suspend fun addTimeSpent(taskId: String, minutes: Int, updatedAt: Long)
+
     @Query("UPDATE tasks SET serverId = :serverId WHERE id = :id")
     suspend fun updateServerId(id: String, serverId: Long)
 

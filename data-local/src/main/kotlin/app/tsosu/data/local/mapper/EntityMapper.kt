@@ -57,6 +57,7 @@ fun TaskEntity.toDomain(): Task = Task(
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     isFocus = isFocus,
+    timeSpentMinutes = timeSpentMinutes,
     tinyVersion = tinyVersion,
     routineTime = routineTime?.let { RoutineTime.fromOrdinal(it) },
     completions = completionsCsv.orEmpty()

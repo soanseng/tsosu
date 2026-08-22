@@ -85,6 +85,16 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
+    <string name="pomodoro_title">Pomodoro</string>
+    <string name="pomodoro_work">Focus time</string>
+    <string name="pomodoro_break">Break</string>
+    <string name="pomodoro_break_ready">Break is ready</string>
+    <string name="pomodoro_idle">Ready</string>
+    <string name="pomodoro_sessions">%d sessions today</string>
+    <string name="pomodoro_pick_task">Attach to task…</string>
+    <string name="pomodoro_start">Start</string>
+    <string name="pomodoro_start_break">Take break</string>
+    <string name="pomodoro_reset">Reset</string>
     <string name="bulk_select">Select</string>
     <string name="bulk_cancel">Cancel</string>
     <string name="bulk_complete">Complete</string>

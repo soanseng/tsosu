@@ -177,6 +177,16 @@
     <string name="notif_action_snooze">稍後 10 分</string>
     <string name="notif_start_title">開始時間到了</string>
     <string name="tile_quick_add">快速新增任務</string>
+    <string name="pomodoro_title">番茄鐘</string>
+    <string name="pomodoro_work">專注中</string>
+    <string name="pomodoro_break">休息</string>
+    <string name="pomodoro_break_ready">休息時間到</string>
+    <string name="pomodoro_idle">準備開始</string>
+    <string name="pomodoro_sessions">今天已完成 %d 次專注</string>
+    <string name="pomodoro_pick_task">綁定任務…</string>
+    <string name="pomodoro_start">開始</string>
+    <string name="pomodoro_start_break">休息一下</string>
+    <string name="pomodoro_reset">重設</string>
     <string name="bulk_select">選取</string>
     <string name="bulk_cancel">取消</string>
     <string name="bulk_complete">完成</string>
