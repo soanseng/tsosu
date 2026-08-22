@@ -21,6 +21,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import android.speech.RecognizerIntent
+import app.tsosu.domain.recurrence.QuickAddGrammar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -60,6 +61,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.ui.util.rememberHaptic
 import kotlinx.datetime.Clock
+import kotlinx.datetime.todayIn
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
@@ -75,12 +77,11 @@ private enum class RecurrenceOption(val label: String, val rrule: String?) {
     WEEKLY("Weekly", "RRULE:FREQ=WEEKLY"),
     CUSTOM("Custom", null),
 }
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun QuickAddTaskSheet(
     onDismiss: () -> Unit,
-    onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?) -> Unit,
+    onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?, projectName: String?) -> Unit,
     initialDueDate: LocalDateTime? = null,
     initialTitle: String? = null,
 ) {
@@ -104,12 +105,14 @@ fun QuickAddTaskSheet(
     var selectedRecurrence by remember { mutableStateOf(RecurrenceOption.NONE) }
     var detectedRrule by remember { mutableStateOf<String?>(null) }
     var detectedPriority by remember { mutableStateOf<Priority?>(null) }
+    var detectedProjectName by remember { mutableStateOf<String?>(null) }
     var customRecurrence by remember { mutableStateOf("") }
     var cleanTitle by remember { mutableStateOf("") }
     var showRecurrenceHelp by remember { mutableStateOf(false) }
 
     fun applyTitleInput(newValue: String) {
-        // Detect p1-p4 priority token first, then the recurrence pattern.
+        // Detect p1-p4 priority token first, then the recurrence pattern,
+        // then @project / due: grammar tokens.
         var working = newValue
         val prio = TitlePriority.extract(working)
         if (prio.priority != null) {
@@ -120,9 +123,8 @@ fun QuickAddTaskSheet(
         }
         // Detect trailing recurrence pattern
         val extraction = recurrenceParser.extractFromTitle(working)
-        if (extraction.rrule != null) {
+        val baseTitle = if (extraction.rrule != null) {
             detectedRrule = extraction.rrule
-            cleanTitle = extraction.title
             // "starting <date>" prefills the first due date unless the
             // user already picked one manually.
             extraction.startDate?.let { start ->
@@ -137,9 +139,23 @@ fun QuickAddTaskSheet(
                     reminderTime = preset
                 }
             }
+            extraction.title
         } else {
             detectedRrule = null
-            cleanTitle = working
+            working
+        }
+        // @project and due: tokens (explicit due: overrides a "starting"
+        // prefill — the token is the more deliberate intent).
+        val grammar = QuickAddGrammar.extract(
+            baseTitle,
+            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        ) { phrase -> recurrenceParser.parseFlexibleDate(phrase) }
+        detectedProjectName = grammar.projectName
+        cleanTitle = grammar.title
+        grammar.dueDate?.let { d ->
+            if (!datePickedManually) {
+                dueDate = LocalDateTime(d, LocalTime(0, 0))
+            }
         }
     }
 
@@ -472,6 +488,7 @@ fun QuickAddTaskSheet(
                         dueDate,
                         reminderTime,
                         recurrenceRule,
+                        detectedProjectName,
                     )
                     onDismiss()
                 } else {

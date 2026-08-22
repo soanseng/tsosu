@@ -33,7 +33,7 @@ class QuickAddTaskSheetScreenshotTest {
             TsosuTheme(darkTheme = false) {
                 QuickAddTaskSheet(
                     onDismiss = {},
-                    onAdd = { _, _, _, _, _, _, _ -> },
+                    onAdd = { _, _, _, _, _, _, _, _ -> },
                 )
             }
         }

@@ -335,11 +335,23 @@ class MainActivity : AppCompatActivity() {
                             },
                             initialDueDate = quickAddInitialDate,
                             initialTitle = sharedCaptureText,
-                            onAdd = { title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule ->
-                                quickAddViewModel.createTask(title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule)
+                            onAdd = { title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule, projectName ->
+                                quickAddViewModel.createTask(title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule, projectName)
                                 showAddTask = false
                                 sharedCaptureText = null
                             },
+                        )
+                    }
+                }
+
+                editingTaskId?.let { taskId ->
+                    ModalBottomSheet(
+                        onDismissRequest = { editingTaskId = null },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    ) {
+                        TaskDetailSheet(
+                            taskId = taskId,
+                            onDismiss = { editingTaskId = null },
                         )
                     }
                 }

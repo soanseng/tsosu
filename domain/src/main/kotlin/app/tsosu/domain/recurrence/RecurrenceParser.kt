@@ -181,7 +181,7 @@ class RecurrenceParser {
      * Flexible date: 8/31, 2026/8/31, 2026-08-31, aug 31, august 31 2027,
      * and Chinese 8月31 / 2026年8月31日. No year → current year.
      */
-    internal fun parseFlexibleDate(raw: String): kotlinx.datetime.LocalDate? {
+    fun parseFlexibleDate(raw: String): kotlinx.datetime.LocalDate? {
         val text = raw.trim()
 
         ZH_DATE.matchEntire(text)?.let { match ->
