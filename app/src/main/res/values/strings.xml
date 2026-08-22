@@ -85,6 +85,12 @@
     <string name="notif_action_snooze">Snooze 10m</string>
     <string name="notif_start_title">Time to start</string>
     <string name="tile_quick_add">Quick add task</string>
+    <string name="digest_morning_title">Morning plan 🌅</string>
+    <string name="digest_evening_title">Today’s wins 🎉</string>
+    <string name="digest_morning_body">Today: %1$s\nHabits %3$d/%4$d</string>
+    <string name="digest_evening_body">Completed %2$d tasks 🎉\nHabits %3$d/%4$d</string>
+    <string name="settings_digest">Daily digest</string>
+    <string name="settings_digest_desc">Morning plan and evening celebration at 8am/8pm</string>
     <string name="quick_add_voice">Voice input</string>
     <string name="search_result_count">%d results</string>
     <string name="notif_channel_habits">Habit Reminders</string>

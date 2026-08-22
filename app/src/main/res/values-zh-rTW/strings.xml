@@ -177,6 +177,12 @@
     <string name="notif_action_snooze">稍後 10 分</string>
     <string name="notif_start_title">開始時間到了</string>
     <string name="tile_quick_add">快速新增任務</string>
+    <string name="digest_morning_title">晨間計畫 🌅</string>
+    <string name="digest_evening_title">今天的收穫 🎉</string>
+    <string name="digest_morning_body">今天：%1$s\n習慣 %3$d/%4$d</string>
+    <string name="digest_evening_body">完成了 %2$d 個任務 🎉\n習慣 %3$d/%4$d</string>
+    <string name="settings_digest">每日摘要</string>
+    <string name="settings_digest_desc">早 8 點晨間計畫、晚 8 點慶祝回顧</string>
     <string name="quick_add_voice">語音輸入</string>
     <string name="search_result_count">%d 筆結果</string>
     <string name="notif_channel_habits">習慣提醒</string>

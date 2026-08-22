@@ -27,6 +27,7 @@ class NotificationHelper @Inject constructor(
         const val CHANNEL_OVERDUE = "task_overdue"
         const val CHANNEL_HABITS = "habit_reminders"
         private const val OVERDUE_SUMMARY_ID = 2001
+        const val DIGEST_ID = 40_100
     }
 
     init {
@@ -223,6 +224,32 @@ class NotificationHelper @Inject constructor(
             .build()
 
         NotificationManagerCompat.from(context).notify(OVERDUE_SUMMARY_ID, notification)
+    }
+
+    fun showDigest(morning: Boolean, text: String) {
+        if (!hasPermission()) return
+        val tapIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val tapPending = PendingIntent.getActivity(
+            context,
+            DIGEST_ID,
+            tapIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notification = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(
+                context.getString(
+                    if (morning) R.string.digest_morning_title else R.string.digest_evening_title,
+                ),
+            )
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentText(text)
+            .setContentIntent(tapPending)
+            .setAutoCancel(true)
+            .build()
+        NotificationManagerCompat.from(context).notify(DIGEST_ID, notification)
     }
 
     fun cancelOverdueSummary() {

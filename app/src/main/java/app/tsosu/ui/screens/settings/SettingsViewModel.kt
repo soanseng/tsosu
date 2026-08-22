@@ -24,6 +24,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.LanguageOption
 import app.tsosu.ui.theme.LocaleHelper
+import app.tsosu.notification.DigestPreferences
 import app.tsosu.ui.theme.ThemePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,6 +66,7 @@ class SettingsViewModel @Inject constructor(
     private val importRepository: ImportRepository,
     private val projectRepository: ProjectRepository,
     private val themePreferences: ThemePreferences,
+    private val digestPreferences: DigestPreferences,
     private val exportIcsUseCase: ExportIcsUseCase,
     private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
@@ -77,6 +79,9 @@ class SettingsViewModel @Inject constructor(
 
     val darkMode: StateFlow<DarkModeOption> = themePreferences.darkMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DarkModeOption.SYSTEM)
+
+    val digestEnabled: StateFlow<Boolean> = digestPreferences.enabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _language = MutableStateFlow(LocaleHelper.current())
     val language: StateFlow<LanguageOption> = _language
@@ -324,6 +329,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setDarkMode(option: DarkModeOption) {
         viewModelScope.launch { themePreferences.setDarkMode(option) }
+    }
+
+    fun setDigestEnabled(enabled: Boolean) {
+        viewModelScope.launch { digestPreferences.setEnabled(enabled) }
     }
 
     fun setLanguage(option: LanguageOption) {

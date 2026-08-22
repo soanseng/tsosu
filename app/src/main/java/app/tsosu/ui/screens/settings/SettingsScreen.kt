@@ -70,6 +70,7 @@ import java.io.File
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
+    val digestEnabled by viewModel.digestEnabled.collectAsStateWithLifecycle()
     val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -136,6 +137,25 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             Switch(
                 checked = dynamicColor,
                 onCheckedChange = { viewModel.setDynamicColor(it) },
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(stringResource(R.string.settings_digest), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.settings_digest_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = digestEnabled,
+                onCheckedChange = { viewModel.setDigestEnabled(it) },
             )
         }
 
