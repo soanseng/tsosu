@@ -38,6 +38,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' ORDER BY updatedAt DESC")
     fun search(query: String): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE status = :status ORDER BY position")
+    fun getByStatus(status: Int): Flow<List<TaskEntity>>
+
     @Query("SELECT * FROM tasks WHERE isFocus = 1 AND dueDate BETWEEN :startOfDay AND :endOfDay ORDER BY position")
     fun getFocusTasks(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
 

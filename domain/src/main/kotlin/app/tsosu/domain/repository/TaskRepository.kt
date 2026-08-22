@@ -12,6 +12,8 @@ interface TaskRepository {
     fun getUpcomingTasks(days: Int = 7): Flow<List<Task>>
     fun getTasksForProject(projectId: String): Flow<List<Task>>
     fun getTask(taskId: String): Flow<Task?>
+    fun getTasksByStatus(status: TaskStatus): Flow<List<Task>>
+
     /** Adds focused minutes to a task's time-spent tally (pomodoro logging). */
     suspend fun addTimeSpent(taskId: String, minutes: Int)
 

@@ -53,6 +53,9 @@ class TaskRepositoryImpl(
     override fun getTask(taskId: String): Flow<Task?> =
         taskDao.getById(taskId).map { it?.toDomain() }
 
+    override fun getTasksByStatus(status: TaskStatus): Flow<List<Task>> =
+        taskDao.getByStatus(status.ordinal).map { it.map { e -> e.toDomain() } }
+
     override suspend fun addTimeSpent(taskId: String, minutes: Int) {
         if (minutes <= 0) return
         taskDao.addTimeSpent(taskId, minutes, Clock.System.now().toEpochMilliseconds())
