@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.map
 
 private val Context.digestDataStore by preferencesDataStore(name = "digest_prefs")
 
-class DigestPreferences(private val context: Context) {
+class DigestPreferences @javax.inject.Inject constructor(private val context: Context) {
 
     private companion object {
         val ENABLED = booleanPreferencesKey("digest_enabled")
