@@ -17,4 +17,11 @@ interface FocusDao {
 
     @Query("SELECT COUNT(*) FROM daily_focus WHERE date BETWEEN :startDate AND :endDate AND (taskId1 IS NOT NULL OR taskId2 IS NOT NULL OR taskId3 IS NOT NULL)")
     fun getFocusDaysCount(startDate: Long, endDate: Long): Flow<Int>
+
+    @Query("SELECT * FROM daily_focus")
+    suspend fun getAll(): List<DailyFocusEntity>
+
+    @Query("DELETE FROM daily_focus")
+    suspend fun clearAll()
+
 }

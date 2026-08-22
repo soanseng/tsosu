@@ -1,6 +1,8 @@
 package app.tsosu.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import app.tsosu.data.local.entity.GamificationEntity
 import kotlinx.coroutines.flow.Flow
@@ -40,4 +42,14 @@ interface GamificationDao {
 
     @Query("INSERT OR IGNORE INTO gamification (id, energy) VALUES (1, 0)")
     suspend fun ensureRow()
+
+    @Query("SELECT * FROM gamification WHERE id = 1")
+    suspend fun getEnergyRow(): GamificationEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRow(row: GamificationEntity)
+
+    @Query("DELETE FROM gamification")
+    suspend fun clearAll()
+
 }

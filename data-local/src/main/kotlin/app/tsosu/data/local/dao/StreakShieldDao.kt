@@ -17,4 +17,11 @@ interface StreakShieldDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(shield: StreakShieldEntity)
+
+    @Query("SELECT * FROM streak_shields")
+    fun all(): Flow<List<StreakShieldEntity>>
+
+    @Query("DELETE FROM streak_shields")
+    suspend fun clearAll()
+
 }

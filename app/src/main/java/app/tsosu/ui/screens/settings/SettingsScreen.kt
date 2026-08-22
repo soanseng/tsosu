@@ -467,6 +467,40 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
         HorizontalDivider()
 
+        // Backup Section
+        Text("Backup", style = MaterialTheme.typography.titleMedium)
+
+        val backupFilePicker = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json"),
+        ) { uri ->
+            uri ?: return@rememberLauncherForActivityResult
+            viewModel.exportBackup(uri, context)
+        }
+        val restoreFilePicker = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            uri ?: return@rememberLauncherForActivityResult
+            viewModel.restoreBackup(uri, context)
+        }
+
+        Text(
+            "Full JSON backup of tasks, habits, streaks and progress.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = {
+                backupFilePicker.launch("tsosu-backup.json")
+            }) {
+                Text("Backup")
+            }
+            OutlinedButton(onClick = {
+                restoreFilePicker.launch(arrayOf("application/json"))
+            }) {
+                Text("Restore")
+            }
+        }
+
         // Export Section
         Text("Export", style = MaterialTheme.typography.titleMedium)
 

@@ -31,4 +31,8 @@ interface ProjectDao {
 
     @Query("SELECT * FROM projects WHERE id = :id LIMIT 1")
     suspend fun getByIdSync(id: String): ProjectEntity?
+
+    @Query("DELETE FROM projects")
+    suspend fun clearAll()
+
 }

@@ -24,7 +24,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.LanguageOption
 import app.tsosu.ui.theme.LocaleHelper
+import app.tsosu.data.local.BackupRepository
 import app.tsosu.notification.DigestPreferences
+import app.tsosu.notification.ReminderResync
 import app.tsosu.ui.theme.ThemePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -67,6 +69,8 @@ class SettingsViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val themePreferences: ThemePreferences,
     private val digestPreferences: DigestPreferences,
+    private val backupRepository: BackupRepository,
+    private val reminderResync: ReminderResync,
     private val exportIcsUseCase: ExportIcsUseCase,
     private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
@@ -338,6 +342,37 @@ class SettingsViewModel @Inject constructor(
     fun setLanguage(option: LanguageOption) {
         LocaleHelper.apply(option)
         _language.value = option
+    }
+
+    fun exportBackup(uri: Uri, context: Context) {
+        viewModelScope.launch {
+            runCatching {
+                val json = backupRepository.exportJson()
+                context.contentResolver.openOutputStream(uri, "wt")?.use { out ->
+                    out.bufferedWriter().write(json)
+                }
+            }.onSuccess {
+                _uiState.value = _uiState.value.copy(message = "Backup saved ✓")
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(message = "Backup failed: ${e.message}")
+            }
+        }
+    }
+
+    fun restoreBackup(uri: Uri, context: Context) {
+        viewModelScope.launch {
+            runCatching {
+                val text = context.contentResolver.openInputStream(uri)?.use { input ->
+                    input.bufferedReader().readText()
+                } ?: error("Could not read backup file")
+                backupRepository.restore(backupRepository.decode(text))
+            }.onSuccess {
+                reminderResync.afterSync()
+                _uiState.value = _uiState.value.copy(message = "Backup restored ✓")
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(message = "Restore failed: ${e.message}")
+            }
+        }
     }
 
     fun exportIcs() {

@@ -64,4 +64,20 @@ interface HabitDao {
 
     @Query("SELECT * FROM habit_completions WHERE habitId = :habitId ORDER BY date DESC")
     fun getAllCompletionsForHabit(habitId: String): Flow<List<HabitCompletionEntity>>
+
+    @Query("SELECT * FROM habits")
+    fun getAllHabits(): Flow<List<HabitEntity>>
+
+    @Query("SELECT * FROM habit_completions")
+    fun getAllCompletions(): Flow<List<HabitCompletionEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCompletion(completion: HabitCompletionEntity)
+
+    @Query("DELETE FROM habits")
+    suspend fun clearAll()
+
+    @Query("DELETE FROM habit_completions")
+    suspend fun clearCompletions()
+
 }

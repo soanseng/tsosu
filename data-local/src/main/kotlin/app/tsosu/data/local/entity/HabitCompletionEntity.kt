@@ -1,9 +1,11 @@
 package app.tsosu.data.local.entity
 
 import androidx.room.Entity
+import kotlinx.serialization.Serializable
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+@Serializable
 @Entity(
     tableName = "habit_completions",
     indices = [Index(value = ["habitId", "date"], unique = true)],
