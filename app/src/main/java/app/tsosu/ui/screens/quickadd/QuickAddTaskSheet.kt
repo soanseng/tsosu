@@ -35,6 +35,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,10 +77,11 @@ fun QuickAddTaskSheet(
     onDismiss: () -> Unit,
     onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?) -> Unit,
     initialDueDate: LocalDateTime? = null,
+    initialTitle: String? = null,
 ) {
     val haptic = rememberHaptic()
     val recurrenceParser = remember { RecurrenceParser() }
-    var title by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTitle ?: "") }
     var titleError by remember { mutableStateOf(false) }
     var selectedPriority by remember { mutableStateOf(Priority.NONE) }
     var selectedEnergy by remember { mutableStateOf(EnergyLevel.MEDIUM) }
@@ -101,6 +103,47 @@ fun QuickAddTaskSheet(
     var cleanTitle by remember { mutableStateOf("") }
     var showRecurrenceHelp by remember { mutableStateOf(false) }
 
+    fun applyTitleInput(newValue: String) {
+        // Detect p1-p4 priority token first, then the recurrence pattern.
+        var working = newValue
+        val prio = TitlePriority.extract(working)
+        if (prio.priority != null) {
+            detectedPriority = prio.priority
+            working = prio.title
+        } else {
+            detectedPriority = null
+        }
+        // Detect trailing recurrence pattern
+        val extraction = recurrenceParser.extractFromTitle(working)
+        if (extraction.rrule != null) {
+            detectedRrule = extraction.rrule
+            cleanTitle = extraction.title
+            // "starting <date>" prefills the first due date unless the
+            // user already picked one manually.
+            extraction.startDate?.let { start ->
+                if (!datePickedManually) {
+                    dueDate = LocalDateTime(start, LocalTime(0, 0))
+                }
+            }
+            // Time-of-day keyword ("every morning") prefills the
+            // reminder unless the user already chose one.
+            extraction.suggestedReminder?.let { preset ->
+                if (!reminderPickedManually) {
+                    reminderTime = preset
+                }
+            }
+        } else {
+            detectedRrule = null
+            cleanTitle = working
+        }
+    }
+
+    // Shared/prefilled titles get the same detection pass as typed input.
+    LaunchedEffect(initialTitle) {
+        if (!initialTitle.isNullOrBlank()) {
+            applyTitleInput(initialTitle)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,38 +159,7 @@ fun QuickAddTaskSheet(
             onValueChange = { newValue ->
                 title = newValue
                 if (newValue.isNotBlank()) titleError = false
-                // Detect p1-p4 priority token first, then the recurrence pattern.
-                var working = newValue
-                val prio = TitlePriority.extract(working)
-                if (prio.priority != null) {
-                    detectedPriority = prio.priority
-                    working = prio.title
-                } else {
-                    detectedPriority = null
-                }
-                // Detect trailing recurrence pattern
-                val extraction = recurrenceParser.extractFromTitle(working)
-                if (extraction.rrule != null) {
-                    detectedRrule = extraction.rrule
-                    cleanTitle = extraction.title
-                    // "starting <date>" prefills the first due date unless the
-                    // user already picked one manually.
-                    extraction.startDate?.let { start ->
-                        if (!datePickedManually) {
-                            dueDate = LocalDateTime(start, LocalTime(0, 0))
-                        }
-                    }
-                    // Time-of-day keyword ("every morning") prefills the
-                    // reminder unless the user already chose one.
-                    extraction.suggestedReminder?.let { preset ->
-                        if (!reminderPickedManually) {
-                            reminderTime = preset
-                        }
-                    }
-                } else {
-                    detectedRrule = null
-                    cleanTitle = working
-                }
+                applyTitleInput(newValue)
             },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,

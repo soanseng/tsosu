@@ -108,7 +108,10 @@ class MainActivity : AppCompatActivity() {
 
             TsosuTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
-                var showAddTask by remember { mutableStateOf(false) }
+                var sharedCaptureText by remember {
+                    mutableStateOf(SharedCaptureText.fromIntent(intent))
+                }
+                var showAddTask by remember { mutableStateOf(sharedCaptureText != null) }
                 var quickAddInitialDate by remember { mutableStateOf<kotlinx.datetime.LocalDateTime?>(null) }
                 var showAddHabit by remember { mutableStateOf(false) }
                 var showPickOne by remember { mutableStateOf(false) }
@@ -312,7 +315,6 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                 }
-
                 if (showAddTask) {
                     val quickAddViewModel: QuickAddViewModel = hiltViewModel()
                     ModalBottomSheet(
@@ -323,24 +325,15 @@ class MainActivity : AppCompatActivity() {
                             onDismiss = {
                                 showAddTask = false
                                 quickAddInitialDate = null
+                                sharedCaptureText = null
                             },
                             initialDueDate = quickAddInitialDate,
+                            initialTitle = sharedCaptureText,
                             onAdd = { title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule ->
                                 quickAddViewModel.createTask(title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule)
                                 showAddTask = false
+                                sharedCaptureText = null
                             },
-                        )
-                    }
-                }
-
-                editingTaskId?.let { taskId ->
-                    ModalBottomSheet(
-                        onDismissRequest = { editingTaskId = null },
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    ) {
-                        TaskDetailSheet(
-                            taskId = taskId,
-                            onDismiss = { editingTaskId = null },
                         )
                     }
                 }
