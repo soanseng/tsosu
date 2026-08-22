@@ -19,9 +19,21 @@ import kotlinx.datetime.plus
  */
 object RecurrenceExpander {
 
-    private const val MAX_STEPS = 10_000
+    // Generous bound: daily rules anchored decades in the past (imported
+    // data) still expand; the cap only guards against pathological loops.
+    private const val MAX_STEPS = 200_000
 
-    fun nextDueDate(rule: String?, anchorDue: LocalDate?, today: LocalDate): LocalDate? {
+    /**
+     * @param completedOccurrences how many occurrences of this series have
+     * already been completed (the completing occurrence is counted by this
+     * call). A `COUNT=n` rule ends the series once n occurrences are done.
+     */
+    fun nextDueDate(
+        rule: String?,
+        anchorDue: LocalDate?,
+        today: LocalDate,
+        completedOccurrences: Int = 0,
+    ): LocalDate? {
         if (rule.isNullOrBlank()) return null
         val parts = parseRule(rule) ?: return null
         val interval = parts.interval
@@ -45,6 +57,13 @@ object RecurrenceExpander {
             "YEARLY" -> stepByPeriod(anchor, today) { it.plus(DatePeriod(years = interval)) }
             else -> null
         } ?: return null
+
+        // A `COUNT=n` rule ends the series once n occurrences are completed:
+        // this completion is number completedOccurrences + 1, so a series that
+        // has reached its budget behaves like a plain task.
+        parts.count?.let { count ->
+            if (completedOccurrences + 1 >= count) return null
+        }
 
         // A bounded rule (`until <date>`) ends the series: the occurrence on the
         // UNTIL date is the last one, so a next date past the bound means the task
@@ -121,12 +140,13 @@ object RecurrenceExpander {
         val interval = kv["INTERVAL"]?.toIntOrNull()?.takeIf { it > 0 } ?: 1
         val byDay = kv["BYDAY"]?.split(",")?.mapNotNull { it.toDayOfWeek() }?.toSet()
         val byMonthDay = kv["BYMONTHDAY"]?.toIntOrNull()
+        val count = kv["COUNT"]?.toIntOrNull()?.takeIf { it > 0 }
         val until = kv["UNTIL"]?.take(8)?.let {
             runCatching {
                 LocalDate(it.take(4).toInt(), it.substring(4, 6).toInt(), it.substring(6, 8).toInt())
             }.getOrNull()
         }
-        return RuleParts(freq, interval, byDay, byMonthDay, until)
+        return RuleParts(freq, interval, byDay, byMonthDay, count, until)
     }
 
     private data class RuleParts(
@@ -134,8 +154,10 @@ object RecurrenceExpander {
         val interval: Int,
         val byDay: Set<DayOfWeek>?,
         val byMonthDay: Int?,
+        val count: Int?,
         val until: LocalDate?,
     )
+
     private fun String.toDayOfWeek(): DayOfWeek? = when (uppercase()) {
         "MO" -> DayOfWeek.MONDAY
         "TU" -> DayOfWeek.TUESDAY

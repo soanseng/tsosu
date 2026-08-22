@@ -149,4 +149,51 @@ class RecurrenceExpanderTest {
             ),
         )
     }
+
+    @Test
+    fun `count rule recurs while occurrences remain`() {
+        // "3 times": completing occurrence #2 still schedules the next one.
+        assertEquals(
+            LocalDate(2026, 8, 18),
+            RecurrenceExpander.nextDueDate(
+                "FREQ=DAILY;COUNT=3",
+                today,
+                today,
+                completedOccurrences = 1,
+            ),
+        )
+    }
+
+    @Test
+    fun `count rule ends series at count`() {
+        // Completing the final (#3 of 3) occurrence ends the series.
+        assertNull(
+            RecurrenceExpander.nextDueDate(
+                "FREQ=DAILY;COUNT=3",
+                today,
+                today,
+                completedOccurrences = 2,
+            ),
+        )
+    }
+
+    @Test
+    fun `count of one ends on first completion`() {
+        assertNull(
+            RecurrenceExpander.nextDueDate(
+                "FREQ=WEEKLY;COUNT=1",
+                mon,
+                mon,
+            ),
+        )
+    }
+
+    @Test
+    fun `count defaults to unbounded when not completed yet`() {
+        // No completedOccurrences passed (default 0): occurrence #1 of 3 recurs.
+        assertEquals(
+            LocalDate(2026, 8, 18),
+            RecurrenceExpander.nextDueDate("FREQ=DAILY;COUNT=3", today, today),
+        )
+    }
 }

@@ -21,6 +21,9 @@ import app.tsosu.data.local.entity.ProjectEntity
 import app.tsosu.data.local.entity.RoutineEntity
 import app.tsosu.data.local.entity.StreakShieldEntity
 import app.tsosu.data.local.entity.TaskEntity
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -103,7 +106,67 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
     }
 }
 
-@Database(entities = [TaskEntity::class, HabitEntity::class, HabitCompletionEntity::class, RoutineEntity::class, DailyFocusEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 10)
+/**
+ * `habit_completions.date` and `streak_shields.date` historically stored
+ * local-midnight epoch millis, which drift across timezone changes (a
+ * completion recorded in Taipei reads as the previous day in San Francisco).
+ * Convert both to timezone-independent epoch days, interpreting each row in
+ * the current timezone — the same conversion the read path has always
+ * applied, so displayed dates are preserved.
+ *
+ * Rows that collide after conversion (double-writes caused by the very bug
+ * being fixed) are collapsed to the lowest rowid per (habitId, epochDays).
+ */
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val tz = TimeZone.currentSystemDefault()
+        for (table in listOf("habit_completions", "streak_shields")) {
+            // rowid -> converted epoch days
+            val converted = mutableListOf<Pair<Long, Long>>()
+            db.query("SELECT rowid, habitId, date FROM $table").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val days = Instant.fromEpochMilliseconds(cursor.getLong(2))
+                        .toLocalDateTime(tz).date.toEpochDays().toLong()
+                    converted.add(cursor.getLong(0) to days)
+                }
+            }
+            // Collapse collisions (same habit + day) keeping the lowest rowid.
+            val habitIdByRow = db.query("SELECT rowid, habitId FROM $table").use { cursor ->
+                buildMap {
+                    while (cursor.moveToNext()) {
+                        put(cursor.getLong(0), cursor.getString(1))
+                    }
+                }
+            }
+            val winners = converted
+                .groupBy { habitIdByRow[it.first] to it.second }
+                .mapValues { (_, rows) -> rows.minBy { (rowId, _) -> rowId }.first }
+                .values.toSet()
+            val losers = converted.map { it.first }.filter { it !in winners }
+
+            db.beginTransaction()
+            try {
+                val delete = db.compileStatement("DELETE FROM $table WHERE rowid = ?")
+                for (rowId in losers) {
+                    delete.bindLong(1, rowId)
+                    delete.executeUpdateDelete()
+                }
+                val update = db.compileStatement("UPDATE $table SET date = ? WHERE rowid = ?")
+                for ((rowId, days) in converted) {
+                    if (rowId !in winners) continue
+                    update.bindLong(1, days)
+                    update.bindLong(2, rowId)
+                    update.executeUpdateDelete()
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+        }
+    }
+}
+
+@Database(entities = [TaskEntity::class, HabitEntity::class, HabitCompletionEntity::class, RoutineEntity::class, DailyFocusEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 11)
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun habitDao(): HabitDao

@@ -46,8 +46,8 @@ class HabitRepositoryImpl(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getTodayCompletions(): Flow<List<HabitCompletion>> =
         localDayTicker().flatMapLatest { today ->
-            val epoch = today.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-            habitDao.getCompletionsForDate(epoch).map { it.map { e -> e.toDomain() } }
+            habitDao.getCompletionsForDate(today.toEpochDays().toLong())
+                .map { it.map { e -> e.toDomain() } }
         }
 
     override fun getStreakInfo(habitId: String): Flow<HabitStreakInfo> {
@@ -55,14 +55,9 @@ class HabitRepositoryImpl(
             habitDao.getById(habitId),
             habitDao.getCompletionDates(habitId),
             gamification?.shieldedDates(habitId) ?: flowOf(emptyList()),
-        ) { habit, dateEpochs, shieldEpochs ->
-            val tz = TimeZone.currentSystemDefault()
-            val dates = dateEpochs.map {
-                Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
-            }.toSet()
-            val shielded = shieldEpochs.map {
-                Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
-            }.toSet()
+        ) { habit, dateEpochDays, shieldEpochDays ->
+            val dates = dateEpochDays.map { LocalDate.fromEpochDays(it.toInt()) }.toSet()
+            val shielded = shieldEpochDays.map { LocalDate.fromEpochDays(it.toInt()) }.toSet()
             HabitStreakInfo(
                 habitId = habitId,
                 habitTitle = habit?.title ?: "",
@@ -125,26 +120,18 @@ class HabitRepositoryImpl(
 
     private suspend fun autoShieldGap(habitId: String) {
         val gamification = gamification ?: return
-        val tz = TimeZone.currentSystemDefault()
-        val dates = habitDao.getCompletionDatesSync(habitId).map {
-            Instant.fromEpochMilliseconds(it).toLocalDateTime(tz).date
-        }.toSet()
+        val dates = habitDao.getCompletionDatesSync(habitId)
+            .map { LocalDate.fromEpochDays(it.toInt()) }
+            .toSet()
         val gap = HabitStreakCalculator.firstGapBeforeStreak(dates) ?: return
-        val gapEpoch = gap.atStartOfDayIn(tz).toEpochMilliseconds()
-        gamification.shieldGap(habitId, gapEpoch)
+        gamification.shieldGap(habitId, gap.toEpochDays().toLong())
     }
 
     override suspend fun uncompleteHabit(habitId: String, date: LocalDate): Result<Unit> =
         runCatching {
-            val dateEpoch = date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-            habitDao.deleteCompletion(habitId, dateEpoch)
+            habitDao.deleteCompletion(habitId, date.toEpochDays().toLong())
             onHabitChanged?.invoke(habitId)
         }
-
-    /**
-     * Emits the local date immediately, then again at every local midnight —
-     * "today" must roll over for flows collected across midnight.
-     */
     private fun localDayTicker(): Flow<LocalDate> = flow {
         while (currentCoroutineContext().isActive) {
             val tz = TimeZone.currentSystemDefault()

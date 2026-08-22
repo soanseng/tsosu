@@ -26,12 +26,7 @@ class SafMarkdownFileAccess(
     private suspend fun writeFile(filename: String, content: String) {
         val folderUri = folderUriProvider() ?: return
         val folder = DocumentFile.fromTreeUri(context, folderUri) ?: return
-        val file = folder.findFile(filename)
-            ?: folder.createFile("text/markdown", filename)
-            ?: return
-        context.contentResolver.openOutputStream(file.uri, "wt")?.use { stream ->
-            stream.bufferedWriter().use { it.write(content) }
-        }
+        writeAtomically(folder, filename, content)
     }
 
     override suspend fun ensureFolder(folderName: String) {
@@ -73,12 +68,45 @@ class SafMarkdownFileAccess(
         val subfolder = root.findFile(folderName)
             ?: root.createDirectory(folderName)
             ?: return
-        val file = subfolder.findFile(filename)
-            ?: subfolder.createFile("text/markdown", filename)
+        writeAtomically(subfolder, filename, content)
+    }
+
+    /**
+     * Crash-safe write: the full content lands in a temp sibling first, then
+     * the target is replaced by rename. A process death mid-write can only
+     * orphan `<filename>.tmp` (overwritten next sync), never truncate the
+     * real note. If the provider refuses the rename, falls back to a direct
+     * write so the data still lands.
+     */
+    private fun writeAtomically(folder: DocumentFile, filename: String, content: String) {
+        val tempName = "$filename.tmp"
+        val temp = folder.findFile(tempName)
+            ?: folder.createFile("text/markdown", tempName)
             ?: return
-        context.contentResolver.openOutputStream(file.uri, "wt")?.use { stream ->
+
+        val wroteTemp = context.contentResolver.openOutputStream(temp.uri, "wt")?.use { stream ->
             stream.bufferedWriter().use { it.write(content) }
+            true
+        } ?: false
+        if (!wroteTemp) {
+            temp.delete()
+            return
         }
+
+        val target = folder.findFile(filename)
+        target?.delete()
+        if (temp.renameTo(filename)) return
+
+        // Rename refused (provider quirk): recreate the target (the old
+        // handle is dead after delete) and write through directly, then
+        // clean up the temp file.
+        val direct = folder.createFile("text/markdown", filename)
+        direct?.let { file ->
+            context.contentResolver.openOutputStream(file.uri, "wt")?.use { stream ->
+                stream.bufferedWriter().use { it.write(content) }
+            }
+        }
+        temp.delete()
     }
 
     companion object {

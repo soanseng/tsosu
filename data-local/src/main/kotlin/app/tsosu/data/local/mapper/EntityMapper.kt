@@ -136,14 +136,14 @@ fun Habit.toEntity(): HabitEntity = HabitEntity(
 
 fun HabitCompletionEntity.toDomain(): HabitCompletion = HabitCompletion(
     habitId = habitId,
-    date = Instant.fromEpochMilliseconds(date)
-        .toLocalDateTime(TimeZone.currentSystemDefault()).date,
+    // date column stores timezone-independent epoch days (see MIGRATION_10_11).
+    date = LocalDate.fromEpochDays(date.toInt()),
     completedAt = Instant.fromEpochMilliseconds(completedAt),
 )
 
 fun HabitCompletion.toEntity(): HabitCompletionEntity = HabitCompletionEntity(
     habitId = habitId,
-    date = date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
+    date = date.toEpochDays().toLong(),
     completedAt = completedAt.toEpochMilliseconds(),
 )
 

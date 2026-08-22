@@ -20,12 +20,12 @@ interface GamificationRepository {
     suspend fun buyFreeze(): Boolean
 
     /**
-     * Consumes one freeze to bridge [gapEpochMillis] for [habitId].
+     * Consumes one freeze to bridge [gapEpochDays] for [habitId].
      * Idempotent per (habitId, date). Returns success.
      */
-    suspend fun shieldGap(habitId: String, gapEpochMillis: Long): Boolean
+    suspend fun shieldGap(habitId: String, gapEpochDays: Long): Boolean
 
-    /** Shielded (bridged) gap days for a habit, as epoch millis. */
+    /** Shielded (bridged) gap days for a habit, as epoch days. */
     fun shieldedDates(habitId: String): Flow<List<Long>>
 
     companion object {

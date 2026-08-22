@@ -43,7 +43,7 @@ class FocusRepositoryImpl(
 
         return combine(
             taskDao.getTodayTasks(start, end), // reuse for date range
-            habitDao.getCompletionsForDate(start), // simplified
+            habitDao.getCompletionsForDate(weekStart.toEpochDays().toLong()), // simplified
             focusDao.getFocusDaysCount(start, end),
         ) { tasks, _, focusDays ->
             val completedTasks = tasks.filter { it.done }

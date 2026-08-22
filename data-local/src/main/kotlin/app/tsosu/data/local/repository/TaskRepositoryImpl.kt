@@ -174,8 +174,12 @@ class TaskRepositoryImpl(
         val task = entity.toDomain()
         val tz = TimeZone.currentSystemDefault()
         val completedOn = Instant.fromEpochMilliseconds(now).toLocalDateTime(tz).date
-        val nextDate = RecurrenceExpander.nextDueDate(rule, task.dueDate?.date, completedOn)
-            ?: return null
+        val nextDate = RecurrenceExpander.nextDueDate(
+            rule = rule,
+            anchorDue = task.dueDate?.date,
+            today = completedOn,
+            completedOccurrences = task.completions.size,
+        ) ?: return null
         val nextTime = task.dueDate?.time ?: task.scheduledDate?.time ?: LocalTime(0, 0)
         val updated = entity.copy(
             status = TaskStatus.TODO.ordinal,

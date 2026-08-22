@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 
 @AndroidEntryPoint
@@ -104,8 +103,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 rescheduleNext(habitId, habit.reminderMinutes, habit.isArchived)
                 if (habit.isArchived || habit.reminderMinutes == null) return@launch
 
-                val todayEpoch = todayEpoch()
-                val completedToday = habitDao.getCompletionsForDate(todayEpoch).first()
+                val completedToday = habitDao.getCompletionsForDate(todayEpochDays()).first()
                     .any { it.habitId == habitId }
                 if (!completedToday) {
                     notificationHelper.showHabitReminder(
@@ -128,7 +126,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 val now = Clock.System.now().toEpochMilliseconds()
                 val inserted = habitDao.insertCompletionOnce(
                     habitId = habitId,
-                    date = todayEpoch(),
+                    date = todayEpochDays(),
                     completedAt = now,
                 )
                 if (inserted > 0) {
@@ -151,8 +149,8 @@ class ReminderReceiver : BroadcastReceiver() {
         if (trigger != null) reminderScheduler.scheduleHabit(habitId, trigger)
         else reminderScheduler.cancelHabit(habitId)
     }
-
-    private fun todayEpoch(): Long =
+    /** Today's date as timezone-independent epoch days (matches the DB column). */
+    private fun todayEpochDays(): Long =
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            .atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+            .toEpochDays().toLong()
 }

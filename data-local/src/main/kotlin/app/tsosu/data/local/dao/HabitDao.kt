@@ -37,6 +37,7 @@ interface HabitDao {
 
     // Single-statement guard: same (habitId, date) never inserts twice,
     // no matter which path (repo, notification action, widget) writes it.
+    // `date` is timezone-independent epoch days (days since 1970-01-01 UTC).
     @Query(
         """INSERT INTO habit_completions (habitId, date, completedAt)
            SELECT :habitId, :date, :completedAt
