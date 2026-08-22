@@ -91,6 +91,16 @@ class NotificationHelper @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
+        val snoozeIntent = Intent(context, ReminderReceiver::class.java).apply {
+            action = ReminderReceiver.ACTION_SNOOZE
+            putExtra(ReminderReceiver.EXTRA_TASK_ID, taskId)
+        }
+        val snoozePending = PendingIntent.getBroadcast(
+            context,
+            notificationId + 30_000,
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         val notification = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(context.getString(R.string.notif_reminder_title))
@@ -102,6 +112,11 @@ class NotificationHelper @Inject constructor(
                 R.mipmap.ic_launcher,
                 context.getString(R.string.notif_action_complete),
                 completePending,
+            )
+            .addAction(
+                R.mipmap.ic_launcher,
+                context.getString(R.string.notif_action_snooze),
+                snoozePending,
             )
             .build()
 

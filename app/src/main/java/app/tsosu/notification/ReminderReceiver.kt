@@ -26,11 +26,13 @@ class ReminderReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_REMINDER = "app.tsosu.ACTION_REMINDER"
         const val ACTION_COMPLETE = "app.tsosu.ACTION_COMPLETE"
+        const val ACTION_SNOOZE = "app.tsosu.ACTION_SNOOZE"
         const val EXTRA_TASK_ID = "extra_task_id"
         const val ACTION_HABIT_REMINDER = "app.tsosu.ACTION_HABIT_REMINDER"
         const val ACTION_HABIT_COMPLETE = "app.tsosu.ACTION_HABIT_COMPLETE"
         const val EXTRA_HABIT_ID = "extra_habit_id"
         const val ENERGY_PER_HABIT = 5
+        const val SNOOZE_MINUTES = 10L
     }
 
     @Inject lateinit var notificationHelper: NotificationHelper
@@ -45,6 +47,7 @@ class ReminderReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_REMINDER -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleReminder(it) }
             ACTION_COMPLETE -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleComplete(context, it) }
+            ACTION_SNOOZE -> intent.getStringExtra(EXTRA_TASK_ID)?.let { handleSnooze(context, it) }
             ACTION_HABIT_REMINDER -> intent.getStringExtra(EXTRA_HABIT_ID)?.let { handleHabitReminder(it) }
             ACTION_HABIT_COMPLETE -> intent.getStringExtra(EXTRA_HABIT_ID)?.let { handleHabitComplete(context, it) }
         }
@@ -87,6 +90,24 @@ class ReminderReceiver : BroadcastReceiver() {
                     NotificationManagerCompat.from(context).cancel(taskId.hashCode())
                     watcher.pushSoon()
                 }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    /** Snoozes the reminder: dismiss now, re-arm the alarm [SNOOZE_MINUTES] later. */
+    private fun handleSnooze(context: Context, taskId: String) {
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val task = taskDao.getByIdSync(taskId) ?: return@launch
+                if (TaskStatus.fromOrdinal(task.status).isTerminal) return@launch
+                NotificationManagerCompat.from(context).cancel(taskId.hashCode())
+                reminderScheduler.schedule(
+                    taskId = taskId,
+                    triggerAtMillis = System.currentTimeMillis() + SNOOZE_MINUTES * 60_000,
+                )
             } finally {
                 pendingResult.finish()
             }
