@@ -12,6 +12,11 @@ Most task managers are designed for neurotypical brains. They punish you with ov
 
 Tsosu is different. It's built on clinical understanding of ADHD and the principles of Atomic Habits — **make it small, make it easy, celebrate progress.**
 
+## What's New in 1.2.1
+
+- **🛠 Real-device hardening** — seven fixes found in on-device QA of 1.2.0: quick-add `@project`/`due:` tokens no longer stay in saved titles (with a detection chip), the Weekly Review wizard is now reachable from the view menu, habit streaks update the moment you tick them, JSON backup no longer writes an empty file, ICS subscriptions actually fetch and overlay (with a toggle), and the app lock engages reliably on cold start.
+- **🔁 Round-trips & timing** — vault notes keep the `estimate` field; daily digest slots re-anchor to 08:00/20:00 instead of drifting; the pomodoro button no longer reads "Start" mid-session; Inbox bulk delete asks first.
+
 ## What's New in 1.2.0
 
 - **🔗 Capture from anywhere** — share text from any app (or the selection menu) straight into quick add, plus a Quick Settings tile and voice input.
