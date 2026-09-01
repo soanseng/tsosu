@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -61,6 +62,7 @@ fun CalendarScreen(
     onQuickAddDate: (java.time.LocalDate) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val showExternal by viewModel.showExternal.collectAsStateWithLifecycle()
     val konfettiTrigger = remember { mutableIntStateOf(0) }
 
     KonfettiOverlay(konfettiTrigger)
@@ -78,6 +80,8 @@ fun CalendarScreen(
 
         SubscriptionBar(
             urls = state.subscriptions,
+            showExternal = showExternal,
+            onToggleExternal = viewModel::setShowExternal,
             onAdd = viewModel::addSubscription,
             onRemove = viewModel::removeSubscription,
         )
@@ -340,6 +344,8 @@ private fun formatSelectedDateHeader(date: LocalDate): String {
 @Composable
 private fun SubscriptionBar(
     urls: Set<String>,
+    showExternal: Boolean,
+    onToggleExternal: (Boolean) -> Unit,
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
 ) {
@@ -356,6 +362,12 @@ private fun SubscriptionBar(
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.weight(1f),
             )
+            if (urls.isNotEmpty()) {
+                Switch(
+                    checked = showExternal,
+                    onCheckedChange = onToggleExternal,
+                )
+            }
             androidx.compose.material3.TextButton(onClick = { showAdd = !showAdd }) {
                 Text(stringResource(R.string.ics_add))
             }

@@ -82,6 +82,11 @@ class CalendarViewModel @Inject constructor(
                 subscriptions = subscriptionUrls.value,
             )
         }
+        // Include the URL set as a source so the 訂閱 count re-emits the
+        // moment a subscription is added or removed.
+        .combine(icsSubscriptions.urls) { state, urls ->
+            state.copy(subscriptions = urls)
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CalendarUiState())
 
     private val _showExternal = MutableStateFlow(false)
@@ -113,9 +118,13 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun addSubscription(url: String) {
-        viewModelScope.launch { icsSubscriptions.addUrl(url) }
+        viewModelScope.launch {
+            icsSubscriptions.addUrl(url)
+            // Fetch immediately — adding a feed means the user wants to see
+            // its events, not to hunt for a second toggle.
+            _showExternal.value = true
+        }
     }
-
     fun removeSubscription(url: String) {
         viewModelScope.launch { icsSubscriptions.removeUrl(url) }
     }
