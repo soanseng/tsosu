@@ -74,13 +74,17 @@ class HabitRepositoryImpl(
         }
     }
 
-    override fun getAllStreakInfos(): Flow<List<HabitStreakInfo>> {
-        return habitDao.getActiveHabits().map { habits ->
-            habits.map { habit ->
-                getStreakInfo(habit.id).first()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getAllStreakInfos(): Flow<List<HabitStreakInfo>> =
+        habitDao.getActiveHabits().flatMapLatest { habits ->
+            if (habits.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                // getStreakInfo observes completion dates and shields, so a
+                // toggle re-emits immediately instead of on next re-subscribe.
+                combine(habits.map { getStreakInfo(it.id) }) { infos -> infos.toList() }
             }
         }
-    }
 
     override suspend fun createHabit(habit: Habit): Result<Habit> = runCatching {
         habitDao.insert(habit.toEntity())
