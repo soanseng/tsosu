@@ -334,6 +334,8 @@ private fun PomodoroCard(
                 Button(onClick = onStart, enabled = state.phase != app.tsosu.domain.usecase.PomodoroEngine.Phase.WORK) {
                     Text(
                         when (state.phase) {
+                            app.tsosu.domain.usecase.PomodoroEngine.Phase.WORK ->
+                                stringResource(R.string.pomodoro_focusing)
                             app.tsosu.domain.usecase.PomodoroEngine.Phase.BREAK -> stringResource(R.string.pomodoro_break)
                             app.tsosu.domain.usecase.PomodoroEngine.Phase.FINISHED_WORK -> stringResource(R.string.pomodoro_start_break)
                             else -> stringResource(R.string.pomodoro_start)

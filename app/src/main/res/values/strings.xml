@@ -115,6 +115,7 @@
     <string name="pomodoro_sessions">%d sessions today</string>
     <string name="pomodoro_pick_task">Attach to task…</string>
     <string name="pomodoro_start">Start</string>
+    <string name="pomodoro_focusing">Focusing…</string>
     <string name="pomodoro_start_break">Take break</string>
     <string name="pomodoro_reset">Reset</string>
     <string name="bulk_select">Select</string>
