@@ -422,7 +422,7 @@ fun QuickAddTaskSheet(
                     reminderPickedManually = true
                     reminderTime = null
                 }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear reminder")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.quick_add_clear_reminder))
                 }
             }
         }

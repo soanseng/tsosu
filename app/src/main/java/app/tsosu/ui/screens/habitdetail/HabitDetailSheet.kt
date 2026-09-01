@@ -48,6 +48,7 @@ import app.tsosu.R
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.HabitFrequency
 import app.tsosu.ui.util.rememberHaptic
+import app.tsosu.ui.util.localizedLabel
 import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -231,7 +232,7 @@ fun HabitDetailSheet(
                         haptic.tick()
                         viewModel.onEnergyChange(level)
                     },
-                    label = { Text("${level.emoji} ${level.name.lowercase()}") },
+                    label = { Text(level.localizedLabel()) },
                 )
             }
         }
