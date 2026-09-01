@@ -76,7 +76,11 @@ class TsosuApp : Application(), Configuration.Provider {
                 .build()
             WorkManager.getInstance(this).enqueueUniquePeriodicWork(
                 if (morning) DailyDigestWorker.WORK_NAME_MORNING else DailyDigestWorker.WORK_NAME_EVENING,
-                ExistingPeriodicWorkPolicy.KEEP,
+                // Re-enqueue on every process start so the initial delay is
+                // recomputed to the next 08:00/20:00 slot. KEEP let JobScheduler
+                // deferral drift the schedule by hours across days (observed
+                // morning slot sliding to ~12:05).
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 request,
             )
         }
