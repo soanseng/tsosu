@@ -147,4 +147,8 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // Robolectric native graphics cannot re-initialize inside a JVM that
+    // already ran another sandboxed SDK config — screenshot tests fail with
+    // UnsatisfiedLinkError unless each test class gets a fresh JVM.
+    forkEvery = 1
 }
