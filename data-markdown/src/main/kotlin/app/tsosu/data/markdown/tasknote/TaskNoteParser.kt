@@ -55,6 +55,7 @@ class TaskNoteParser {
             cancelledDate = fm["cancelled"]?.let { LocalDate.parse(it).atTime(0, 0) },
             energyLevel = energy,
             recurrenceRule = fm["recurrence"],
+            estimatedMinutes = fm["estimate"]?.let { parseEstimateMinutes(it) },
             tinyVersion = fm["tiny"],
             routineTime = fm["routine"]?.let { parseRoutineTime(it) },
             completions = fm["completions"].orEmpty()
@@ -99,6 +100,10 @@ class TaskNoteParser {
         val parts = s.split(":")
         return LocalTime(parts[0].toInt(), parts[1].toInt())
     }
+
+    /** `estimate: 30m` (or `30min`, plain `30`) → minutes. */
+    private fun parseEstimateMinutes(s: String): Int? =
+        s.trim().removeSuffix("min").removeSuffix("m").toIntOrNull()
 
     private fun parseRoutineTime(s: String): RoutineTime? = when (s.lowercase()) {
         "morning" -> RoutineTime.MORNING
