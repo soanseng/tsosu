@@ -215,6 +215,8 @@
     <string name="bulk_complete">完成</string>
     <string name="bulk_someday">改天再說</string>
     <string name="bulk_delete">刪除</string>
+    <string name="bulk_delete_confirm_title">刪除任務？</string>
+    <string name="bulk_delete_confirm_body">將永久刪除 %d 項任務，此操作無法復原。</string>
     <string name="bulk_selected_count">已選 %d 項</string>
     <string name="digest_morning_title">晨間計畫 🌅</string>
     <string name="digest_evening_title">今天的收穫 🎉</string>

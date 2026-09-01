@@ -38,6 +38,28 @@ fun InboxScreen(
     val staleIds by viewModel.staleIds.collectAsStateWithLifecycle()
     val selectedIds by viewModel.selectedIds.collectAsStateWithLifecycle()
     var selectionMode by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    if (confirmDelete) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.bulk_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.bulk_delete_confirm_body, selectedIds.size)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    confirmDelete = false
+                    viewModel.bulkDelete()
+                }) {
+                    Text(stringResource(R.string.bulk_delete))
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { confirmDelete = false }) {
+                    Text(stringResource(R.string.bulk_cancel))
+                }
+            },
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectionMode) {
@@ -58,7 +80,7 @@ fun InboxScreen(
                         OutlinedButton(onClick = { viewModel.bulkSomeday() }) {
                             Text(stringResource(R.string.bulk_someday))
                         }
-                        OutlinedButton(onClick = { viewModel.bulkDelete() }) {
+                        OutlinedButton(onClick = { confirmDelete = true }) {
                             Text(stringResource(R.string.bulk_delete))
                         }
                         Button(onClick = {
