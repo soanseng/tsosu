@@ -82,6 +82,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -115,11 +116,16 @@ class MainActivity : AppCompatActivity() {
 
             // Biometric gate: when enabled, keep the UI locked until the user
             // authenticates (biometric or device credential).
-            val appLockEnabled by appLockPreferences.enabled.collectAsState(initial = false)
-            var unlocked by remember { mutableStateOf(!appLockEnabled) }
-            LaunchedEffect(appLockEnabled) { if (!appLockEnabled) unlocked = true }
+            // `null` = DataStore not loaded yet: no gate flash for unlocked
+            // users, and no way to remember `unlocked = true` before the
+            // persisted value arrives.
+            val appLockEnabled by appLockPreferences.enabled
+                .map { it as Boolean? }
+                .collectAsState(initial = null)
+            var unlocked by remember { mutableStateOf(false) }
+            LaunchedEffect(appLockEnabled) { if (appLockEnabled == false) unlocked = true }
 
-            if (appLockEnabled && !unlocked) {
+            if (appLockEnabled == true && !unlocked) {
                 LockScreen(onUnlocked = { unlocked = true })
                 return@setContent
             }
