@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.domain.model.EnergyLevel
+import androidx.compose.ui.res.stringResource
+import app.tsosu.R
+import app.tsosu.ui.util.localizedLabel
 import app.tsosu.ui.util.rememberHaptic
 
 @Composable
@@ -42,9 +45,9 @@ fun PickOneSheet(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Pick One", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.pick_one_title), style = MaterialTheme.typography.titleLarge)
         Text(
-            "How's your energy right now?",
+            stringResource(R.string.pick_one_energy_prompt),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -58,7 +61,7 @@ fun PickOneSheet(
                         haptic.tick()
                         viewModel.selectEnergy(level)
                     },
-                    label = { Text("${level.emoji} ${level.name.lowercase()}") },
+                    label = { Text(level.localizedLabel()) },
                 )
             }
         }
@@ -80,7 +83,7 @@ fun PickOneSheet(
                         Text(task.title, style = MaterialTheme.typography.headlineSmall)
                         task.estimatedMinutes?.let { min ->
                             Text(
-                                "$min min",
+                                stringResource(R.string.pick_one_minutes, min),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -95,15 +98,15 @@ fun PickOneSheet(
                 OutlinedButton(onClick = {
                     haptic.tick()
                     viewModel.pickAnother()
-                }) { Text("Pick another") }
+                }) { Text(stringResource(R.string.pick_one_another)) }
                 Button(onClick = {
                     haptic.confirm()
                     onDismiss()
-                }) { Text("Start this one") }
+                }) { Text(stringResource(R.string.pick_one_start)) }
             }
         } ?: run {
             Text(
-                "No tasks at this energy level. Try another!",
+                stringResource(R.string.pick_one_empty),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

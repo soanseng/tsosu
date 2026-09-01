@@ -60,6 +60,8 @@ import app.tsosu.domain.recurrence.TitlePriority
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.ui.util.rememberHaptic
+import app.tsosu.ui.util.localizedLabel
+import app.tsosu.ui.util.localizedName
 import kotlinx.datetime.Clock
 import kotlinx.datetime.todayIn
 import kotlinx.datetime.DateTimeUnit
@@ -71,11 +73,11 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-private enum class RecurrenceOption(val label: String, val rrule: String?) {
-    NONE("None", null),
-    DAILY("Daily", "RRULE:FREQ=DAILY"),
-    WEEKLY("Weekly", "RRULE:FREQ=WEEKLY"),
-    CUSTOM("Custom", null),
+private enum class RecurrenceOption(val rrule: String?) {
+    NONE(null),
+    DAILY("RRULE:FREQ=DAILY"),
+    WEEKLY("RRULE:FREQ=WEEKLY"),
+    CUSTOM(null),
 }
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -256,7 +258,7 @@ fun QuickAddTaskSheet(
                     onClick = { detectedPriority = null },
                     label = {
                         Text(
-                            "${currentDetectedPriority.emoji} ${currentDetectedPriority.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                            "${currentDetectedPriority.emoji} ${currentDetectedPriority.localizedName()}",
                             color = Color(currentDetectedPriority.color),
                         )
                     },
@@ -300,7 +302,7 @@ fun QuickAddTaskSheet(
                     },
                     label = {
                         Text(
-                            text = p.name.lowercase().replaceFirstChar { it.uppercase() },
+                            text = p.localizedName(),
                             color = if (selectedPriority == p) Color(p.color) else Color.Unspecified,
                         )
                     },
@@ -319,7 +321,7 @@ fun QuickAddTaskSheet(
                         haptic.tick()
                         selectedEnergy = level
                     },
-                    label = { Text("${level.emoji} ${level.name.lowercase()}") },
+                    label = { Text(level.localizedLabel()) },
                 )
             }
         }
@@ -402,7 +404,7 @@ fun QuickAddTaskSheet(
         Spacer(Modifier.height(12.dp))
 
         // Reminder time
-        Text("Reminder", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.quick_add_reminder), style = MaterialTheme.typography.labelLarge)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -433,7 +435,7 @@ fun QuickAddTaskSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Recurrence", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.quick_add_recurrence), style = MaterialTheme.typography.labelLarge)
             TextButton(onClick = { showRecurrenceHelp = true }) {
                 Text(stringResource(R.string.recurrence_help_open))
             }
@@ -452,7 +454,18 @@ fun QuickAddTaskSheet(
                             customRecurrence = ""
                         }
                     },
-                    label = { Text(option.label) },
+                    label = {
+                        Text(
+                            stringResource(
+                                when (option) {
+                                    RecurrenceOption.NONE -> R.string.recurrence_none
+                                    RecurrenceOption.DAILY -> R.string.recurrence_daily
+                                    RecurrenceOption.WEEKLY -> R.string.recurrence_weekly
+                                    RecurrenceOption.CUSTOM -> R.string.recurrence_custom
+                                },
+                            ),
+                        )
+                    },
                 )
             }
         }
@@ -461,7 +474,7 @@ fun QuickAddTaskSheet(
             OutlinedTextField(
                 value = customRecurrence,
                 onValueChange = { customRecurrence = it },
-                label = { Text("e.g. every 2 days") },
+                label = { Text(stringResource(R.string.quick_add_recurrence_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -562,7 +575,7 @@ fun QuickAddTaskSheet(
         )
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            title = { Text("Reminder time") },
+            title = { Text(stringResource(R.string.task_detail_reminder_time)) },
             text = {
                 TimePicker(state = timePickerState)
             },

@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.domain.model.EnergyLevel
+import androidx.compose.ui.res.stringResource
+import app.tsosu.R
+import app.tsosu.ui.util.localizedLabel
 
 @Composable
 fun PickOneScreen(viewModel: PickOneViewModel = hiltViewModel()) {
@@ -35,11 +38,11 @@ fun PickOneScreen(viewModel: PickOneViewModel = hiltViewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Pick One",
+            text = stringResource(R.string.pick_one_title),
             style = MaterialTheme.typography.headlineMedium,
         )
         Text(
-            text = "How's your energy right now?",
+            text = stringResource(R.string.pick_one_energy_prompt),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -53,7 +56,7 @@ fun PickOneScreen(viewModel: PickOneViewModel = hiltViewModel()) {
                 FilterChip(
                     selected = selectedEnergy == level,
                     onClick = { viewModel.selectEnergy(level) },
-                    label = { Text("${level.emoji} ${level.name.lowercase()}") },
+                    label = { Text(level.localizedLabel()) },
                 )
             }
         }
@@ -74,7 +77,7 @@ fun PickOneScreen(viewModel: PickOneViewModel = hiltViewModel()) {
                     )
                     task.estimatedMinutes?.let { min ->
                         Text(
-                            text = "$min min",
+                            text = stringResource(R.string.pick_one_minutes, min),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -85,11 +88,11 @@ fun PickOneScreen(viewModel: PickOneViewModel = hiltViewModel()) {
             Spacer(Modifier.height(16.dp))
 
             Button(onClick = { viewModel.pickAnother() }) {
-                Text("Pick another")
+                Text(stringResource(R.string.pick_one_another))
             }
         } ?: run {
             Text(
-                text = "No tasks at this energy level. Try another!",
+                text = stringResource(R.string.pick_one_empty),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

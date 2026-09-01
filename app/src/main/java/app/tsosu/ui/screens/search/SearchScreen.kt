@@ -17,6 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.tsosu.domain.model.Task
+import androidx.compose.ui.res.stringResource
+import app.tsosu.R
 
 @Composable
 fun SearchScreen(
@@ -36,7 +38,7 @@ fun SearchScreen(
                 query = it
                 onSearch(it)
             },
-            label = { Text("Search tasks") },
+            label = { Text(stringResource(R.string.search_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )

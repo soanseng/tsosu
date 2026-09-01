@@ -123,12 +123,12 @@ fun CalendarScreen(
 
             if (state.selectedDayTasks.isEmpty()) {
                 Text(
-                    text = "No tasks on this day.",
+                    text = stringResource(R.string.calendar_no_tasks),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Long-press any day to quickly add a task.",
+                    text = stringResource(R.string.calendar_long_press_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

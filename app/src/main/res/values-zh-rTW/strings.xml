@@ -51,6 +51,7 @@
     <string name="pick_one_empty">這個精力等級沒有任務，試試其他的！</string>
     <string name="pick_one_another">再選一個</string>
     <string name="pick_one_minutes">%d 分鐘</string>
+    <string name="pick_one_start">就做這個</string>
 
     <!-- Quick Add -->
     <string name="quick_add_task_title">新任務</string>
@@ -135,6 +136,11 @@
     <string name="energy_low">低</string>
     <string name="energy_medium">中</string>
     <string name="energy_high">高</string>
+    <string name="priority_none">無</string>
+    <string name="priority_low">低</string>
+    <string name="priority_medium">中</string>
+    <string name="priority_high">高</string>
+    <string name="priority_urgent">緊急</string>
 
     <!-- Todoist Import Dialog -->
     <string name="import_dialog_title">匯入 Todoist 任務</string>
@@ -327,6 +333,13 @@
     <string name="task_detail_cancel">取消</string>
     <string name="task_detail_ok">確定</string>
     <string name="quick_add_priority">優先級</string>
+    <string name="quick_add_reminder">提醒</string>
+    <string name="quick_add_recurrence">重複</string>
+    <string name="quick_add_recurrence_hint">例如：每 2 天</string>
+    <string name="recurrence_none">無</string>
+    <string name="recurrence_daily">每天</string>
+    <string name="recurrence_weekly">每週</string>
+    <string name="recurrence_custom">自訂</string>
     <string name="quick_add_due_date">到期日</string>
     <string name="quick_add_today">今天</string>
     <string name="quick_add_tomorrow">明天</string>
@@ -398,6 +411,7 @@
     <string name="calendar_previous_month">上個月</string>
     <string name="calendar_next_month">下個月</string>
     <string name="calendar_no_tasks">這天沒有任務</string>
+    <string name="calendar_long_press_hint">長按任何一天可快速新增任務。</string>
     <string name="calendar_tasks_for">%1$s %2$d 的任務</string>
     <string name="progress_tasks">%1$d / %2$d 個任務</string>
     <string name="progress_est_minutes">約 %dm</string>

@@ -59,6 +59,8 @@ import app.tsosu.ui.components.displayName
 import app.tsosu.ui.components.icon
 import app.tsosu.ui.components.iconTint
 import app.tsosu.ui.util.rememberHaptic
+import app.tsosu.ui.util.localizedLabel
+import app.tsosu.ui.util.localizedName
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -170,7 +172,7 @@ fun TaskDetailSheet(
                     },
                     label = {
                         Text(
-                            text = p.name.lowercase().replaceFirstChar { it.uppercase() },
+                            text = p.localizedName(),
                             color = if (state.priority == p) Color(p.color) else Color.Unspecified,
                         )
                     },
@@ -189,7 +191,7 @@ fun TaskDetailSheet(
                         haptic.tick()
                         viewModel.onEnergyChange(level)
                     },
-                    label = { Text("${level.emoji} ${level.name.lowercase()}") },
+                    label = { Text(level.localizedLabel()) },
                 )
             }
         }
@@ -406,7 +408,7 @@ fun TaskDetailSheet(
         )
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            title = { Text("Reminder time") },
+            title = { Text(stringResource(R.string.task_detail_reminder_time)) },
             text = {
                 TimePicker(state = timePickerState)
             },

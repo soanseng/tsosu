@@ -51,6 +51,7 @@
     <string name="pick_one_empty">No tasks at this energy level. Try another!</string>
     <string name="pick_one_another">Pick another</string>
     <string name="pick_one_minutes">%d min</string>
+    <string name="pick_one_start">Start this one</string>
 
     <!-- Quick Add -->
     <string name="quick_add_task_title">New Task</string>
@@ -252,6 +253,11 @@
     <string name="energy_low">low</string>
     <string name="energy_medium">medium</string>
     <string name="energy_high">high</string>
+    <string name="priority_none">None</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_high">High</string>
+    <string name="priority_urgent">Urgent</string>
 
     <!-- Focus Screen (additional) -->
     <string name="hint_long_press_status">Long-press for more status options</string>
@@ -296,9 +302,15 @@
     <string name="task_detail_delete_action">Delete</string>
     <string name="task_detail_cancel">Cancel</string>
     <string name="task_detail_ok">OK</string>
-
+    <string name="quick_add_recurrence_hint">e.g. every 2 days</string>
+    <string name="recurrence_none">None</string>
+    <string name="recurrence_daily">Daily</string>
+    <string name="recurrence_weekly">Weekly</string>
+    <string name="recurrence_custom">Custom</string>
     <!-- Quick Add (additional) -->
     <string name="quick_add_priority">Priority</string>
+    <string name="quick_add_reminder">Reminder</string>
+    <string name="quick_add_recurrence">Recurrence</string>
     <string name="quick_add_due_date">Due date</string>
     <string name="quick_add_today">Today</string>
     <string name="quick_add_tomorrow">Tomorrow</string>
@@ -377,6 +389,7 @@
     <string name="calendar_previous_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>
     <string name="calendar_no_tasks">No tasks for this day</string>
+    <string name="calendar_long_press_hint">Long-press any day to quickly add a task.</string>
     <string name="calendar_tasks_for">Tasks for %1$s %2$d</string>
 
     <!-- Detail Strings -->
