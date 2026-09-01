@@ -267,6 +267,25 @@ fun QuickAddTaskSheet(
             }
         }
 
+        // Show detected @project chip (filed on save; dismiss to keep the
+        // token as plain title text).
+        val currentDetectedProject = detectedProjectName
+        if (currentDetectedProject != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FilterChip(
+                    selected = true,
+                    onClick = { detectedProjectName = null },
+                    label = { Text("\uD83D\uDCC1 @$currentDetectedProject") },
+                )
+                IconButton(onClick = { detectedProjectName = null }) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.quick_add_clear_project))
+                }
+            }
+        }
+
 
         Spacer(Modifier.height(12.dp))
 
@@ -461,8 +480,13 @@ fun QuickAddTaskSheet(
 
         Button(
             onClick = {
+                // Grammar-stripped title when any token is still applied;
+                // dismissing its chip falls back to the raw title (tokens
+                // kept as plain text), matching the rrule/priority chips.
+                // `cleanTitle != title` also covers a parsed `due:` token.
                 val finalTitle = when {
-                    detectedRrule != null || detectedPriority != null -> cleanTitle
+                    detectedRrule != null || detectedPriority != null || detectedProjectName != null -> cleanTitle
+                    cleanTitle != title -> cleanTitle
                     else -> title
                 }
                 if (finalTitle.isNotBlank()) {
