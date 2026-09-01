@@ -7,6 +7,7 @@
     <string name="nav_focus">專注</string>
     <string name="nav_habits">習慣</string>
     <string name="nav_upcoming">即將到來</string>
+    <string name="nav_calendar">日曆</string>
     <string name="nav_pick_one">選一個</string>
 
     <!-- Focus Screen -->
@@ -338,6 +339,9 @@
     <string name="settings_dynamic_colors">動態色彩</string>
     <string name="settings_dynamic_colors_desc">隨桌布調整</string>
     <string name="settings_dark_mode">深色模式</string>
+    <string name="settings_dark_system">系統</string>
+    <string name="settings_dark_light">淺色</string>
+    <string name="settings_dark_dark">深色</string>
     <string name="settings_language">語言</string>
     <string name="settings_language_system">系統</string>
     <string name="settings_language_english">English</string>
@@ -348,6 +352,7 @@
     <string name="settings_markdown_sync">Markdown 同步</string>
     <string name="settings_syncing_to_folder">同步至資料夾</string>
     <string name="settings_select_folder">選擇資料夾</string>
+    <string name="settings_change_folder">更換資料夾</string>
     <string name="settings_select_folder_desc">選擇資料夾，將任務與習慣以 markdown 檔案同步。使用 Syncthing 或 Obsidian Sync 資料夾可跨裝置同步。</string>
     <string name="settings_caldav_placeholder">https://caldav.fastmail.com/dav/calendars/…</string>
     <string name="settings_webdav_title">WebDAV（發布 .ics）</string>
@@ -355,6 +360,35 @@
     <string name="settings_webdav_user">使用者名稱</string>
     <string name="settings_webdav_password">密碼</string>
     <string name="settings_webdav_placeholder">https://dav.example.com/tsosu/…</string>
+    <string name="settings_google_coming_soon">Google 日曆（即將推出）</string>
+    <string name="settings_backup">備份</string>
+    <string name="settings_backup_desc">完整 JSON 備份：任務、習慣、連續紀錄與進度。</string>
+    <string name="settings_restore">還原</string>
+    <string name="settings_export">匯出</string>
+    <string name="settings_export_ics_desc">將含截止日期的任務匯出為 ICS 日曆檔。</string>
+    <string name="settings_export_ics">匯出為 ICS</string>
+    <string name="settings_export_ics_share">匯出 ICS</string>
+    <string name="cd_filter">篩選</string>
+    <string name="cd_search">搜尋</string>
+    <string name="cd_settings">設定</string>
+    <string name="msg_synced">已同步：匯出 %1$d、匯入 %2$d</string>
+    <string name="msg_sync_error">同步錯誤：%1$s</string>
+    <string name="msg_imported_todoist">已從 Todoist 匯入 %1$d 個任務%2$s</string>
+    <string name="msg_import_error">匯入錯誤：%1$s</string>
+    <string name="msg_imported_ticktick">已從 TickTick 匯入 %1$d 個任務</string>
+    <string name="msg_google_connected">Google 日曆已連線</string>
+    <string name="msg_google_error">Google 日曆錯誤：%1$s</string>
+    <string name="msg_caldav_connected">CalDAV 已連線</string>
+    <string name="msg_caldav_error">CalDAV 錯誤：%1$s</string>
+    <string name="msg_webdav_connected">WebDAV 已連線</string>
+    <string name="msg_webdav_error">WebDAV 錯誤：%1$s</string>
+    <string name="msg_calendar_disconnected">日曆已解除連線</string>
+    <string name="msg_backup_saved">備份已儲存 ✓</string>
+    <string name="msg_backup_failed">備份失敗：%1$s</string>
+    <string name="msg_backup_restored">備份已還原 ✓</string>
+    <string name="msg_restore_failed">還原失敗：%1$s</string>
+    <string name="msg_ics_empty">沒有含截止日期的任務可匯出</string>
+    <string name="msg_ics_error">ICS 匯出錯誤：%1$s</string>
     <string name="status_todo">待辦</string>
     <string name="status_in_progress">進行中</string>
     <string name="status_on_hold">暫緩</string>

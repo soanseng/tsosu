@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.data.markdown.MarkdownFileAccess
 import app.tsosu.data.markdown.MarkdownPreferences
+import app.tsosu.R
 import app.tsosu.VaultChangeWatcher
 import app.tsosu.domain.repository.CalendarProvider
 import app.tsosu.domain.repository.CalendarRepository
@@ -80,6 +81,8 @@ class SettingsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState
 
+    private fun msg(res: Int, vararg args: Any): String = appContext.getString(res, *args)
+
     val dynamicColor: StateFlow<Boolean> = themePreferences.dynamicColor
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -152,13 +155,13 @@ class SettingsViewModel @Inject constructor(
             result.fold(
                 onSuccess = { r ->
                     _uiState.value = _uiState.value.copy(
-                        message = "Synced: ${r.exported} exported, ${r.imported} imported",
+                        message = msg(R.string.msg_synced, r.exported, r.imported),
                     )
                     refreshVaultStats()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        message = "Sync error: ${e.message}",
+                        message = msg(R.string.msg_sync_error, e.message ?: ""),
                     )
                 },
             )
@@ -224,14 +227,14 @@ class SettingsViewModel @Inject constructor(
                         "\n${r.warnings.joinToString("\n")}"
                     } else ""
                     _uiState.value = _uiState.value.copy(
-                        message = "Imported ${r.tasksImported} tasks from Todoist$warningText",
+                        message = msg(R.string.msg_imported_todoist, r.tasksImported, warningText),
                     )
                     // Push imported tasks into the markdown vault
                     vaultChangeWatcher.syncOnce()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        message = "Import error: ${e.message}",
+                        message = msg(R.string.msg_import_error, e.message ?: ""),
                     )
                 },
             )
@@ -251,12 +254,12 @@ class SettingsViewModel @Inject constructor(
             result.fold(
                 onSuccess = { r ->
                     _uiState.value = _uiState.value.copy(
-                        message = "Imported ${r.tasksImported} tasks from TickTick",
+                        message = msg(R.string.msg_imported_ticktick, r.tasksImported),
                     )
                     vaultChangeWatcher.syncOnce()
                 },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(message = "Import error: ${e.message}")
+                    _uiState.value = _uiState.value.copy(message = msg(R.string.msg_import_error, e.message ?: ""))
                 },
             )
         }
@@ -269,12 +272,12 @@ class SettingsViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         calendarProvider = CalendarProvider.GOOGLE,
-                        message = "Google Calendar connected",
+                        message = msg(R.string.msg_google_connected),
                     )
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        message = "Google Calendar error: ${e.message}",
+                        message = msg(R.string.msg_google_error, e.message ?: ""),
                     )
                 },
             )
@@ -291,12 +294,12 @@ class SettingsViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         calendarProvider = CalendarProvider.CALDAV,
-                        message = "CalDAV connected",
+                        message = msg(R.string.msg_caldav_connected),
                     )
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        message = "CalDAV error: ${e.message}",
+                        message = msg(R.string.msg_caldav_error, e.message ?: ""),
                     )
                 },
             )
@@ -325,12 +328,12 @@ class SettingsViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         calendarProvider = CalendarProvider.WEBDAV,
-                        message = "WebDAV connected",
+                        message = msg(R.string.msg_webdav_connected),
                     )
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        message = "WebDAV error: ${e.message}",
+                        message = msg(R.string.msg_webdav_error, e.message ?: ""),
                     )
                 },
             )
@@ -348,7 +351,7 @@ class SettingsViewModel @Inject constructor(
                 webdavUrl = "",
                 webdavUsername = "",
                 webdavPassword = "",
-                message = "Calendar disconnected",
+                message = msg(R.string.msg_calendar_disconnected),
             )
         }
     }
@@ -387,9 +390,9 @@ class SettingsViewModel @Inject constructor(
                 // flushes — closing only the stream silently drops it.
                 out.bufferedWriter().use { it.write(json) }
             }.onSuccess {
-                _uiState.value = _uiState.value.copy(message = "Backup saved ✓")
+                _uiState.value = _uiState.value.copy(message = msg(R.string.msg_backup_saved))
             }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(message = "Backup failed: ${e.message}")
+                _uiState.value = _uiState.value.copy(message = msg(R.string.msg_backup_failed, e.message ?: ""))
             }
         }
     }
@@ -403,9 +406,9 @@ class SettingsViewModel @Inject constructor(
                 backupRepository.restore(backupRepository.decode(text))
             }.onSuccess {
                 reminderResync.afterSync()
-                _uiState.value = _uiState.value.copy(message = "Backup restored ✓")
+                _uiState.value = _uiState.value.copy(message = msg(R.string.msg_backup_restored))
             }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(message = "Restore failed: ${e.message}")
+                _uiState.value = _uiState.value.copy(message = msg(R.string.msg_restore_failed, e.message ?: ""))
             }
         }
     }
@@ -417,7 +420,7 @@ class SettingsViewModel @Inject constructor(
                 onSuccess = { ics ->
                     if (ics.isBlank()) {
                         _uiState.value = _uiState.value.copy(
-                            message = "No tasks with due dates to export",
+                            message = msg(R.string.msg_ics_empty),
                         )
                     } else {
                         _uiState.value = _uiState.value.copy(icsContent = ics)
@@ -425,7 +428,7 @@ class SettingsViewModel @Inject constructor(
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        message = "ICS export error: ${e.message}",
+                        message = msg(R.string.msg_ics_error, e.message ?: ""),
                     )
                 },
             )

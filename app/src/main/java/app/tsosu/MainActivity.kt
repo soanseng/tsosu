@@ -74,6 +74,7 @@ import app.tsosu.ui.widget.QuickAddTileService
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.ThemePreferences
 import app.tsosu.ui.theme.TsosuTheme
+import app.tsosu.util.StorageUris
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import app.tsosu.domain.repository.GamificationRepository
@@ -274,16 +275,16 @@ class MainActivity : AppCompatActivity() {
                                         } else {
                                             Icons.Default.FilterAlt
                                         },
-                                        contentDescription = "Filter",
+                                        contentDescription = stringResource(R.string.cd_filter),
                                     )
                                 }
                                 IconButton(onClick = { showSearch = true }) {
-                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
                                 }
                                 IconButton(onClick = {
                                     navController.navigate(Screen.Settings.route)
                                 }) {
-                                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_settings))
                                 }
                             },
                         )
@@ -339,7 +340,7 @@ class MainActivity : AppCompatActivity() {
                             showAddTask = true
                         },
                         isVaultConfigured = isVaultConfigured,
-                        onSelectFolder = { folderPicker.launch(null) },
+                        onSelectFolder = { folderPicker.launch(StorageUris.browseStartUri()) },
                     )
                 }
 

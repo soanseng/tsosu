@@ -62,6 +62,7 @@ import app.tsosu.domain.repository.SyncState
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.LanguageOption
 import app.tsosu.ui.screens.recurrencehelp.RecurrenceHelpSheet
+import app.tsosu.util.StorageUris
 import androidx.core.content.FileProvider
 import java.io.File
 
@@ -192,7 +193,15 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 FilterChip(
                     selected = darkMode == option,
                     onClick = { viewModel.setDarkMode(option) },
-                    label = { Text(option.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                    label = {
+                        Text(
+                            when (option) {
+                                DarkModeOption.SYSTEM -> stringResource(R.string.settings_dark_system)
+                                DarkModeOption.LIGHT -> stringResource(R.string.settings_dark_light)
+                                DarkModeOption.DARK -> stringResource(R.string.settings_dark_dark)
+                            },
+                        )
+                    },
                 )
             }
         }
@@ -279,6 +288,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                             Text(stringResource(R.string.settings_disconnect))
                         }
                     }
+                    OutlinedButton(
+                        onClick = { folderPicker.launch(StorageUris.browseStartUri()) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.settings_change_folder))
+                    }
                     if (!state.canScheduleExactAlarms) {
                         Spacer(Modifier.height(8.dp))
                         Text(
@@ -307,7 +322,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Button(
-                onClick = { folderPicker.launch(null) },
+                onClick = { folderPicker.launch(StorageUris.browseStartUri()) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_select_folder))
@@ -415,7 +430,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                     enabled = false,
                 ) {
-                    Text("Google Calendar (Coming soon)")
+                    Text(stringResource(R.string.settings_google_coming_soon))
                 }
 
                 OutlinedButton(
@@ -502,7 +517,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         HorizontalDivider()
 
         // Backup Section
-        Text("Backup", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_backup), style = MaterialTheme.typography.titleMedium)
 
         val backupFilePicker = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.CreateDocument("application/json"),
@@ -518,7 +533,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
 
         Text(
-            "Full JSON backup of tasks, habits, streaks and progress.",
+            stringResource(R.string.settings_backup_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -526,20 +541,20 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             OutlinedButton(onClick = {
                 backupFilePicker.launch("tsosu-backup.json")
             }) {
-                Text("Backup")
+                Text(stringResource(R.string.settings_backup))
             }
             OutlinedButton(onClick = {
                 restoreFilePicker.launch(arrayOf("application/json"))
             }) {
-                Text("Restore")
+                Text(stringResource(R.string.settings_restore))
             }
         }
 
         // Export Section
-        Text("Export", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_export), style = MaterialTheme.typography.titleMedium)
 
         Text(
-            "Export tasks with due dates as an ICS calendar file.",
+            stringResource(R.string.settings_export_ics_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -550,7 +565,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         ) {
             Icon(Icons.Default.Share, contentDescription = null)
             Spacer(Modifier.padding(start = 4.dp))
-            Text("Export to ICS")
+            Text(stringResource(R.string.settings_export_ics))
         }
 
         // Share ICS when content is available
@@ -570,7 +585,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Export ICS"))
+            context.startActivity(
+                Intent.createChooser(shareIntent, context.getString(R.string.settings_export_ics_share)),
+            )
             viewModel.clearIcsContent()
         }
 

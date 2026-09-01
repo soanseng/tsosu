@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.res.stringResource
+import app.tsosu.R
 
 @Composable
 fun BottomNavBar(
@@ -22,6 +24,13 @@ fun BottomNavBar(
 
     NavigationBar {
         Screen.bottomNavItems.forEach { screen ->
+            val title = when (screen) {
+                Screen.Focus -> stringResource(R.string.nav_focus)
+                Screen.Habits -> stringResource(R.string.nav_habits)
+                Screen.Calendar -> stringResource(R.string.nav_calendar)
+                Screen.Upcoming -> stringResource(R.string.nav_upcoming)
+                else -> screen.title
+            }
             val badgeCount = when (screen) {
                 Screen.Focus -> focusPendingCount
                 Screen.Habits -> habitsPendingCount
@@ -34,13 +43,13 @@ fun BottomNavBar(
                         BadgedBox(badge = {
                             Badge { Text(if (badgeCount > 99) "99+" else "$badgeCount") }
                         }) {
-                            Icon(screen.icon, contentDescription = screen.title)
+                            Icon(screen.icon, contentDescription = title)
                         }
                     } else {
-                        Icon(screen.icon, contentDescription = screen.title)
+                        Icon(screen.icon, contentDescription = title)
                     }
                 },
-                label = { Text(screen.title) },
+                label = { Text(title) },
                 selected = currentRoute == screen.route,
                 onClick = {
                     if (currentRoute != screen.route) {
