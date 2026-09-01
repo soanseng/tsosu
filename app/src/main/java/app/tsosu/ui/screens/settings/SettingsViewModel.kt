@@ -381,9 +381,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 val json = backupRepository.exportJson()
-                context.contentResolver.openOutputStream(uri, "wt")?.use { out ->
-                    out.bufferedWriter().write(json)
-                }
+                val out = context.contentResolver.openOutputStream(uri, "wt")
+                    ?: error("Could not open $uri for writing")
+                // Close the Writer (not just the stream) so the buffer
+                // flushes — closing only the stream silently drops it.
+                out.bufferedWriter().use { it.write(json) }
             }.onSuccess {
                 _uiState.value = _uiState.value.copy(message = "Backup saved ✓")
             }.onFailure { e ->
