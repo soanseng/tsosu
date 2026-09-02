@@ -127,16 +127,25 @@ fun RecurrencePicker(
     var customText by remember { mutableStateOf("") }
     val parser = remember { RecurrenceParser() }
 
+    // Builder emissions can legitimately equal a preset (週/月 with interval 1
+    // and no selections are exactly WEEKLY/MONTHLY) — those must NOT kick the
+    // user out of custom mode. Compare the exact emitted rule so a later
+    // external change (title-token detection) still takes over.
+    var lastBuilderRrule by remember { mutableStateOf<String?>(null) }
+
     // An externally supplied preset rule (e.g. a title-token detection)
     // takes over and leaves custom editing mode.
     LaunchedEffect(parsedPreset) {
+        if (rrule != null && rrule == lastBuilderRrule) return@LaunchedEffect
         if (parsedPreset != RecurrencePreset.CUSTOM && parsedPreset != RecurrencePreset.NONE) {
             customSelected = false
         }
     }
     fun emitBuilderSpec(spec: CustomRecurrenceSpec) {
+        val built = spec.toRrule()
+        lastBuilderRrule = built
         customText = ""
-        onRruleChange(spec.toRrule())
+        onRruleChange(built)
     }
 
     Column(modifier = modifier) {
