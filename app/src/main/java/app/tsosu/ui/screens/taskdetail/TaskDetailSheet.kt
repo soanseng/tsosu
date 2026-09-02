@@ -19,8 +19,6 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.EventAvailable
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
+import app.tsosu.ui.components.RecurrencePicker
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.TaskStatus
@@ -68,7 +67,7 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 
 private enum class DatePickerTarget {
-    DUE, SCHEDULED, START
+    DUE
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -180,21 +179,6 @@ fun TaskDetailSheet(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-
-        Text(stringResource(R.string.task_detail_energy), style = MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            EnergyLevel.entries.forEach { level ->
-                FilterChip(
-                    selected = state.energyLevel == level,
-                    onClick = {
-                        haptic.tick()
-                        viewModel.onEnergyChange(level)
-                    },
-                    label = { Text(level.localizedLabel()) },
-                )
-            }
-        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -215,7 +199,13 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(12.dp))
 
         // Due date
-        Text(stringResource(R.string.task_detail_due_date), style = MaterialTheme.typography.labelLarge)
+        // Date: the single date on a task — "Next" when it recurs
+        val dateLabel = if (state.recurrenceRule == null) {
+            R.string.task_detail_due_date
+        } else {
+            R.string.task_detail_next_due
+        }
+        Text(stringResource(dateLabel), style = MaterialTheme.typography.labelLarge)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -235,51 +225,14 @@ fun TaskDetailSheet(
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
-        // Scheduled date
-        Text(stringResource(R.string.task_detail_scheduled_date), style = MaterialTheme.typography.labelLarge)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.SCHEDULED }) {
-                Icon(Icons.Default.EventAvailable, contentDescription = null)
-                Spacer(Modifier.padding(start = 4.dp))
-                Text(
-                    state.scheduledDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
-                        ?: stringResource(R.string.task_detail_no_date),
-                )
-            }
-            if (state.scheduledDate != null) {
-                IconButton(onClick = { viewModel.onScheduledDateChange(null) }) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
-                }
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        // Start date
-        Text(stringResource(R.string.task_detail_start_date), style = MaterialTheme.typography.labelLarge)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.START }) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null)
-                Spacer(Modifier.padding(start = 4.dp))
-                Text(
-                    state.startDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
-                        ?: stringResource(R.string.task_detail_no_date),
-                )
-            }
-            if (state.startDate != null) {
-                IconButton(onClick = { viewModel.onStartDateChange(null) }) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
-                }
-            }
-        }
+        // Recurrence
+        Text(stringResource(R.string.quick_add_recurrence), style = MaterialTheme.typography.labelLarge)
+        RecurrencePicker(
+            rrule = state.recurrenceRule,
+            onRruleChange = viewModel::onRecurrenceRuleChange,
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -361,8 +314,6 @@ fun TaskDetailSheet(
     if (datePickerTarget != null) {
         val initialMillis = when (datePickerTarget) {
             DatePickerTarget.DUE -> state.dueDate
-            DatePickerTarget.SCHEDULED -> state.scheduledDate
-            DatePickerTarget.START -> state.startDate
             null -> null
         }?.let {
             it.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
@@ -380,8 +331,6 @@ fun TaskDetailSheet(
                             .toLocalDateTime(TimeZone.currentSystemDefault())
                         when (datePickerTarget) {
                             DatePickerTarget.DUE -> viewModel.onDueDateChange(ldt)
-                            DatePickerTarget.SCHEDULED -> viewModel.onScheduledDateChange(ldt)
-                            DatePickerTarget.START -> viewModel.onStartDateChange(ldt)
                             null -> {}
                         }
                     }

@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.atTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -33,8 +34,7 @@ data class TaskDetailState(
     val energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
     val estimatedMinutes: Int = 0,
     val dueDate: LocalDateTime? = null,
-    val scheduledDate: LocalDateTime? = null,
-    val startDate: LocalDateTime? = null,
+    val recurrenceRule: String? = null,
     val reminderTime: LocalTime? = null,
     val saved: Boolean = false,
     val deleted: Boolean = false,
@@ -67,8 +67,7 @@ class TaskDetailViewModel @Inject constructor(
                         energyLevel = task.energyLevel,
                         estimatedMinutes = task.estimatedMinutes ?: 0,
                         dueDate = task.dueDate,
-                        scheduledDate = task.scheduledDate,
-                        startDate = task.startDate,
+                        recurrenceRule = task.recurrenceRule,
                         reminderTime = task.reminderTime,
                     )
                 }
@@ -104,12 +103,8 @@ class TaskDetailViewModel @Inject constructor(
         _state.value = _state.value.copy(dueDate = value)
     }
 
-    fun onScheduledDateChange(value: LocalDateTime?) {
-        _state.value = _state.value.copy(scheduledDate = value)
-    }
-
-    fun onStartDateChange(value: LocalDateTime?) {
-        _state.value = _state.value.copy(startDate = value)
+    fun onRecurrenceRuleChange(value: String?) {
+        _state.value = _state.value.copy(recurrenceRule = value)
     }
 
     fun onReminderTimeChange(value: LocalTime?) {
@@ -131,6 +126,11 @@ class TaskDetailViewModel @Inject constructor(
             } else {
                 null
             }
+
+            // A rule with no date yet gets its first occurrence due today.
+            val effectiveDueDate = _state.value.dueDate ?: _state.value.recurrenceRule?.let {
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.atTime(0, 0)
+            }
             val updated = task.copy(
                 title = _state.value.title,
                 description = _state.value.description,
@@ -138,9 +138,10 @@ class TaskDetailViewModel @Inject constructor(
                 priority = _state.value.priority,
                 energyLevel = _state.value.energyLevel,
                 estimatedMinutes = _state.value.estimatedMinutes.takeIf { it > 0 },
-                dueDate = _state.value.dueDate,
-                scheduledDate = _state.value.scheduledDate,
-                startDate = _state.value.startDate,
+                dueDate = effectiveDueDate,
+                recurrenceRule = _state.value.recurrenceRule,
+                scheduledDate = task.scheduledDate,
+                startDate = task.startDate,
                 reminderTime = _state.value.reminderTime,
                 completedDate = completedDate,
                 cancelledDate = cancelledDate,

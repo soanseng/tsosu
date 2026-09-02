@@ -136,6 +136,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 var quickAddInitialDate by remember { mutableStateOf<kotlinx.datetime.LocalDateTime?>(null) }
+                var quickAddInitialRecurrence by remember { mutableStateOf<String?>(null) }
                 val notifPermissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission(),
                 ) { }
@@ -259,6 +260,8 @@ class MainActivity : AppCompatActivity() {
                         FloatingActionButton(
                             onClick = {
                                 quickAddInitialDate = null
+                                quickAddInitialRecurrence =
+                                    if (currentRoute == Screen.Habits.route) "RRULE:FREQ=DAILY" else null
                                 showAddTask = true
                             },
                         ) {
@@ -280,6 +283,7 @@ class MainActivity : AppCompatActivity() {
                                 kotlinx.datetime.LocalDate(javaDate.year, javaDate.monthValue, javaDate.dayOfMonth),
                                 kotlinx.datetime.LocalTime(0, 0),
                             )
+                            quickAddInitialRecurrence = null
                             showAddTask = true
                         },
                         isVaultConfigured = isVaultConfigured,
@@ -297,12 +301,17 @@ class MainActivity : AppCompatActivity() {
                             onDismiss = {
                                 showAddTask = false
                                 quickAddInitialDate = null
+                                quickAddInitialRecurrence = null
                                 sharedCaptureText = null
                             },
                             initialDueDate = quickAddInitialDate,
                             initialTitle = sharedCaptureText,
-                            onAdd = { title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule, projectName ->
-                                quickAddViewModel.createTask(title, priority, energy, minutes, dueDate, reminderTime, recurrenceRule, projectName)
+                            initialRecurrenceRule = quickAddInitialRecurrence,
+                            onAdd = { title, priority, dueDate, reminderTime, recurrenceRule, projectName, routineTime, tinyVersion ->
+                                quickAddViewModel.createTask(
+                                    title, priority, dueDate, reminderTime,
+                                    recurrenceRule, projectName, routineTime, tinyVersion,
+                                )
                                 showAddTask = false
                                 sharedCaptureText = null
                             },

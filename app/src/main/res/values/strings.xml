@@ -307,6 +307,11 @@
     <string name="task_detail_delete_action">Delete</string>
     <string name="task_detail_cancel">Cancel</string>
     <string name="task_detail_ok">OK</string>
+    <string name="recurrence_weekdays">Weekdays</string>
+    <string name="recurrence_monthly">Monthly</string>
+    <string name="recurrence_unrecognized">Couldn\'t read that. Try "every 2 days".</string>
+    <string name="task_detail_next_due">Next</string>
+    <string name="task_detail_repeats">Repeats: %s</string>
     <string name="quick_add_recurrence_hint">e.g. every 2 days</string>
     <string name="recurrence_none">None</string>
     <string name="recurrence_daily">Daily</string>

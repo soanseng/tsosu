@@ -57,10 +57,10 @@ import app.tsosu.R
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.domain.recurrence.RecurrenceResult
 import app.tsosu.domain.recurrence.TitlePriority
-import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.RoutineTime
+import app.tsosu.ui.components.RecurrencePicker
 import app.tsosu.ui.util.rememberHaptic
-import app.tsosu.ui.util.localizedLabel
 import app.tsosu.ui.util.localizedName
 import kotlinx.datetime.Clock
 import kotlinx.datetime.todayIn
@@ -73,27 +73,21 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-private enum class RecurrenceOption(val rrule: String?) {
-    NONE(null),
-    DAILY("RRULE:FREQ=DAILY"),
-    WEEKLY("RRULE:FREQ=WEEKLY"),
-    CUSTOM(null),
-}
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun QuickAddTaskSheet(
     onDismiss: () -> Unit,
-    onAdd: (title: String, priority: Priority, energy: EnergyLevel, estimatedMinutes: Int?, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?, projectName: String?) -> Unit,
+    onAdd: (title: String, priority: Priority, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?, projectName: String?, routineTime: RoutineTime?, tinyVersion: String?) -> Unit,
     initialDueDate: LocalDateTime? = null,
     initialTitle: String? = null,
-) {
+    initialRecurrenceRule: String? = null,
+)
+{
     val haptic = rememberHaptic()
     val recurrenceParser = remember { RecurrenceParser() }
     var title by remember { mutableStateOf(initialTitle ?: "") }
     var titleError by remember { mutableStateOf(false) }
     var selectedPriority by remember { mutableStateOf(Priority.NONE) }
-    var selectedEnergy by remember { mutableStateOf(EnergyLevel.MEDIUM) }
-    var estimatedMinutes by remember { mutableIntStateOf(0) }
     var dueDate by remember { mutableStateOf<LocalDateTime?>(initialDueDate) }
     // True once the user picked a date manually (or a calendar screen passed
     // one in); a "starting <date>" prefill from the title never overwrites it.
@@ -104,11 +98,12 @@ fun QuickAddTaskSheet(
     // True once the user set/cleared the reminder manually; keyword prefill
     // ("every morning" → 08:00) never overwrites a manual choice.
     var reminderPickedManually by remember { mutableStateOf(false) }
-    var selectedRecurrence by remember { mutableStateOf(RecurrenceOption.NONE) }
+    var pickerRrule by remember { mutableStateOf(initialRecurrenceRule) }
     var detectedRrule by remember { mutableStateOf<String?>(null) }
     var detectedPriority by remember { mutableStateOf<Priority?>(null) }
     var detectedProjectName by remember { mutableStateOf<String?>(null) }
-    var customRecurrence by remember { mutableStateOf("") }
+    var routineTime by remember { mutableStateOf(RoutineTime.AFTERNOON) }
+    var tinyVersion by remember { mutableStateOf("") }
     var cleanTitle by remember { mutableStateOf("") }
     var showRecurrenceHelp by remember { mutableStateOf(false) }
 
@@ -310,37 +305,6 @@ fun QuickAddTaskSheet(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-
-        Text(stringResource(R.string.quick_add_energy), style = MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            EnergyLevel.entries.forEach { level ->
-                FilterChip(
-                    selected = selectedEnergy == level,
-                    onClick = {
-                        haptic.tick()
-                        selectedEnergy = level
-                    },
-                    label = { Text(level.localizedLabel()) },
-                )
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Text(stringResource(R.string.quick_add_time), style = MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(5, 15, 30, 60).forEach { minutes ->
-                FilterChip(
-                    selected = estimatedMinutes == minutes,
-                    onClick = {
-                        haptic.tick()
-                        estimatedMinutes = minutes
-                    },
-                    label = { Text("${minutes}m") },
-                )
-            }
-        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -440,41 +404,40 @@ fun QuickAddTaskSheet(
                 Text(stringResource(R.string.recurrence_help_open))
             }
         }
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            RecurrenceOption.entries.forEach { option ->
-                FilterChip(
-                    selected = selectedRecurrence == option,
-                    onClick = {
-                        haptic.tick()
-                        selectedRecurrence = option
-                        if (option != RecurrenceOption.CUSTOM) {
-                            customRecurrence = ""
-                        }
-                    },
-                    label = {
-                        Text(
-                            stringResource(
-                                when (option) {
-                                    RecurrenceOption.NONE -> R.string.recurrence_none
-                                    RecurrenceOption.DAILY -> R.string.recurrence_daily
-                                    RecurrenceOption.WEEKLY -> R.string.recurrence_weekly
-                                    RecurrenceOption.CUSTOM -> R.string.recurrence_custom
+        RecurrencePicker(
+            rrule = detectedRrule ?: pickerRrule,
+            onRruleChange = { pickerRrule = it },
+        )
+        val effectiveRrule = detectedRrule ?: pickerRrule
+        if (effectiveRrule != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.quick_add_routine), style = MaterialTheme.typography.labelLarge)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RoutineTime.entries.forEach { time ->
+                    FilterChip(
+                        selected = routineTime == time,
+                        onClick = {
+                            haptic.tick()
+                            routineTime = time
+                        },
+                        label = {
+                            Text(
+                                when (time) {
+                                    RoutineTime.MORNING -> "${time.emoji} ${stringResource(R.string.habits_morning)}"
+                                    RoutineTime.AFTERNOON -> "${time.emoji} ${stringResource(R.string.habits_anytime)}"
+                                    RoutineTime.EVENING -> "${time.emoji} ${stringResource(R.string.habits_evening)}"
                                 },
-                            ),
-                        )
-                    },
-                )
+                            )
+                        },
+                    )
+                }
             }
-        }
-        if (selectedRecurrence == RecurrenceOption.CUSTOM) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
             OutlinedTextField(
-                value = customRecurrence,
-                onValueChange = { customRecurrence = it },
-                label = { Text(stringResource(R.string.quick_add_recurrence_hint)) },
+                value = tinyVersion,
+                onValueChange = { tinyVersion = it },
+                label = { Text(stringResource(R.string.quick_add_tiny_version)) },
+                supportingText = { Text(stringResource(R.string.quick_add_tiny_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -506,26 +469,17 @@ fun QuickAddTaskSheet(
                     haptic.confirm()
                     // Priority: detected from title > preset chips
                     val priority = detectedPriority ?: selectedPriority
-                    // Recurrence: detected from title > manual custom > preset
-                    val recurrenceRule = detectedRrule ?: when (selectedRecurrence) {
-                        RecurrenceOption.CUSTOM -> {
-                            val parsed = recurrenceParser.parse(customRecurrence)
-                            when (parsed) {
-                                is RecurrenceResult.Success -> parsed.rrule
-                                is RecurrenceResult.Unrecognized -> customRecurrence.takeIf { it.isNotBlank() }
-                            }
-                        }
-                        else -> selectedRecurrence.rrule
-                    }
+                    // Recurrence: detected from title > picker
+                    val recurrenceRule = detectedRrule ?: pickerRrule
                     onAdd(
                         finalTitle,
                         priority,
-                        selectedEnergy,
-                        estimatedMinutes.takeIf { it > 0 },
                         dueDate,
                         reminderTime,
                         recurrenceRule,
                         detectedProjectName,
+                        if (recurrenceRule != null) routineTime else null,
+                        tinyVersion.takeIf { it.isNotBlank() && recurrenceRule != null },
                     )
                     onDismiss()
                 } else {
