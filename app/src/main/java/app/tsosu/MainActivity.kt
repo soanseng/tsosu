@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandMore
+import app.tsosu.ui.components.GamificationHelpDialog
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -199,11 +201,17 @@ class MainActivity : AppCompatActivity() {
                                 )
                             },
                             actions = {
+                                var showGamiHelp by remember { mutableStateOf(false) }
                                 Text(
                                     "⚡$energy",
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(end = 8.dp),
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .clickable { showGamiHelp = true },
                                 )
+                                if (showGamiHelp) {
+                                    GamificationHelpDialog(onDismiss = { showGamiHelp = false })
+                                }
                                 var showViewMenu by remember { mutableStateOf(false) }
                                 IconButton(onClick = { showViewMenu = true }) {
                                     Icon(

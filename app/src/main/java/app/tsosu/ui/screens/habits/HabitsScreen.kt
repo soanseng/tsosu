@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,6 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,6 +45,7 @@ import app.tsosu.ui.util.recurrenceDisplayLabel
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.ui.components.KonfettiOverlay
+import app.tsosu.ui.components.GamificationHelpDialog
 import app.tsosu.ui.util.rememberHaptic
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
@@ -61,6 +68,7 @@ fun HabitsScreen(
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
     val errorMsg = stringResource(R.string.habits_create_failed)
+    var showGamiHelp by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -79,6 +87,10 @@ fun HabitsScreen(
         viewModel.celebrateEvent.collect {
             konfettiTrigger.intValue++
         }
+    }
+
+    if (showGamiHelp) {
+        GamificationHelpDialog(onDismiss = { showGamiHelp = false })
     }
 
     KonfettiOverlay(konfettiTrigger)
@@ -105,6 +117,13 @@ fun HabitsScreen(
                             )
                         },
                     )
+                    IconButton(onClick = { showGamiHelp = true }) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = stringResource(R.string.gamification_help_cd),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 Text(
                     text = stringResource(R.string.habits_done_count, state.completedCount, state.totalCount),

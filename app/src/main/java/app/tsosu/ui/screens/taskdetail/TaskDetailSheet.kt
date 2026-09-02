@@ -234,6 +234,43 @@ fun TaskDetailSheet(
             onRruleChange = viewModel::onRecurrenceRuleChange,
         )
 
+        // Completion history: how many times and when (compact past 5).
+        if (state.completions.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                stringResource(R.string.task_detail_history),
+                style = MaterialTheme.typography.labelLarge,
+            )
+            Text(
+                stringResource(R.string.task_detail_history_count, state.completions.size),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            var historyExpanded by remember { mutableStateOf(false) }
+            val sortedHistory = state.completions.sortedDescending()
+            val shownHistory = if (historyExpanded) sortedHistory else sortedHistory.take(5)
+            shownHistory.forEach { date ->
+                Text(
+                    "${date.year}/${date.monthNumber}/${date.dayOfMonth}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            if (sortedHistory.size > 5) {
+                TextButton(onClick = { historyExpanded = !historyExpanded }) {
+                    Text(
+                        stringResource(
+                            if (historyExpanded) {
+                                R.string.task_detail_history_collapse
+                            } else {
+                                R.string.task_detail_history_expand
+                            },
+                            sortedHistory.size,
+                        ),
+                    )
+                }
+            }
+        }
+
         Spacer(Modifier.height(8.dp))
 
         // Reminder time

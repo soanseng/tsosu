@@ -321,7 +321,7 @@
     <string name="recurrence_every_n_months">Every %d months</string>
     <string name="recurrence_every_n_months_on_day">Every %1$d months on day %2$d</string>
     <string name="recurrence_every_year">Every year</string>
-    <string name="recurrence_weekly_on">on %s</string>
+    <string name="recurrence_weekly_on">· %s</string>
     <string name="recurrence_monthly_on_day">Monthly on day %d</string>
     <string name="recurrence_until_short"> until %s</string>
     <string name="recurrence_builder_freq">Frequency</string>
@@ -330,4 +330,15 @@
     <string name="recurrence_unit_month">Months</string>
     <string name="recurrence_builder_weekdays">On weekdays</string>
     <string name="recurrence_builder_month_day">Day of month</string>
+    <string name="task_detail_history">History</string>
+    <string name="task_detail_history_count">%d times</string>
+    <string name="task_detail_history_expand">Show all %d</string>
+    <string name="task_detail_history_collapse">Show less</string>
+    <string name="gamification_help_title">⚡ Energy &amp; ❄ Shields</string>
+    <string name="gamification_help_cd">How gamification works</string>
+    <string name="gamification_help_energy">⚡ Energy: every completed task earns +2⚡. Spend it on shields in the Habits tab.</string>
+    <string name="gamification_help_shield_buy">❄ Shield: one shield costs 30⚡ and you can hold at most 2.</string>
+    <string name="gamification_help_shield_auto">Missed a day? Complete the habit again within 3 days and a ❄ shield is spent automatically to bridge the gap — your streak survives.</string>
+    <string name="gamification_help_streak">🔥 Streak: consecutive completion days. Shielded days count too.</string>
+    <string name="settings_gamification_help">⚡ How gamification works</string>
 </resources>

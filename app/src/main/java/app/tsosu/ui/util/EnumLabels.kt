@@ -65,13 +65,15 @@ fun recurrenceDisplayLabel(rrule: String): String {
                 ?.split(",")
                 ?.mapNotNull { dayCodeName(it) }
                 .orEmpty()
-            when {
-                days.isNotEmpty() && interval > 1 ->
-                    stringResource(R.string.recurrence_every_n_weeks, interval) +
-                        " " + stringResource(R.string.recurrence_weekly_on, days.joinToString("、"))
+            val freqLabel = if (interval > 1) {
+                stringResource(R.string.recurrence_every_n_weeks, interval)
+            } else {
+                stringResource(R.string.recurrence_weekly)
+            }
+            freqLabel + when {
                 days.isNotEmpty() ->
-                    stringResource(R.string.recurrence_weekly_on, days.joinToString("、"))
-                else -> stringResource(R.string.recurrence_every_n_weeks, interval)
+                    " " + stringResource(R.string.recurrence_weekly_on, days.joinToString("、"))
+                else -> ""
             }
         }
         "MONTHLY" -> when {

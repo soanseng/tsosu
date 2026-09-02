@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atTime
@@ -35,6 +36,7 @@ data class TaskDetailState(
     val estimatedMinutes: Int = 0,
     val dueDate: LocalDateTime? = null,
     val recurrenceRule: String? = null,
+    val completions: List<LocalDate> = emptyList(),
     val reminderTime: LocalTime? = null,
     val saved: Boolean = false,
     val deleted: Boolean = false,
@@ -68,6 +70,7 @@ class TaskDetailViewModel @Inject constructor(
                         estimatedMinutes = task.estimatedMinutes ?: 0,
                         dueDate = task.dueDate,
                         recurrenceRule = task.recurrenceRule,
+                        completions = task.completions,
                         reminderTime = task.reminderTime,
                     )
                 }

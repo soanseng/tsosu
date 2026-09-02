@@ -301,7 +301,7 @@
     <string name="recurrence_every_n_months">每 %d 月</string>
     <string name="recurrence_every_n_months_on_day">每 %1$d 月 %2$d 號</string>
     <string name="recurrence_every_year">每年</string>
-    <string name="recurrence_weekly_on">的 %s</string>
+    <string name="recurrence_weekly_on">· %s</string>
     <string name="recurrence_monthly_on_day">每月 %d 號</string>
     <string name="recurrence_until_short">，到 %s</string>
     <string name="recurrence_builder_freq">頻率</string>
@@ -310,4 +310,15 @@
     <string name="recurrence_unit_month">月</string>
     <string name="recurrence_builder_weekdays">每週幾</string>
     <string name="recurrence_builder_month_day">每月幾號</string>
+    <string name="task_detail_history">完成紀錄</string>
+    <string name="task_detail_history_count">共 %d 次</string>
+    <string name="task_detail_history_expand">顯示全部 %d 筆</string>
+    <string name="task_detail_history_collapse">收起</string>
+    <string name="gamification_help_title">⚡ 能量與 ❄ 護盾</string>
+    <string name="gamification_help_cd">遊戲化說明</string>
+    <string name="gamification_help_energy">⚡ 能量：每完成一個任務 +2⚡，在「習慣」頁可購買 ❄ 護盾。</string>
+    <string name="gamification_help_shield_buy">❄ 護盾：一個 30⚡，最多持有 2 個。</string>
+    <string name="gamification_help_shield_auto">漏了一天別擔心：3 天內再次完成，會自動消耗一個 ❄ 補上缺口，🔥 連續紀錄不中斷。</string>
+    <string name="gamification_help_streak">🔥 連續：連續完成的天數，護盾補上的日子也算在內。</string>
+    <string name="settings_gamification_help">⚡ 遊戲化說明</string>
 </resources>

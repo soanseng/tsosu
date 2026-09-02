@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
+import app.tsosu.ui.components.GamificationHelpDialog
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
@@ -77,6 +78,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val language by viewModel.language.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showRecurrenceHelp by remember { mutableStateOf(false) }
+    var showGamificationHelp by remember { mutableStateOf(false) }
     val versionName = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -597,6 +599,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
 
         Spacer(Modifier.height(16.dp))
+        OutlinedButton(
+            onClick = { showGamificationHelp = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.settings_gamification_help))
+        }
         Text(
             stringResource(R.string.settings_version, versionName),
             style = MaterialTheme.typography.bodySmall,
@@ -604,6 +612,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         )
     }
 
+    if (showGamificationHelp) {
+        GamificationHelpDialog(onDismiss = { showGamificationHelp = false })
+    }
     if (showRecurrenceHelp) {
         ModalBottomSheet(
             onDismissRequest = { showRecurrenceHelp = false },
