@@ -4,11 +4,9 @@
 
     <!-- Navigation -->
     <string name="nav_inbox">收件匣</string>
-    <string name="nav_focus">專注</string>
     <string name="nav_habits">習慣</string>
     <string name="nav_upcoming">即將到來</string>
     <string name="nav_calendar">日曆</string>
-    <string name="nav_pick_one">選一個</string>
     <string name="nav_today">今天</string>
     <string name="today_empty">今天沒有到期任務。</string>
     <string name="today_overdue">逾期</string>
@@ -16,12 +14,6 @@
     <string name="upcoming_empty_hint">為任務加上到期日，就會出現在這裡。</string>
 
     <!-- Focus Screen -->
-    <string name="focus_title">專注 3</string>
-    <string name="focus_today">今日專注</string>
-    <string name="focus_other_tasks">其他任務</string>
-    <string name="focus_empty">今天沒事了，好好享受！</string>
-    <string name="focus_minutes">今天 %d 分鐘</string>
-    <string name="focus_complete">專注 3 全部完成！剩下的都是加分。</string>
 
     <!-- Habits Screen -->
     <string name="habits_title">每日習慣</string>
@@ -32,10 +24,6 @@
     <string name="habits_anytime">隨時</string>
     <string name="habits_evening">晚間</string>
     <string name="habits_other">其他</string>
-    <string name="habits_recurring_section">循環任務</string>
-    <string name="habits_recurring_streak">🔥 連續 %d 天</string>
-    <string name="habits_streak">過去 %2$d 天完成 %1$d 天</string>
-    <string name="habits_month_count">這個月做了 %d 次！</string>
     <string name="habits_create_failed">建立習慣失敗</string>
 
     <!-- Inbox -->
@@ -47,29 +35,16 @@
     <string name="inbox_empty">收件匣清空了！做得好。</string>
 
     <!-- Upcoming -->
-    <string name="upcoming_title">即將到來</string>
     <string name="upcoming_empty">接下來沒有任務，享受平靜！</string>
 
     <!-- Pick One -->
-    <string name="pick_one_title">選一個</string>
-    <string name="pick_one_energy_prompt">你現在精力如何？</string>
-    <string name="pick_one_empty">這個精力等級沒有任務，試試其他的！</string>
-    <string name="pick_one_another">再選一個</string>
-    <string name="pick_one_minutes">%d 分鐘</string>
-    <string name="pick_one_start">就做這個</string>
 
     <!-- Quick Add -->
     <string name="quick_add_task_title">新任務</string>
-    <string name="quick_add_task_hint">需要做什麼？</string>
-    <string name="quick_add_energy">精力</string>
-    <string name="quick_add_time">預計時間</string>
     <string name="quick_add_submit_task">新增任務</string>
-    <string name="quick_add_habit_title">新習慣</string>
-    <string name="quick_add_habit_hint">習慣名稱</string>
     <string name="quick_add_tiny_version">兩分鐘版本是什麼？</string>
     <string name="quick_add_tiny_hint">最小的一步就好</string>
     <string name="quick_add_routine">時段</string>
-    <string name="quick_add_submit_habit">新增習慣</string>
     <string name="quick_add_title_required">請輸入標題</string>
 
     <!-- Search -->
@@ -93,13 +68,9 @@
     <string name="settings_last_sync">上次同步：%1$s</string>
     <string name="settings_vault_files">Vault 檔案數：%1$d</string>
     <string name="settings_server_url">伺服器網址</string>
-    <string name="settings_username">使用者名稱</string>
-    <string name="settings_password">密碼</string>
-    <string name="settings_connect">連線</string>
     <string name="settings_calendar">行事曆</string>
     <string name="settings_calendar_none">尚未連接行事曆</string>
     <string name="settings_calendar_disconnect">中斷行事曆</string>
-    <string name="settings_google_connect">連接 Google 日曆</string>
     <string name="settings_google_connected">已連接 Google 日曆</string>
     <string name="settings_caldav_title">CalDAV (Fastmail 等)</string>
     <string name="settings_caldav_connected">已連接 CalDAV</string>
@@ -109,25 +80,10 @@
     <string name="settings_import">匯入</string>
     <string name="settings_import_todoist">從 Todoist 匯入 (CSV)</string>
     <string name="settings_import_todoist_desc">先從 Todoist 匯出 CSV 檔案，再從這裡匯入。</string>
-    <string name="settings_cleanup">過期任務清理</string>
-    <string name="settings_cleanup_desc">封存超過 14 天未動的任務</string>
-    <string name="settings_cleanup_btn">清理</string>
-    <string name="settings_cleanup_result">已封存 %d 個過期任務</string>
 
     <!-- Weekly Review -->
-    <string name="review_title">每週回顧</string>
-    <string name="review_tasks_completed">完成任務</string>
-    <string name="review_habits_completed">完成習慣</string>
-    <string name="review_focus_days">專注天數</string>
-    <string name="review_time_invested">投入時間</string>
-    <string name="review_top_project">最多專案</string>
-    <string name="review_best_streak">最佳連續</string>
-    <string name="review_celebration">這週做得很好！每一步都算數。</string>
-    <string name="review_no_data">這週還沒有資料。</string>
 
     <!-- Sync -->
-    <string name="sync_pulled">同步完成：拉取 %1$d，推送 %2$d</string>
-    <string name="sync_error">同步錯誤：%s</string>
 
     <string name="hint_long_press_status">長按可切換更多狀態</string>
     <string name="detail_today">今天</string>
@@ -164,24 +120,11 @@
     <string name="quick_add_clear_reminder">清除提醒</string>
     <string name="recurrence_help_priority_title">優先級速記</string>
     <string name="recurrence_help_priority_body">在標題任意處加 p1 到 p4：p1＝緊急、p2＝高、p3＝中、p4＝低。大小寫不拘（"P2" 可以），須為獨立詞（"ap1" 不算）；多個時取最後一個。存檔時會從標題移除並預選優先級。</string>
-    <string name="filter_saved_views">儲存檢視</string>
-    <string name="filter_view_name">檢視名稱</string>
-    <string name="filter_save_view">儲存</string>
-    <string name="filter_delete_view">刪除 %1$s</string>
-    <string name="filter_due">到期日</string>
-    <string name="filter_due_any">全部</string>
-    <string name="filter_due_overdue">逾期</string>
-    <string name="filter_due_today">今天</string>
-    <string name="filter_due_week">未來 7 天</string>
-    <string name="filter_projects">專案</string>
 
     <!-- Accessibility -->
-    <string name="a11y_filter_active">篩選已啟用</string>
-    <string name="a11y_expand_section">展開區段</string>
-    <string name="a11y_collapse_section">收合區段</string>
-    <string name="a11y_setup_vault">設定保管庫</string>
     <string name="a11y_pick_date">選擇日期</string>
     <string name="a11y_pick_time">選擇時間</string>
+    <string name="tile_quick_add">快速新增</string>
     <string name="notif_channel_reminders">任務提醒</string>
     <string name="notif_channel_reminders_desc">排程任務的提醒</string>
     <string name="notif_channel_overdue">逾期任務</string>
@@ -190,7 +133,6 @@
     <string name="notif_action_complete">完成</string>
     <string name="notif_action_snooze">稍後 10 分</string>
     <string name="notif_start_title">開始時間到了</string>
-    <string name="tile_quick_add">快速新增任務</string>
     <string name="applock_title">解鎖 tsosu</string>
     <string name="applock_subtitle">保護你的任務隱私</string>
     <string name="applock_unlock">解鎖</string>
@@ -201,29 +143,6 @@
     <string name="ics_add">新增</string>
     <string name="ics_remove">移除</string>
     <string name="ics_url_hint">日曆訂閱網址（.ics）</string>
-    <string name="review_wizard_start">引導式回顧</string>
-    <string name="review_wizard_next">下一步</string>
-    <string name="review_wizard_step1_title">先慶祝 🎉</string>
-    <string name="review_wizard_step1_body">看看上面的統計——每個完成的任務都算數，再小都是。</string>
-    <string name="review_wizard_step2_title">很久沒動的任務</string>
-    <string name="review_wizard_step3_title">改天再說停車場</string>
-    <string name="review_wizard_all_clear">這裡很乾淨！</string>
-    <string name="review_wizard_keep">保留</string>
-    <string name="review_wizard_someday">改天</string>
-    <string name="review_wizard_delete">刪除</string>
-    <string name="review_wizard_promote">現在做</string>
-    <string name="review_wizard_finish">完成</string>
-    <string name="pomodoro_title">番茄鐘</string>
-    <string name="pomodoro_work">專注中</string>
-    <string name="pomodoro_break">休息</string>
-    <string name="pomodoro_break_ready">休息時間到</string>
-    <string name="pomodoro_idle">準備開始</string>
-    <string name="pomodoro_sessions">今天已完成 %d 次專注</string>
-    <string name="pomodoro_pick_task">綁定任務…</string>
-    <string name="pomodoro_start">開始</string>
-    <string name="pomodoro_focusing">專注中…</string>
-    <string name="pomodoro_start_break">休息一下</string>
-    <string name="pomodoro_reset">重設</string>
     <string name="bulk_select">選取</string>
     <string name="bulk_cancel">取消</string>
     <string name="bulk_complete">完成</string>
@@ -240,46 +159,10 @@
     <string name="settings_digest_desc">早 8 點晨間計畫、晚 8 點慶祝回顧</string>
     <string name="quick_add_voice">語音輸入</string>
     <string name="search_result_count">%d 筆結果</string>
-    <string name="notif_channel_habits">習慣提醒</string>
-    <string name="notif_channel_habits_desc">每日習慣提醒督促</string>
-    <string name="notif_habit_done">完成</string>
     <string name="habits_buy_freeze">買護盾 ⚡30</string>
     <string name="habits_not_enough_energy">⚡ 還不夠——完成任務與習慣來賺能量</string>
-    <string name="kanban_habits_section">習慣</string>
-    <string name="kanban_view_board">板面</string>
-    <string name="kanban_view_list">清單</string>
-    <string name="habit_field_weekdays">特定星期幾</string>
-    <string name="habit_weekdays_every_day">每天——選取日子以限制排程</string>
-    <string name="habit_field_project">專案</string>
-    <string name="habit_project_none">無</string>
-    <string name="weekday_mon">一</string>
-    <string name="weekday_tue">二</string>
-    <string name="weekday_wed">三</string>
-    <string name="weekday_thu">四</string>
-    <string name="weekday_fri">五</string>
-    <string name="weekday_sat">六</string>
-    <string name="weekday_sun">日</string>
 
     <!-- Habit Editor -->
-    <string name="habit_detail_title">編輯習慣</string>
-    <string name="habit_field_title">習慣名稱</string>
-    <string name="habit_field_tiny">2 分鐘版本</string>
-    <string name="habit_field_routine">例行時段</string>
-    <string name="habit_field_frequency">頻率</string>
-    <string name="habit_field_energy">能量</string>
-    <string name="habit_field_reminder">提醒</string>
-    <string name="habit_freq_daily">每天</string>
-    <string name="habit_freq_weekdays">平日</string>
-    <string name="habit_freq_custom">自訂</string>
-    <string name="habit_target_days">每週天數</string>
-    <string name="habit_reminder_none">不提醒</string>
-    <string name="habit_save">儲存</string>
-    <string name="habit_archive">封存</string>
-    <string name="habit_archive_confirm_title">封存習慣？</string>
-    <string name="habit_archive_confirm_body">習慣會從清單移除，歷史紀錄保留在 vault 裡。</string>
-    <string name="habit_ok">確定</string>
-    <string name="habit_cancel">取消</string>
-    <string name="quick_add_habit_reminder">提醒</string>
 
     <!-- Recurrence keyword help -->
     <string name="recurrence_help_title">重複任務關鍵字</string>
@@ -294,38 +177,21 @@
     <string name="recurrence_help_timeofday_title">時段關鍵字</string>
     <string name="recurrence_help_timeofday_body">"every morning · every afternoon · every evening · every night · 每天早上 · 每天下午 · 每天晚上——每天重複外加預設提醒（08:00 / 13:00 / 18:00 / 21:00）。可與結束日合併：every morning until 8/31。"</string>
     <string name="recurrence_help_other_body">"every other day 每隔一天 · every other week 每隔一週 · every other month 每隔一個月 · every other year 每隔一年"</string>
-    <string name="recurrence_help_bang_title">every 與 every!</string>
-    <string name="recurrence_help_bang_body">"every" 按日曆走（漏了一天，下次仍照表）。"every!"（或 "ev!"）從完成日重新起算——適合「every! 30 days」這類循環。</string>
     <string name="recurrence_help_short_title">縮寫</string>
     <string name="recurrence_help_short_body">"ev = every——試試「澆花 ev mon」。中文關鍵字（每…）同樣可用。"</string>
     <string name="recurrence_help_obsidian_title">在 Obsidian 裡</string>
     <string name="recurrence_help_obsidian_body">同樣的關鍵字在 vault 裡也有效：任務行寫「買牛奶 every other week 🔁」——🔁 標記會帶著規則，下次同步 Tsosu 自動吃進來。</string>
     <string name="recurrence_help_open">關鍵字</string>
-    <string name="focus_filter_active">篩選已啟用</string>
-    <string name="focus_vault_setup_title">設定你的 vault</string>
-    <string name="focus_vault_setup_desc">連結 markdown 資料夾，與 Obsidian、nvim 或其他工具同步。</string>
-    <string name="focus_empty_no_tasks">今天還沒有任務。</string>
-    <string name="focus_empty_hint">點 + 新增第一個任務。</string>
-    <string name="focus_empty_break">今天沒有事。你值得休息！</string>
-    <string name="filter_title">篩選與排序</string>
-    <string name="filter_search_title">依標題搜尋</string>
-    <string name="filter_status">狀態</string>
-    <string name="filter_min_priority">最低優先級</string>
-    <string name="filter_energy_level">精力等級</string>
-    <string name="filter_sort_by">排序方式</string>
-    <string name="filter_clear">清除</string>
-    <string name="filter_apply">套用</string>
+    <string name="vault_setup_title">設定你的 vault</string>
+    <string name="vault_setup_desc">連結 markdown 資料夾，與 Obsidian、nvim 或其他工具同步。</string>
     <string name="task_detail_title">編輯任務</string>
     <string name="task_detail_field_title">標題</string>
     <string name="task_detail_field_description">描述</string>
     <string name="task_detail_status">狀態</string>
     <string name="task_detail_priority">優先級</string>
-    <string name="task_detail_energy">精力</string>
     <string name="task_detail_time_estimate">時間估計</string>
     <string name="task_detail_time_none">無</string>
     <string name="task_detail_due_date">到期日</string>
-    <string name="task_detail_scheduled_date">排程日期</string>
-    <string name="task_detail_start_date">開始日期</string>
     <string name="task_detail_reminder_time">提醒時間</string>
     <string name="task_detail_no_date">無日期</string>
     <string name="task_detail_no_reminder">無提醒</string>
@@ -392,7 +258,6 @@
     <string name="settings_export_ics_desc">將含截止日期的任務匯出為 ICS 日曆檔。</string>
     <string name="settings_export_ics">匯出為 ICS</string>
     <string name="settings_export_ics_share">匯出 ICS</string>
-    <string name="cd_filter">篩選</string>
     <string name="cd_search">搜尋</string>
     <string name="cd_settings">設定</string>
     <string name="msg_synced">已同步：匯出 %1$d、匯入 %2$d</string>
@@ -423,10 +288,6 @@
     <string name="calendar_next_month">下個月</string>
     <string name="calendar_no_tasks">這天沒有任務</string>
     <string name="calendar_long_press_hint">長按任何一天可快速新增任務。</string>
-    <string name="calendar_tasks_for">%1$s %2$d 的任務</string>
-    <string name="progress_tasks">%1$d / %2$d 個任務</string>
-    <string name="progress_est_minutes">約 %dm</string>
-    <string name="progress_streak">連續 %d 天</string>
     <plurals name="notif_overdue_count">
         <item quantity="one">%d 個逾期任務</item>
         <item quantity="other">%d 個逾期任務</item>
@@ -434,9 +295,4 @@
     <string name="task_edit">編輯</string>
     <string name="task_set_focus_today">設為今日 Focus</string>
     <string name="view_switcher">檢視</string>
-    <string name="view_focus">專注</string>
-    <string name="view_inbox">收件匣</string>
-    <string name="view_kanban">看板</string>
-    <string name="view_calendar">日曆</string>
-    <string name="view_upcoming">即將到來</string>
 </resources>

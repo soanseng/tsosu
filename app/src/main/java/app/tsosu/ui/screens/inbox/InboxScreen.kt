@@ -122,18 +122,18 @@ fun InboxScreen(
                             ) {
                                 Icon(
                                     Icons.Default.FolderOpen,
-                                    contentDescription = stringResource(R.string.focus_vault_setup_title),
+                                    contentDescription = stringResource(R.string.vault_setup_title),
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                 )
                                 Text(
-                                    stringResource(R.string.focus_vault_setup_title),
+                                    stringResource(R.string.vault_setup_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 )
                             }
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                stringResource(R.string.focus_vault_setup_desc),
+                                stringResource(R.string.vault_setup_desc),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
