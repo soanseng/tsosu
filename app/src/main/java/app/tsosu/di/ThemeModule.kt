@@ -20,11 +20,6 @@ object ThemeModule {
         return ThemePreferences(context)
     }
 
-    @Provides
-    @Singleton
-    fun provideSavedViewPreferences(@ApplicationContext context: Context): app.tsosu.ui.screens.filter.SavedViewPreferences {
-        return app.tsosu.ui.screens.filter.SavedViewPreferences(context)
-    }
 
     @Provides
     @Singleton
