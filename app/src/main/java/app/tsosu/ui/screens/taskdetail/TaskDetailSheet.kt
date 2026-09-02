@@ -67,7 +67,9 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 
 private enum class DatePickerTarget {
-    DUE
+    DUE,
+    SCHEDULED,
+    START,
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -225,6 +227,56 @@ fun TaskDetailSheet(
             }
         }
 
+        // Scheduled / start dates (Obsidian ⏳ / 🛫 parity)
+        if (state.scheduledDate != null || state.startDate != null) {
+            Text(stringResource(R.string.task_detail_scheduled_date), style = MaterialTheme.typography.labelLarge)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.SCHEDULED }) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                    Spacer(Modifier.padding(start = 4.dp))
+                    Text(
+                        state.scheduledDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
+                            ?: stringResource(R.string.task_detail_no_date),
+                    )
+                }
+                IconButton(onClick = { viewModel.onScheduledDateChange(null) }) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.task_detail_start_date), style = MaterialTheme.typography.labelLarge)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedButton(onClick = { datePickerTarget = DatePickerTarget.START }) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                    Spacer(Modifier.padding(start = 4.dp))
+                    Text(
+                        state.startDate?.let { "${it.monthNumber}/${it.dayOfMonth}/${it.year}" }
+                            ?: stringResource(R.string.task_detail_no_date),
+                    )
+                }
+                IconButton(onClick = { viewModel.onStartDateChange(null) }) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_detail_clear_date))
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        // Depends on (Obsidian ⛔) — display only; ids reference other tasks
+        if (state.dependsOn.isNotEmpty()) {
+            Text(stringResource(R.string.task_detail_depends_on), style = MaterialTheme.typography.labelLarge)
+            Text(
+                "⛔ " + state.dependsOn.joinToString(", "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+        }
         Spacer(Modifier.height(12.dp))
 
         // Recurrence
@@ -298,10 +350,7 @@ fun TaskDetailSheet(
         Spacer(Modifier.height(16.dp))
 
         Button(
-            onClick = {
-                haptic.confirm()
-                viewModel.save()
-            },
+            onClick = { viewModel.save() },
             modifier = Modifier.fillMaxWidth(),
             enabled = state.title.isNotBlank(),
         ) {
@@ -351,6 +400,8 @@ fun TaskDetailSheet(
     if (datePickerTarget != null) {
         val initialMillis = when (datePickerTarget) {
             DatePickerTarget.DUE -> state.dueDate
+            DatePickerTarget.SCHEDULED -> state.scheduledDate
+            DatePickerTarget.START -> state.startDate
             null -> null
         }?.let {
             it.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
@@ -368,6 +419,8 @@ fun TaskDetailSheet(
                             .toLocalDateTime(TimeZone.currentSystemDefault())
                         when (datePickerTarget) {
                             DatePickerTarget.DUE -> viewModel.onDueDateChange(ldt)
+                            DatePickerTarget.SCHEDULED -> viewModel.onScheduledDateChange(ldt)
+                            DatePickerTarget.START -> viewModel.onStartDateChange(ldt)
                             null -> {}
                         }
                     }

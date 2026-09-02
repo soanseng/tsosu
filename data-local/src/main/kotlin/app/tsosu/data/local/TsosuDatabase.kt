@@ -162,7 +162,14 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     }
 }
 
-@Database(entities = [TaskEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 13)
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE tasks ADD COLUMN dependsOnCsv TEXT")
+    }
+}
+
+
+@Database(entities = [TaskEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 14)
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun projectDao(): ProjectDao

@@ -839,6 +839,40 @@ class MarkdownTaskParserTest {
     }
 
     @Test
+    fun `dependsOn emoji ids parsed`() {
+        val markdown = """
+            - [ ] Ship release 🆔 rel-1 ⛔ write-docs, tag-build ➕ 2026-09-01
+        """.trimIndent()
+
+        val task = parser.parse(markdown).tasks[0]
+
+        assertEquals(listOf("write-docs", "tag-build"), task.dependsOn)
+        assertEquals("Ship release", task.title)
+        assertEquals("rel-1", task.id)
+    }
+
+    @Test
+    fun `dependsOn round trips through serializer`() {
+        val serializer = MarkdownTaskSerializer()
+        val original = Task(
+            id = "rel-1",
+            title = "Ship release",
+            dependsOn = listOf("write-docs", "tag-build"),
+            createdAt = Instant.parse("2026-09-01T10:00:00Z"),
+        )
+
+        val markdown = serializer.serialize(listOf(original))
+        val parsed = parser.parse(markdown).tasks[0]
+
+        assertEquals(original.dependsOn, parsed.dependsOn)
+        val line = markdown.lines().first { it.startsWith("- [") }
+        assertTrue(
+            line.contains("\uD83C\uDD94 rel-1 \u26D4 write-docs,tag-build"),
+            "⛔ must follow 🆔, got: $line",
+        )
+    }
+
+    @Test
     fun `unrecognized recurrence text kept verbatim for lossless rewrite`() {
         val markdown = """
             - [ ] Water plants 🔁 every month on the last day 🆔 w1

@@ -23,6 +23,7 @@ data class ParsedTasks(
 class MarkdownTaskParser {
 
     private val taskLineRegex = Regex("""^\s*(?:[-*+]|\d+[.)])\s+\[(.)\]\s+(.+)$""")
+    private val dependsOnRegex = Regex("""\u26D4\s*([a-zA-Z0-9-_ ,]+)""")
     private val idRegex = Regex("""<!-- id:(\S+) -->""")
     private val idEmojiRegex = Regex("""\uD83C\uDD94\s*([a-zA-Z0-9-_]+)""")
     private val dueDateRegex = Regex("""(?:\uD83D\uDCC5|\uD83D\uDCC6|\uD83D\uDDD3) (\d{4}-\d{2}-\d{2})""")
@@ -185,9 +186,16 @@ class MarkdownTaskParser {
                     priorityLowestRegex.containsMatchIn(rawContent) -> Priority.LOW
                     else -> Priority.NONE
                 }
+                // Extract dependsOn (Obsidian ⛔ id1,id2)
+                val dependsOn = dependsOnRegex.find(rawContent)
+                    ?.groupValues?.get(1)
+                    ?.split(",")
+                    ?.mapNotNull { it.trim().takeIf(String::isNotEmpty) }
+                    .orEmpty()
 
                 // Clean title: strip all metadata markers, wikilinks, and id comment
                 val title = rawContent
+                    .replace(dependsOnRegex, "")
                     .replace(idEmojiRegex, "")
                     .replace(idRegex, "")
                     .replace(wikilinkRegex, "")
@@ -222,8 +230,9 @@ class MarkdownTaskParser {
                     scheduledDate = scheduledDate,
                     startDate = startDate,
                     reminderTime = reminderTime,
-                    recurrenceRule = recurrenceRule,
+                    dependsOn = dependsOn,
                     priority = priority,
+                    recurrenceRule = recurrenceRule,
                     energyLevel = energyLevel,
                     estimatedMinutes = estimatedMinutes,
                     position = positionCounter,

@@ -55,6 +55,9 @@ class TaskNoteParser {
             cancelledDate = fm["cancelled"]?.let { LocalDate.parse(it).atTime(0, 0) },
             energyLevel = energy,
             recurrenceRule = fm["recurrence"],
+            dependsOn = fm["dependsOn"].orEmpty()
+                .split(",")
+                .mapNotNull { it.trim().takeIf(String::isNotEmpty) },
             estimatedMinutes = fm["estimate"]?.let { parseEstimateMinutes(it) },
             tinyVersion = fm["tiny"],
             routineTime = fm["routine"]?.let { parseRoutineTime(it) },

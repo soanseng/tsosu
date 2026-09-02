@@ -341,4 +341,7 @@
     <string name="gamification_help_shield_auto">Missed a day? Complete the habit again within 3 days and a ❄ shield is spent automatically to bridge the gap — your streak survives.</string>
     <string name="gamification_help_streak">🔥 Streak: consecutive completion days. Shielded days count too.</string>
     <string name="settings_gamification_help">⚡ How gamification works</string>
+    <string name="task_detail_scheduled_date">Scheduled</string>
+    <string name="task_detail_start_date">Start</string>
+    <string name="task_detail_depends_on">Depends on</string>
 </resources>

@@ -33,9 +33,12 @@ data class TaskDetailState(
     val status: TaskStatus = TaskStatus.TODO,
     val priority: Priority = Priority.NONE,
     val energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
-    val estimatedMinutes: Int = 0,
     val dueDate: LocalDateTime? = null,
+    val scheduledDate: LocalDateTime? = null,
+    val startDate: LocalDateTime? = null,
+    val estimatedMinutes: Int = 0,
     val recurrenceRule: String? = null,
+    val dependsOn: List<String> = emptyList(),
     val completions: List<LocalDate> = emptyList(),
     val reminderTime: LocalTime? = null,
     val saved: Boolean = false,
@@ -69,8 +72,11 @@ class TaskDetailViewModel @Inject constructor(
                         energyLevel = task.energyLevel,
                         estimatedMinutes = task.estimatedMinutes ?: 0,
                         dueDate = task.dueDate,
+                        scheduledDate = task.scheduledDate,
+                        startDate = task.startDate,
                         recurrenceRule = task.recurrenceRule,
                         completions = task.completions,
+                        dependsOn = task.dependsOn,
                         reminderTime = task.reminderTime,
                     )
                 }
@@ -104,6 +110,14 @@ class TaskDetailViewModel @Inject constructor(
 
     fun onDueDateChange(value: LocalDateTime?) {
         _state.value = _state.value.copy(dueDate = value)
+    }
+
+    fun onScheduledDateChange(value: LocalDateTime?) {
+        _state.value = _state.value.copy(scheduledDate = value)
+    }
+
+    fun onStartDateChange(value: LocalDateTime?) {
+        _state.value = _state.value.copy(startDate = value)
     }
 
     fun onRecurrenceRuleChange(value: String?) {
@@ -143,8 +157,9 @@ class TaskDetailViewModel @Inject constructor(
                 estimatedMinutes = _state.value.estimatedMinutes.takeIf { it > 0 },
                 dueDate = effectiveDueDate,
                 recurrenceRule = _state.value.recurrenceRule,
-                scheduledDate = task.scheduledDate,
-                startDate = task.startDate,
+                scheduledDate = _state.value.scheduledDate,
+                startDate = _state.value.startDate,
+                dependsOn = _state.value.dependsOn,
                 reminderTime = _state.value.reminderTime,
                 completedDate = completedDate,
                 cancelledDate = cancelledDate,

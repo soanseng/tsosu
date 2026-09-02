@@ -45,6 +45,9 @@ fun TaskEntity.toDomain(): Task = Task(
     projectId = projectId,
     position = position,
     recurrenceRule = recurrenceRule,
+    dependsOn = dependsOnCsv.orEmpty()
+        .split(",")
+        .mapNotNull { it.trim().takeIf(String::isNotEmpty) },
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     isFocus = isFocus,
@@ -77,6 +80,8 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     position = position,
     repeatAfterSeconds = null,
     recurrenceRule = recurrenceRule,
+    dependsOnCsv = dependsOn.takeIf { it.isNotEmpty() }
+        ?.joinToString(","),
     calendarEventId = calendarEventId,
     estimatedMinutes = estimatedMinutes,
     isFocus = isFocus,

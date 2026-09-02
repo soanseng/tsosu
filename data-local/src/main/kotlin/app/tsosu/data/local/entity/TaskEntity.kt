@@ -25,6 +25,7 @@ data class TaskEntity(
     val position: Double = 0.0,
     val repeatAfterSeconds: Long? = null,
     val recurrenceRule: String? = null,
+    val dependsOnCsv: String? = null,
     val calendarEventId: String? = null,
     val estimatedMinutes: Int? = null,
     val energyLevel: Int = 1,

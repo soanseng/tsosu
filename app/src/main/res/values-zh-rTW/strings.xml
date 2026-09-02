@@ -321,4 +321,7 @@
     <string name="gamification_help_shield_auto">漏了一天別擔心：3 天內再次完成，會自動消耗一個 ❄ 補上缺口，🔥 連續紀錄不中斷。</string>
     <string name="gamification_help_streak">🔥 連續：連續完成的天數，護盾補上的日子也算在內。</string>
     <string name="settings_gamification_help">⚡ 遊戲化說明</string>
+    <string name="task_detail_scheduled_date">排程</string>
+    <string name="task_detail_start_date">開始</string>
+    <string name="task_detail_depends_on">等待任務</string>
 </resources>

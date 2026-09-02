@@ -29,6 +29,9 @@ class TaskNoteSerializer {
             put("energy", task.energyLevel.name.lowercase())
             task.estimatedMinutes?.let { put("estimate", "${it}m") }
             task.recurrenceRule?.let { put("recurrence", it) }
+            if (task.dependsOn.isNotEmpty()) {
+                put("dependsOn", task.dependsOn.joinToString(","))
+            }
             task.tinyVersion?.let { put("tiny", it) }
             task.routineTime?.let { put("routine", it.name.lowercase()) }
             if (task.completions.isNotEmpty()) {

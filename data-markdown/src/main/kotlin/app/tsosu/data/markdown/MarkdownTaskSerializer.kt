@@ -59,7 +59,10 @@ class MarkdownTaskSerializer {
         // Obsidian Tasks id
         append(" \uD83C\uDD94 ${task.id}")
 
-        // Priority (NONE is omitted)
+        // Depends on (Obsidian ⛔), comma-separated ids after 🆔
+        if (task.dependsOn.isNotEmpty()) {
+            append(" \u26D4 ${task.dependsOn.joinToString(",")}")
+        }
         if (task.priority != Priority.NONE) {
             append(" ${task.priority.emoji}")
         }

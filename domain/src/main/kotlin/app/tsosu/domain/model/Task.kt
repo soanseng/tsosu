@@ -26,6 +26,8 @@ data class Task(
     val position: Double = 0.0,
     val subtasks: List<Task> = emptyList(),
     val recurrenceRule: String? = null,
+    /** Ids of tasks this one waits on (Obsidian ⛔ dependsOn). */
+    val dependsOn: List<String> = emptyList(),
     val calendarEventId: String? = null,
     val estimatedMinutes: Int? = null,
     val energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
