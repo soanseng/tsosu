@@ -41,7 +41,7 @@ class HabitsRecurringScreenshotTest {
         )
         composeRule.setContent {
             TsosuTheme(darkTheme = false) {
-                RecurringTaskRow(task = task, streak = 3, onToggle = {}, onOpen = {})
+                RecurringTaskRow(task = task, streak = 3, checked = true, onToggle = {}, onOpen = {})
             }
         }
         composeRule.onNodeWithText("每天走路 10 分鐘").assertIsDisplayed()

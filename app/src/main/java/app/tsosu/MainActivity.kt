@@ -274,7 +274,7 @@ class MainActivity : AppCompatActivity() {
                         modifier = Modifier.padding(innerPadding),
                         todayViewModel = todayViewModel,
                         onTaskClick = { taskId -> editingTaskId = taskId },
-                        onHabitClick = { },
+
                         onQuickAddDate = { javaDate ->
                             quickAddInitialDate = kotlinx.datetime.LocalDateTime(
                                 kotlinx.datetime.LocalDate(javaDate.year, javaDate.monthValue, javaDate.dayOfMonth),
