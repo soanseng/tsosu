@@ -50,4 +50,7 @@ class GamificationRepositoryImpl(
 
     override fun shieldedDates(habitId: String): Flow<List<Long>> =
         streakShieldDao.datesForHabit(habitId)
+
+    override fun allShieldedDates(): Flow<Map<String, List<Long>>> =
+        streakShieldDao.all().map { rows -> rows.groupBy({ it.habitId }, { it.date }) }
 }

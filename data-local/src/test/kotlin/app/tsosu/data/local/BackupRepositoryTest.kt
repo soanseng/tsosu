@@ -3,8 +3,6 @@ package app.tsosu.data.local
 import android.content.Context
 import androidx.room.Room
 import app.tsosu.data.local.entity.GamificationEntity
-import app.tsosu.data.local.entity.HabitCompletionEntity
-import app.tsosu.data.local.entity.HabitEntity
 import app.tsosu.data.local.entity.TaskEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -37,12 +35,9 @@ class BackupRepositoryTest {
         repo = BackupRepository(
             db = db,
             taskDao = db.taskDao(),
-            habitDao = db.habitDao(),
-            focusDao = db.focusDao(),
             gamificationDao = db.gamificationDao(),
             streakShieldDao = db.streakShieldDao(),
             projectDao = db.projectDao(),
-            routineDao = db.routineDao(),
         )
     }
 
@@ -52,7 +47,7 @@ class BackupRepositoryTest {
     }
 
     @Test
-    fun `export then restore round-trips tasks and completions`() = runBlocking {
+    fun `export then restore round-trips tasks and gamification`() = runBlocking {
         val task = TaskEntity(
             id = "t1",
             title = "Water plants",
@@ -64,8 +59,6 @@ class BackupRepositoryTest {
             completionsCsv = "2026-08-21",
         )
         db.taskDao().insert(task)
-        db.habitDao().insert(HabitEntity(id = "h1", title = "Read", position = 0.0, createdAt = 1L))
-        db.habitDao().insertCompletionOnce("h1", date = 20_686, completedAt = 123L)
         db.gamificationDao().ensureRow()
         db.gamificationDao().awardEnergy(7)
 
@@ -73,8 +66,6 @@ class BackupRepositoryTest {
 
         // Wipe everything, then restore from the JSON.
         db.taskDao().clearAll()
-        db.habitDao().clearCompletions()
-        db.habitDao().clearAll()
         db.gamificationDao().clearAll()
         assertTrue(db.taskDao().getAllTasks().first().isEmpty())
 
@@ -83,7 +74,6 @@ class BackupRepositoryTest {
         val restoredTasks = db.taskDao().getByIdSync("t1")!!
         assertEquals("Water plants", restoredTasks.title)
         assertEquals("RRULE:FREQ=DAILY", restoredTasks.recurrenceRule)
-        assertEquals(20_686L, db.habitDao().getCompletionDatesSync("h1").single())
         assertEquals(7, db.gamificationDao().getEnergy())
     }
 

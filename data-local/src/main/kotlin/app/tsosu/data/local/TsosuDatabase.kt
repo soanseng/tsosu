@@ -5,20 +5,13 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.tsosu.data.local.dao.TaskDao
-import app.tsosu.data.local.dao.FocusDao
 import app.tsosu.data.local.dao.GamificationDao
-import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.LabelDao
 import app.tsosu.data.local.dao.ProjectDao
-import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.StreakShieldDao
-import app.tsosu.data.local.entity.DailyFocusEntity
 import app.tsosu.data.local.entity.GamificationEntity
-import app.tsosu.data.local.entity.HabitCompletionEntity
-import app.tsosu.data.local.entity.HabitEntity
 import app.tsosu.data.local.entity.LabelEntity
 import app.tsosu.data.local.entity.ProjectEntity
-import app.tsosu.data.local.entity.RoutineEntity
 import app.tsosu.data.local.entity.StreakShieldEntity
 import app.tsosu.data.local.entity.TaskEntity
 import kotlinx.datetime.TimeZone
@@ -160,12 +153,18 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
     }
 }
 
-@Database(entities = [TaskEntity::class, HabitEntity::class, HabitCompletionEntity::class, RoutineEntity::class, DailyFocusEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 12)
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("DROP TABLE IF EXISTS habits")
+        db.execSQL("DROP TABLE IF EXISTS habit_completions")
+        db.execSQL("DROP TABLE IF EXISTS routines")
+        db.execSQL("DROP TABLE IF EXISTS daily_focus")
+    }
+}
+
+@Database(entities = [TaskEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 13)
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
-    abstract fun habitDao(): HabitDao
-    abstract fun routineDao(): RoutineDao
-    abstract fun focusDao(): FocusDao
     abstract fun projectDao(): ProjectDao
     abstract fun gamificationDao(): GamificationDao
     abstract fun streakShieldDao(): StreakShieldDao

@@ -14,16 +14,18 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 data class HabitsUiState(
     val tasks: List<Task> = emptyList(),
+    val shieldedByTask: Map<String, Set<LocalDate>> = emptyMap(),
     val completedCount: Int = 0,
     val totalCount: Int = 0,
 )
@@ -47,16 +49,20 @@ class HabitsViewModel @Inject constructor(
     val celebrateEvent = _celebrateEvent.asSharedFlow()
 
     /** A habit IS a recurring task (unified model): this tab lists them all. */
-    val uiState: StateFlow<HabitsUiState> = taskRepository.getRecurringTasks()
-        .map { tasks ->
-            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            HabitsUiState(
-                tasks = tasks,
-                completedCount = tasks.count { today in it.completions },
-                totalCount = tasks.size,
-            )
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsUiState())
+    val uiState: StateFlow<HabitsUiState> = combine(
+        taskRepository.getRecurringTasks(),
+        gamification.allShieldedDates(),
+    ) { tasks, allShields ->
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        HabitsUiState(
+            tasks = tasks,
+            shieldedByTask = allShields.mapValues { (_, days) ->
+                days.map { LocalDate.fromEpochDays(it.toInt()) }.toSet()
+            },
+            completedCount = tasks.count { today in it.completions },
+            totalCount = tasks.size,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsUiState())
 
     val freezes: StateFlow<Int> = gamification.freezes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)

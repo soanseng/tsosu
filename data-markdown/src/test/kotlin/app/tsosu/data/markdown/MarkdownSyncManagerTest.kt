@@ -1,17 +1,9 @@
 package app.tsosu.data.markdown
 
 import app.tsosu.data.markdown.dailynote.DailyNoteWriter
-import app.tsosu.data.markdown.habitnote.HabitNoteParser
-import app.tsosu.data.markdown.habitnote.HabitNoteSerializer
-import app.tsosu.data.markdown.index.HabitIndexGenerator
 import app.tsosu.data.markdown.index.TaskIndexGenerator
 import app.tsosu.data.markdown.tasknote.TaskNoteParser
 import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
-import app.tsosu.domain.model.EnergyLevel
-import app.tsosu.domain.model.Habit
-import app.tsosu.domain.model.HabitCompletion
-import app.tsosu.domain.model.HabitFrequency
-import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import io.mockk.coEvery
@@ -29,29 +21,19 @@ class MarkdownSyncManagerTest {
     private val fileAccess = mockk<MarkdownFileAccess>(relaxed = true)
     private val taskSerializer = MarkdownTaskSerializer()
     private val taskParser = MarkdownTaskParser()
-    private val habitSerializer = MarkdownHabitSerializer()
-    private val habitParser = MarkdownHabitParser()
     private val taskNoteSerializer = TaskNoteSerializer()
     private val taskNoteParser = TaskNoteParser()
-    private val habitNoteSerializer = HabitNoteSerializer()
-    private val habitNoteParser = HabitNoteParser()
     private val dailyNoteWriter = DailyNoteWriter()
     private val taskIndexGenerator = TaskIndexGenerator()
-    private val habitIndexGenerator = HabitIndexGenerator()
 
     private val manager = MarkdownSyncManager(
         fileAccess = fileAccess,
         taskSerializer = taskSerializer,
         taskParser = taskParser,
-        habitSerializer = habitSerializer,
-        habitParser = habitParser,
         taskNoteSerializer = taskNoteSerializer,
         taskNoteParser = taskNoteParser,
-        habitNoteSerializer = habitNoteSerializer,
-        habitNoteParser = habitNoteParser,
         dailyNoteWriter = dailyNoteWriter,
         taskIndexGenerator = taskIndexGenerator,
-        habitIndexGenerator = habitIndexGenerator,
     )
 
     private val fixedCreatedAt = Instant.parse("2026-03-20T10:00:00Z")
@@ -73,17 +55,10 @@ class MarkdownSyncManagerTest {
         updatedAt = fixedUpdatedAt,
     )
 
-    private fun habit(
-        id: String = "h1",
+    private fun recurringTask(
+        id: String = "r1",
         title: String = "Exercise",
-    ) = Habit(
-        id = id,
-        title = title,
-        frequency = HabitFrequency.DAILY,
-        targetDaysPerWeek = 7,
-        energyLevel = EnergyLevel.MEDIUM,
-        createdAt = fixedCreatedAt,
-    )
+    ) = task(id = id, title = title).copy(recurrenceRule = "RRULE:FREQ=DAILY")
 
     @Test
     fun `exportTasks writes index file with task title and id`() = runTest {
@@ -265,174 +240,12 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
-    fun `exportHabits writes note files and index`() = runTest {
-        val habits = listOf(habit(id = "h1", title = "Meditate"))
-        val completions = listOf(
-            HabitCompletion("h1", LocalDate.parse("2026-03-23"), Instant.parse("2026-03-23T08:00:00Z")),
-        )
-
-        manager.exportHabits(habits, completions)
-
-        coVerify {
-            fileAccess.ensureFolder("habits")
-            fileAccess.writeFileInFolder("habits", "meditate-h1.md", withArg { content ->
-                assertTrue(content.contains("# Meditate"), "Note should contain title")
-                assertTrue(content.contains("id: h1"), "Note should contain id")
-                assertTrue(content.contains("2026-03-23"), "Note should contain completion date")
-            })
-            fileAccess.writeHabitsFile(withArg { content ->
-                assertTrue(content.contains("Meditate"), "Index should contain habit title")
-                assertTrue(content.contains("<!-- id:h1 -->"), "Index should contain habit id")
-            })
-        }
-    }
-
-    @Test
-    fun `importHabits reads from note files`() = runTest {
-        val noteContent = buildString {
-            appendLine("---")
-            appendLine("id: h1")
-            appendLine("frequency: daily")
-            appendLine("energy: medium")
-            appendLine("color: \"#4CAF50\"")
-            appendLine("archived: false")
-            appendLine("created: 2026-03-20")
-            appendLine("---")
-            appendLine()
-            appendLine("# Meditate")
-            appendLine()
-            appendLine("## Completions")
-            appendLine("- \u2705 2026-03-22")
-        }
-        coEvery { fileAccess.listFolder("habits") } returns listOf("meditate.md")
-        coEvery { fileAccess.readFileInFolder("habits", "meditate.md") } returns noteContent
-
-        val result = manager.importHabits()
-
-        assertEquals(1, result.habits.size)
-        assertEquals("h1", result.habits[0].id)
-        assertEquals("Meditate", result.habits[0].title)
-        assertEquals(1, result.completions.size)
-        assertEquals("h1", result.completions[0].habitId)
-        assertEquals(LocalDate.parse("2026-03-22"), result.completions[0].date)
-    }
-
-    @Test
-    fun `importHabits falls back to old habits file when no note files`() = runTest {
-        coEvery { fileAccess.listFolder("habits") } returns emptyList()
-        val oldContent = buildString {
-            appendLine("---")
-            appendLine("tsosu: v1")
-            appendLine("updated: 2026-03-23T10:00:00")
-            appendLine("---")
-            appendLine()
-            appendLine("## Daily")
-            appendLine()
-            appendLine("- [ ] Meditate \uD83D\uDD01daily \u26A1medium <!-- id:h1 -->")
-            appendLine("  - \u2705 2026-03-22")
-        }
-        coEvery { fileAccess.readHabitsFile() } returns oldContent
-
-        val result = manager.importHabits()
-
-        assertEquals(1, result.habits.size)
-        assertEquals("h1", result.habits[0].id)
-        assertEquals("Meditate", result.habits[0].title)
-        assertEquals(1, result.completions.size)
-    }
-
-    @Test
-    fun `importHabits merges index-only lines when note files exist`() = runTest {
-        val noteContent = buildString {
-            appendLine("---")
-            appendLine("id: h1")
-            appendLine("frequency: daily")
-            appendLine("energy: medium")
-            appendLine("created: 2026-03-20")
-            appendLine("---")
-            appendLine()
-            appendLine("# Meditate")
-        }
-        val indexContent = buildString {
-            appendLine("---")
-            appendLine("tsosu: v1")
-            appendLine("---")
-            appendLine()
-            appendLine("## \uD83C\uDF05 Morning")
-            appendLine()
-            appendLine("- Meditate \u26A1medium <!-- id:h1 -->")
-            appendLine("- Water plants \u26A1low <!-- id:hand-1 -->")
-        }
-        coEvery { fileAccess.listFolder("habits") } returns listOf("meditate.md")
-        coEvery { fileAccess.readFileInFolder("habits", "meditate.md") } returns noteContent
-        coEvery { fileAccess.readHabitsFile() } returns indexContent
-
-        val result = manager.importHabits()
-
-        // Note-file habit wins for h1; the hand-added index-only line
-        // supplements instead of being wiped by the next push.
-        assertEquals(2, result.habits.size)
-        assertEquals(setOf("h1", "hand-1"), result.habits.map { it.id }.toSet())
-        val h1 = result.habits.first { it.id == "h1" }
-        assertEquals("Meditate", h1.title)
-        assertEquals("medium", h1.energyLevel.name.lowercase())
-    }
-
-    @Test
-    fun `index-only line strips wikilink and infers routine from heading`() = runTest {
-        val indexContent = buildString {
-            appendLine("---")
-            appendLine("tsosu: v1")
-            appendLine("---")
-            appendLine()
-            appendLine("## \uD83C\uDF05 Morning")
-            appendLine()
-            appendLine("- Water plants \u26A1low [[habits/water-plants-x1]] <!-- id:hand-1 -->")
-        }
-        coEvery { fileAccess.listFolder("habits") } returns emptyList()
-        coEvery { fileAccess.readHabitsFile() } returns indexContent
-
-        val result = manager.importHabits()
-
-        assertEquals(1, result.habits.size)
-        assertEquals("Water plants", result.habits[0].title)
-        assertEquals(RoutineTime.MORNING, result.routineTimeByHabitId["hand-1"])
-    }
-
-    @Test
-    fun `evening heading maps index-only habit to evening routine`() = runTest {
-        val indexContent = buildString {
-            appendLine("## \uD83C\uDF19 Evening")
-            appendLine()
-            appendLine("- Stretch <!-- id:eve-1 -->")
-        }
-        coEvery { fileAccess.listFolder("habits") } returns emptyList()
-        coEvery { fileAccess.readHabitsFile() } returns indexContent
-
-        val result = manager.importHabits()
-
-        assertEquals("Stretch", result.habits[0].title)
-        assertEquals(RoutineTime.EVENING, result.routineTimeByHabitId["eve-1"])
-    }
-
-    @Test
-    fun `importHabits returns empty when no files exist`() = runTest {
-        coEvery { fileAccess.listFolder("habits") } returns emptyList()
-        coEvery { fileAccess.readHabitsFile() } returns null
-
-        val result = manager.importHabits()
-
-        assertTrue(result.habits.isEmpty(), "Should return empty habits list")
-        assertTrue(result.completions.isEmpty(), "Should return empty completions list")
-    }
-
-    @Test
-    fun `exportDailyNote writes file in daily folder`() = runTest {
+    fun `exportDailyNote writes recurring checklist in daily folder`() = runTest {
         val date = LocalDate.parse("2026-03-23")
-        val habits = listOf(habit(id = "h1", title = "Exercise"))
-        val completedIds = setOf("h1")
+        val recurring = listOf(recurringTask(id = "r1", title = "Exercise"))
+        val completedIds = setOf("r1")
 
-        manager.exportDailyNote(date, habits, completedIds)
+        manager.exportDailyNote(date, recurring, completedIds)
 
         coVerify {
             fileAccess.ensureFolder("daily")
@@ -446,10 +259,10 @@ class MarkdownSyncManagerTest {
     @Test
     fun `exportDailyNote marks uncompleted habits with empty checkbox`() = runTest {
         val date = LocalDate.parse("2026-03-23")
-        val habits = listOf(habit(id = "h1", title = "Exercise"))
+        val recurring = listOf(recurringTask(id = "r1", title = "Exercise"))
         val completedIds = emptySet<String>()
 
-        manager.exportDailyNote(date, habits, completedIds)
+        manager.exportDailyNote(date, recurring, completedIds)
 
         coVerify {
             fileAccess.writeFileInFolder("daily", "2026-03-23.md", withArg { content ->

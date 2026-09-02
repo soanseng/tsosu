@@ -1,9 +1,6 @@
 package app.tsosu.data.markdown.dailynote
 
-import app.tsosu.domain.model.EnergyLevel
-import app.tsosu.domain.model.Habit
-import app.tsosu.domain.model.HabitFrequency
-import kotlinx.datetime.Clock
+import app.tsosu.domain.model.Task
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,30 +13,30 @@ class DailyNoteWriterTest {
 
     private val fixedCreatedAt = Instant.parse("2026-03-20T10:00:00Z")
 
-    private fun habit(
+    private fun recurring(
         id: String = "h1",
         title: String = "Exercise",
         position: Double = 0.0,
-        energyLevel: EnergyLevel = EnergyLevel.MEDIUM,
         createdAt: Instant = fixedCreatedAt,
-    ) = Habit(
+    ) = Task(
         id = id,
         title = title,
         position = position,
-        energyLevel = energyLevel,
+        recurrenceRule = "RRULE:FREQ=DAILY",
         createdAt = createdAt,
+        updatedAt = createdAt,
     )
 
     @Test
     fun `generates daily note with habit checkboxes`() {
-        val habits = listOf(
-            habit(id = "h1", title = "Meditation"),
-            habit(id = "h2", title = "Exercise"),
+        val recurring = listOf(
+            recurring(id = "h1", title = "Meditation"),
+            recurring(id = "h2", title = "Exercise"),
         )
         val completedIds = setOf("h1")
         val date = LocalDate.parse("2026-03-23")
 
-        val result = writer.write(date, habits, completedIds)
+        val result = writer.write(date, recurring, completedIds)
 
         assertTrue(result.contains("date: 2026-03-23"))
         assertTrue(result.contains("## Habits"))
@@ -66,15 +63,15 @@ class DailyNoteWriterTest {
 
     @Test
     fun `all habits completed shows all as checked`() {
-        val habits = listOf(
-            habit(id = "h1", title = "Meditation"),
-            habit(id = "h2", title = "Exercise"),
-            habit(id = "h3", title = "Reading"),
+        val recurring = listOf(
+            recurring(id = "h1", title = "Meditation"),
+            recurring(id = "h2", title = "Exercise"),
+            recurring(id = "h3", title = "Reading"),
         )
         val completedIds = setOf("h1", "h2", "h3")
         val date = LocalDate.parse("2026-03-23")
 
-        val result = writer.write(date, habits, completedIds)
+        val result = writer.write(date, recurring, completedIds)
 
         assertTrue(result.contains("- [x] Meditation #habit <!-- id:h1 -->"))
         assertTrue(result.contains("- [x] Exercise #habit <!-- id:h2 -->"))
@@ -85,13 +82,13 @@ class DailyNoteWriterTest {
 
     @Test
     fun `no habits completed shows all as unchecked`() {
-        val habits = listOf(
-            habit(id = "h1", title = "Meditation"),
-            habit(id = "h2", title = "Exercise"),
+        val recurring = listOf(
+            recurring(id = "h1", title = "Meditation"),
+            recurring(id = "h2", title = "Exercise"),
         )
         val date = LocalDate.parse("2026-03-23")
 
-        val result = writer.write(date, habits, emptySet())
+        val result = writer.write(date, recurring, emptySet())
 
         assertTrue(result.contains("- [ ] Meditation #habit <!-- id:h1 -->"))
         assertTrue(result.contains("- [ ] Exercise #habit <!-- id:h2 -->"))
@@ -101,14 +98,14 @@ class DailyNoteWriterTest {
 
     @Test
     fun `habits sorted by position`() {
-        val habits = listOf(
-            habit(id = "h3", title = "Reading", position = 3.0),
-            habit(id = "h1", title = "Meditation", position = 1.0),
-            habit(id = "h2", title = "Exercise", position = 2.0),
+        val recurring = listOf(
+            recurring(id = "h3", title = "Reading", position = 3.0),
+            recurring(id = "h1", title = "Meditation", position = 1.0),
+            recurring(id = "h2", title = "Exercise", position = 2.0),
         )
         val date = LocalDate.parse("2026-03-23")
 
-        val result = writer.write(date, habits, emptySet())
+        val result = writer.write(date, recurring, emptySet())
 
         val habitLines = result.lines().filter { it.startsWith("- [") }
         assertEquals(3, habitLines.size, "Should have 3 habit lines")

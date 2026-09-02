@@ -11,8 +11,6 @@ class SafMarkdownFileAccess(
 
     override suspend fun readTasksFile(): String? = readFile(TASKS_FILENAME)
     override suspend fun writeTasksFile(content: String) = writeFile(TASKS_FILENAME, content)
-    override suspend fun readHabitsFile(): String? = readFile(HABITS_FILENAME)
-    override suspend fun writeHabitsFile(content: String) = writeFile(HABITS_FILENAME, content)
 
     private suspend fun readFile(filename: String): String? {
         val folderUri = folderUriProvider() ?: return null

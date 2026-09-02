@@ -133,11 +133,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val lastSync = markdownPreferences.getLastSync()
             val taskFiles = markdownFileAccess.listFolder("tasks").size
-            val habitFiles = markdownFileAccess.listFolder("habits").size
             val dailyFiles = markdownFileAccess.listFolder("daily").size
             _uiState.value = _uiState.value.copy(
                 lastSync = lastSync,
-                vaultFileCount = taskFiles + habitFiles + dailyFiles,
+                vaultFileCount = taskFiles + dailyFiles,
             )
         }
     }

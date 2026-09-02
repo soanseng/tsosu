@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -114,6 +113,7 @@ fun HabitsScreen(
                 Spacer(Modifier.height(8.dp))
             }
 
+            val shieldedFor = state.shieldedByTask
             val routineGroups = listOf(
                 RoutineTime.MORNING to R.string.habits_morning,
                 RoutineTime.AFTERNOON to R.string.habits_anytime,
@@ -132,7 +132,7 @@ fun HabitsScreen(
                     items(inGroup, key = { it.id }) { task ->
                         RecurringTaskRow(
                             task = task,
-                            streak = streakDays(task.completions, today),
+                            streak = streakDays(task.completions + (shieldedFor[task.id] ?: emptySet()), today),
                             checked = today in task.completions,
                             onToggle = {
                                 haptic.confirm()
@@ -156,7 +156,7 @@ fun HabitsScreen(
                 items(otherTasks, key = { it.id }) { task ->
                     RecurringTaskRow(
                         task = task,
-                        streak = streakDays(task.completions, today),
+                        streak = streakDays(task.completions + (shieldedFor[task.id] ?: emptySet()), today),
                         checked = today in task.completions,
                         onToggle = {
                             haptic.confirm()

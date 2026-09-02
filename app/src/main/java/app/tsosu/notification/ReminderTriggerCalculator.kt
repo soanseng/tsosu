@@ -87,26 +87,4 @@ object ReminderTriggerCalculator {
         return trigger.takeIf { it > nowMillis }
     }
 
-    /**
-     * Next occurrence of a daily habit reminder (today if still in the
-     * future, else tomorrow). Null when the habit has no reminder or is
-     * archived — the caller then cancels any stale alarm.
-     */
-    fun triggerMillisForHabit(
-        reminderMinutes: Int?,
-        isArchived: Boolean,
-        zone: TimeZone = TimeZone.currentSystemDefault(),
-        nowMillis: Long = System.currentTimeMillis(),
-    ): Long? {
-        if (reminderMinutes == null || isArchived) return null
-
-        val reminder = LocalTime(reminderMinutes / 60, reminderMinutes % 60)
-        val today = Instant.fromEpochMilliseconds(nowMillis).toLocalDateTime(zone).date
-        val todayTrigger = today.atTime(reminder).toInstant(zone).toEpochMilliseconds()
-        return if (todayTrigger > nowMillis) {
-            todayTrigger
-        } else {
-            today.plus(DateTimeUnit.DAY).atTime(reminder).toInstant(zone).toEpochMilliseconds()
-        }
-    }
 }

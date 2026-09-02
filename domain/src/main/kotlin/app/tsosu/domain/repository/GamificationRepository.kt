@@ -28,6 +28,9 @@ interface GamificationRepository {
     /** Shielded (bridged) gap days for a habit, as epoch days. */
     fun shieldedDates(habitId: String): Flow<List<Long>>
 
+    /** All shielded gap days grouped by owner id (legacy habit id, or task id). */
+    fun allShieldedDates(): Flow<Map<String, List<Long>>>
+
     companion object {
         const val FREEZE_COST = 30
         const val MAX_FREEZES = 2

@@ -2,13 +2,9 @@ package app.tsosu.data.markdown.di
 
 import android.content.Context
 import app.tsosu.data.local.TsosuDatabase
-import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
-import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.markdown.MarkdownFileAccess
-import app.tsosu.data.markdown.MarkdownHabitParser
-import app.tsosu.data.markdown.MarkdownHabitSerializer
 import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.data.markdown.MarkdownSyncManager
 import app.tsosu.data.markdown.MarkdownSyncRepository
@@ -17,9 +13,6 @@ import app.tsosu.data.markdown.MarkdownTaskSerializer
 import app.tsosu.data.markdown.TodoistImportRepository
 import app.tsosu.data.markdown.SafMarkdownFileAccess
 import app.tsosu.data.markdown.dailynote.DailyNoteWriter
-import app.tsosu.data.markdown.habitnote.HabitNoteParser
-import app.tsosu.data.markdown.habitnote.HabitNoteSerializer
-import app.tsosu.data.markdown.index.HabitIndexGenerator
 import app.tsosu.data.markdown.index.TaskIndexGenerator
 import app.tsosu.data.markdown.tasknote.TaskNoteParser
 import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
@@ -56,15 +49,10 @@ object MarkdownModule {
         fileAccess = fileAccess,
         taskSerializer = MarkdownTaskSerializer(),
         taskParser = MarkdownTaskParser(),
-        habitSerializer = MarkdownHabitSerializer(),
-        habitParser = MarkdownHabitParser(),
         taskNoteSerializer = TaskNoteSerializer(),
         taskNoteParser = TaskNoteParser(),
-        habitNoteSerializer = HabitNoteSerializer(),
-        habitNoteParser = HabitNoteParser(),
         dailyNoteWriter = DailyNoteWriter(),
         taskIndexGenerator = TaskIndexGenerator(),
-        habitIndexGenerator = HabitIndexGenerator(),
     )
 
     @Provides
@@ -73,16 +61,12 @@ object MarkdownModule {
         preferences: MarkdownPreferences,
         syncManager: MarkdownSyncManager,
         taskDao: TaskDao,
-        habitDao: HabitDao,
         projectDao: ProjectDao,
-        routineDao: RoutineDao,
     ): SyncRepository = MarkdownSyncRepository(
         preferences = preferences,
         syncManager = syncManager,
         taskDao = taskDao,
-        habitDao = habitDao,
         projectDao = projectDao,
-        routineDao = routineDao,
     )
 
     @Provides

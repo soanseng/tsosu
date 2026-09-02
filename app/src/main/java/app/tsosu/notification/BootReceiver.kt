@@ -3,7 +3,6 @@ package app.tsosu.notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.TaskDao
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -25,7 +24,6 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     @Inject lateinit var taskDao: TaskDao
-    @Inject lateinit var habitDao: HabitDao
     @Inject lateinit var reminderScheduler: ReminderScheduler
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -35,7 +33,6 @@ class BootReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 reminderScheduler.rescheduleAll(taskDao.getAllTasks().first())
-                reminderScheduler.rescheduleHabits(habitDao.getActiveHabitsSync())
             } finally {
                 pendingResult.finish()
             }

@@ -1,33 +1,24 @@
 package app.tsosu.data.markdown
 
-import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
-import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
-import app.tsosu.data.local.entity.ProjectEntity
-import app.tsosu.data.local.entity.RoutineEntity
 import app.tsosu.data.local.mapper.toDomain
 import app.tsosu.data.local.mapper.toEntity
-import app.tsosu.domain.model.HabitCompletion
-import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.repository.SyncRepository
 import app.tsosu.domain.repository.SyncResult
 import app.tsosu.domain.repository.SyncState
-import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
+import kotlinx.datetime.toLocalDateTime
 
 class MarkdownSyncRepository(
     private val preferences: MarkdownPreferences,
     private val syncManager: MarkdownSyncManager,
     private val taskDao: TaskDao,
-    private val habitDao: HabitDao,
     private val projectDao: ProjectDao,
-    private val routineDao: RoutineDao,
 ) : SyncRepository {
 
     private val _syncState = MutableStateFlow(SyncState.IDLE)
@@ -58,7 +49,6 @@ class MarkdownSyncRepository(
     private suspend fun pullInternal(): Result<Unit> = runCatching {
         // 1. IMPORT (capture external edits before overwriting)
         val importedTasks = syncManager.importTasks()
-        val importedHabits = syncManager.importHabits()
 
         // 2. Detect conflicts BEFORE the import overwrites the app-side state:
         //    both vault and Room changed since the last export → flag the task.
@@ -68,32 +58,11 @@ class MarkdownSyncRepository(
             appTasks = roomBefore,
             lastExportedHashes = preferences.getTaskHashes(),
         )
-        lastImportedCount = importedTasks.tasks.size + importedHabits.habits.size
+        lastImportedCount = importedTasks.tasks.size
 
         // 3. Merge: upsert imported data into Room (external edits win for conflicts)
         for (task in importedTasks.tasks) {
             taskDao.upsert(task.toEntity())
-        }
-        // Import every habit (parsedNotes covers note files; index-only lines
-        // come through habits/completions with the index routine map).
-        val routineTimeByNote = importedHabits.parsedNotes.associate { (note, time) ->
-            note.habit.id to time
-        }
-        for (habit in importedHabits.habits) {
-            val routineTime = routineTimeByNote[habit.id]
-                ?: importedHabits.routineTimeByHabitId[habit.id]
-            val routineId = routineTime?.let { resolveRoutineId(it) } ?: habit.routineId
-            val projectId = importedHabits.projectNameByHabitId[habit.id]
-                ?.let { resolveProjectId(it) } ?: habit.projectId
-            habitDao.insert(habit.copy(routineId = routineId, projectId = projectId).toEntity())
-        }
-        for (completion in importedHabits.completions) {
-            val entity = completion.toEntity()
-            habitDao.insertCompletionOnce(
-                habitId = entity.habitId,
-                date = entity.date,
-                completedAt = entity.completedAt,
-            )
         }
 
         preferences.setLastSync(System.currentTimeMillis())
@@ -110,29 +79,14 @@ class MarkdownSyncRepository(
         val projectNames = projects.associate { it.id to it.title }
         syncManager.exportTasks(tasks, projectNames, conflictIds)
 
-        val habits = habitDao.getActiveHabits().first().map { it.toDomain() }
-        val completions = mutableListOf<HabitCompletion>()
-        for (habit in habits) {
-            val hc = habitDao.getAllCompletionsForHabit(habit.id).first()
-            completions.addAll(hc.map { it.toDomain() })
-        }
-        val projectNameById = projectNames
-        val projectNameByHabitId = habits.mapNotNull { habit ->
-            habit.projectId?.let { pid -> projectNameById[pid]?.let { habit.id to it } }
-        }.toMap()
-        // exportHabits expects habitId → RoutineTime; resolve through each habit's routineId.
-        val routinesById = routineDao.getAll().first()
-            .associate { it.id to RoutineTime.fromOrdinal(it.timeOfDay) }
-        val routineTimeByHabitId = habits.mapNotNull { habit ->
-            habit.routineId?.let { rid -> routinesById[rid]?.let { habit.id to it } }
-        }.toMap()
-        syncManager.exportHabits(habits, completions, routineTimeByHabitId, projectNameByHabitId)
-
-        // Export today's daily note
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val todayCompletions = completions.filter { it.date == today }
-            .map { it.habitId }.toSet()
-        syncManager.exportDailyNote(today, habits, todayCompletions)
+        // Export today's daily note from the recurring-task (habit) series
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val recurring = taskDao.getRecurringTasks().first().map { it.toDomain() }
+        val completedToday = recurring
+            .filter { today in it.completions }
+            .map { it.id }
+            .toSet()
+        syncManager.exportDailyNote(today, recurring, completedToday)
 
         // Refresh the last-exported baseline for future conflict detection
         preferences.setTaskHashes(
@@ -142,7 +96,7 @@ class MarkdownSyncRepository(
         pendingConflictIds = emptySet()
 
         preferences.setLastSync(System.currentTimeMillis())
-        tasks.size + habits.size
+        tasks.size
     }
 
     override suspend fun disconnect() {
@@ -152,33 +106,8 @@ class MarkdownSyncRepository(
 
     private suspend fun <T> wrapSyncState(action: suspend () -> Result<T>): Result<T> {
         _syncState.value = SyncState.SYNCING
-        return action().also {
-            _syncState.value = if (it.isSuccess) SyncState.IDLE else SyncState.ERROR
-        }
-    }
-
-    private suspend fun resolveRoutineId(time: RoutineTime): String {
-        val existing = routineDao.getAll().first().find { it.timeOfDay == time.ordinal }
-        if (existing != null) return existing.id
-
-        val entity = RoutineEntity(
-            id = UUID.randomUUID().toString(),
-            title = time.name.lowercase().replaceFirstChar { it.uppercase() },
-            timeOfDay = time.ordinal,
-        )
-        routineDao.insert(entity)
-        return entity.id
-    }
-
-    private suspend fun resolveProjectId(title: String): String {
-        val existing = projectDao.getAll().first().find { it.title == title }
-        if (existing != null) return existing.id
-
-        val entity = ProjectEntity(
-            id = UUID.randomUUID().toString(),
-            title = title,
-        )
-        projectDao.insert(entity)
-        return entity.id
+        val result = action()
+        _syncState.value = if (result.isSuccess) SyncState.IDLE else SyncState.ERROR
+        return result
     }
 }

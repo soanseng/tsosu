@@ -1,8 +1,6 @@
 package app.tsosu.data.markdown
 
-import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.ProjectDao
-import app.tsosu.data.local.dao.RoutineDao
 import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.entity.TaskEntity
 import app.tsosu.domain.model.Task
@@ -37,18 +35,14 @@ class MarkdownSyncRepositoryTest {
         preferences: MarkdownPreferences,
         syncManager: MarkdownSyncManager,
         taskDao: TaskDao,
-        habitDao: HabitDao,
         projectDao: ProjectDao,
-        routineDao: RoutineDao,
-    ) = MarkdownSyncRepository(preferences, syncManager, taskDao, habitDao, projectDao, routineDao)
+    ) = MarkdownSyncRepository(preferences, syncManager, taskDao, projectDao)
 
     private class Mocks(
         val preferences: MarkdownPreferences,
         val syncManager: MarkdownSyncManager,
         val taskDao: TaskDao,
-        val habitDao: HabitDao,
         val projectDao: ProjectDao,
-        val routineDao: RoutineDao,
     )
 
     private fun baseMocks(
@@ -61,19 +55,15 @@ class MarkdownSyncRepositoryTest {
         coEvery { preferences.getTaskHashes() } returns lastHashes
         val syncManager = mockk<MarkdownSyncManager>(relaxed = true)
         coEvery { syncManager.importTasks() } returns ParsedTasks(listOf(imported), emptyMap())
-        coEvery { syncManager.importHabits() } returns ParsedHabits(emptyList(), emptyList())
         val taskDao = mockk<TaskDao>(relaxed = true)
         coEvery { taskDao.getAllTasks() } returnsMany listOf(
             flowOf(listOf(entity(roomBefore.id, roomBefore.title))),
             flowOf(listOf(entity(roomAfter.id, roomAfter.title))),
         )
-        val habitDao = mockk<HabitDao>(relaxed = true)
-        coEvery { habitDao.getActiveHabits() } returns flowOf(emptyList())
+        coEvery { taskDao.getRecurringTasks() } returns flowOf(emptyList())
         val projectDao = mockk<ProjectDao>(relaxed = true)
         coEvery { projectDao.getAll() } returns flowOf(emptyList())
-        val routineDao = mockk<RoutineDao>(relaxed = true)
-        coEvery { routineDao.getAll() } returns flowOf(emptyList())
-        return Mocks(preferences, syncManager, taskDao, habitDao, projectDao, routineDao)
+        return Mocks(preferences, syncManager, taskDao, projectDao)
     }
 
     @Test
@@ -91,8 +81,7 @@ class MarkdownSyncRepositoryTest {
         )
 
         val result = repo(
-            mocks.preferences, mocks.syncManager, mocks.taskDao, mocks.habitDao,
-            mocks.projectDao, mocks.routineDao,
+            mocks.preferences, mocks.syncManager, mocks.taskDao, mocks.projectDao,
         ).sync()
 
         assertTrue(result.isSuccess)
@@ -116,8 +105,7 @@ class MarkdownSyncRepositoryTest {
         )
 
         val result = repo(
-            mocks.preferences, mocks.syncManager, mocks.taskDao, mocks.habitDao,
-            mocks.projectDao, mocks.routineDao,
+            mocks.preferences, mocks.syncManager, mocks.taskDao, mocks.projectDao,
         ).sync()
 
         assertTrue(result.isSuccess)
@@ -140,99 +128,12 @@ class MarkdownSyncRepositoryTest {
         )
 
         val result = repo(
-            mocks.preferences, mocks.syncManager, mocks.taskDao, mocks.habitDao,
-            mocks.projectDao, mocks.routineDao,
+            mocks.preferences, mocks.syncManager, mocks.taskDao, mocks.projectDao,
         ).sync()
 
         assertTrue(result.isSuccess)
         coVerify {
             mocks.syncManager.exportTasks(any(), any(), match { it.isEmpty() })
-        }
-    }
-
-    @Test
-    fun `push exports habits with routine map keyed by habit id`() = runTest {
-        val preferences = mockk<MarkdownPreferences>(relaxed = true)
-        val syncManager = mockk<MarkdownSyncManager>(relaxed = true)
-        coEvery { syncManager.importTasks() } returns ParsedTasks(emptyList(), emptyMap())
-        coEvery { syncManager.importHabits() } returns ParsedHabits(emptyList(), emptyList())
-
-        val taskDao = mockk<TaskDao>(relaxed = true)
-        coEvery { taskDao.getAllTasks() } returns flowOf(emptyList())
-
-        val routineId = "routine-evening"
-        val habitDao = mockk<HabitDao>(relaxed = true)
-        coEvery { habitDao.getActiveHabits() } returns flowOf(
-            listOf(
-                app.tsosu.data.local.entity.HabitEntity(
-                    id = "h1",
-                    title = "Evening walk",
-                    routineId = routineId,
-                    createdAt = 0L,
-                ),
-            ),
-        )
-        coEvery { habitDao.getAllCompletionsForHabit("h1") } returns flowOf(emptyList())
-
-        val projectDao = mockk<ProjectDao>(relaxed = true)
-        coEvery { projectDao.getAll() } returns flowOf(emptyList())
-
-        val routineDao = mockk<RoutineDao>(relaxed = true)
-        coEvery { routineDao.getAll() } returns flowOf(
-            listOf(
-                app.tsosu.data.local.entity.RoutineEntity(
-                    id = routineId,
-                    title = "Evening",
-                    timeOfDay = 2, // RoutineTime.EVENING
-                ),
-            ),
-        )
-
-        val result = MarkdownSyncRepository(
-            preferences, syncManager, taskDao, habitDao, projectDao, routineDao,
-        ).sync()
-
-        assertTrue(result.isSuccess)
-        // The exported routine map must be keyed by HABIT id, not routine id —
-        // otherwise every habit lands in "Other" and routine: is dropped.
-        coVerify {
-            syncManager.exportHabits(
-                any(),
-                any(),
-                match { it == mapOf("h1" to app.tsosu.domain.model.RoutineTime.EVENING) },
-            )
-        }
-    }
-
-    @Test
-    fun `pull imports habits from legacy index fallback with no parsed notes`() = runTest {
-        val preferences = mockk<MarkdownPreferences>(relaxed = true)
-        val legacyHabit = app.tsosu.domain.model.Habit(id = "legacy-1", title = "Old line habit")
-        // Legacy habits.md fallback: habits populated, parsedNotes empty.
-        val syncManager = mockk<MarkdownSyncManager>(relaxed = true)
-        coEvery { syncManager.importTasks() } returns ParsedTasks(emptyList(), emptyMap())
-        coEvery { syncManager.importHabits() } returns ParsedHabits(
-            habits = listOf(legacyHabit),
-            completions = emptyList(),
-            parsedNotes = emptyList(),
-        )
-
-        val taskDao = mockk<TaskDao>(relaxed = true)
-        coEvery { taskDao.getAllTasks() } returns flowOf(emptyList())
-        val habitDao = mockk<HabitDao>(relaxed = true)
-        coEvery { habitDao.getActiveHabits() } returns flowOf(emptyList())
-        val projectDao = mockk<ProjectDao>(relaxed = true)
-        coEvery { projectDao.getAll() } returns flowOf(emptyList())
-        val routineDao = mockk<RoutineDao>(relaxed = true)
-        coEvery { routineDao.getAll() } returns flowOf(emptyList())
-
-        val repo = MarkdownSyncRepository(preferences, syncManager, taskDao, habitDao, projectDao, routineDao)
-        repo.pull().getOrThrow()
-
-        // The legacy habit must land in Room — otherwise the next push
-        // would wipe its line from habits.md (data loss).
-        coVerify {
-            habitDao.insert(match { it.id == "legacy-1" })
         }
     }
 }

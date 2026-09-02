@@ -11,6 +11,7 @@ import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.recurrence.RecurrenceExpander
 import app.tsosu.domain.usecase.SearchQueryParser
+import app.tsosu.domain.usecase.HabitStreakCalculator
 import app.tsosu.domain.usecase.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -245,8 +246,20 @@ class TaskRepositoryImpl(
         )
         taskDao.update(updated)
         gamification?.awardEnergy(ENERGY_PER_TASK)
+        autoShieldGap(entity.id, (task.completions + completedOn).toSet())
         onTaskChanged?.invoke(entity.id, "UPDATE", null)
         return updated.toDomain()
+    }
+
+    /**
+     * A completed recurring task with a bought freeze auto-bridges its most
+     * recent streak gap (Duolingo-style repair), ported from the legacy habit
+     * system — streak_shields keys are task ids now.
+     */
+    private suspend fun autoShieldGap(taskId: String, completions: Set<LocalDate>) {
+        val gamification = gamification ?: return
+        val gap = HabitStreakCalculator.firstGapBeforeStreak(completions) ?: return
+        gamification.shieldGap(taskId, gap.toEpochDays().toLong())
     }
 
     private fun todayRange(): Pair<Long, Long> {

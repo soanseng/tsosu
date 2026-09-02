@@ -11,14 +11,12 @@ import app.tsosu.data.local.mapper.toDomain
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import app.tsosu.data.local.dao.HabitDao
 import app.tsosu.data.local.dao.TaskDao
 
-/** Feeds the daily digest with today's tasks and habit completion counts. */
+/** Feeds the daily digest with today's tasks and recurring-task (habit) counts. */
 @Singleton
 class DigestData @Inject constructor(
     private val taskDao: TaskDao,
-    private val habitDao: HabitDao,
 ) {
     suspend fun buildDigestContent(): DigestFormatter.DigestContent {
         val tz = TimeZone.currentSystemDefault()
@@ -28,13 +26,12 @@ class DigestData @Inject constructor(
 
         val tasks = taskDao.getTodayTasks(start, end).first()
             .map { it.toDomain() }
-        val habits = habitDao.getActiveHabitsSync()
-        val completedToday = habitDao.getCompletionsForDate(today.toEpochDays().toLong()).first()
+        val recurring = taskDao.getRecurringTasks().first().map { it.toDomain() }
 
         return DigestFormatter.build(
             todayTasks = tasks,
-            habitsCompleted = habits.count { h -> completedToday.any { it.habitId == h.id } },
-            habitsTotal = habits.size,
+            habitsCompleted = recurring.count { today in it.completions },
+            habitsTotal = recurring.size,
         )
     }
 }

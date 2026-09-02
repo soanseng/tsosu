@@ -1,15 +1,9 @@
 package app.tsosu.data.markdown
 
 import app.tsosu.data.markdown.dailynote.DailyNoteWriter
-import app.tsosu.data.markdown.habitnote.HabitNoteParser
-import app.tsosu.data.markdown.habitnote.HabitNoteSerializer
-import app.tsosu.data.markdown.index.HabitIndexGenerator
 import app.tsosu.data.markdown.index.TaskIndexGenerator
 import app.tsosu.data.markdown.tasknote.TaskNoteParser
 import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
-import app.tsosu.domain.model.Habit
-import app.tsosu.domain.model.HabitCompletion
-import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.Task
 import kotlinx.datetime.LocalDate
 
@@ -17,15 +11,10 @@ class MarkdownSyncManager(
     private val fileAccess: MarkdownFileAccess,
     private val taskSerializer: MarkdownTaskSerializer,
     private val taskParser: MarkdownTaskParser,
-    private val habitSerializer: MarkdownHabitSerializer,
-    private val habitParser: MarkdownHabitParser,
     private val taskNoteSerializer: TaskNoteSerializer = TaskNoteSerializer(),
     private val taskNoteParser: TaskNoteParser = TaskNoteParser(),
-    private val habitNoteSerializer: HabitNoteSerializer = HabitNoteSerializer(),
-    private val habitNoteParser: HabitNoteParser = HabitNoteParser(),
     private val dailyNoteWriter: DailyNoteWriter = DailyNoteWriter(),
     private val taskIndexGenerator: TaskIndexGenerator = TaskIndexGenerator(),
-    private val habitIndexGenerator: HabitIndexGenerator = HabitIndexGenerator(),
 ) {
     suspend fun exportTasks(
         tasks: List<Task>,
@@ -93,98 +82,17 @@ class MarkdownSyncManager(
         return ParsedTasks(allTasks, projectSections)
     }
 
-    suspend fun exportHabits(
-        habits: List<Habit>,
-        completions: List<HabitCompletion>,
-        routineTimeByHabitId: Map<String, RoutineTime> = emptyMap(),
-        projectNameByHabitId: Map<String, String> = emptyMap(),
-    ) {
-        fileAccess.ensureFolder("habits")
-        val completionsByHabit = completions.groupBy { it.habitId }
-        val noteFilenames = mutableMapOf<String, String>()
-
-        for (habit in habits) {
-            val slug = habitNoteSerializer.slugify(habit.title)
-            val filename = "$slug-${habit.id.take(8)}.md"
-            val content = habitNoteSerializer.serialize(
-                habit,
-                completionsByHabit[habit.id] ?: emptyList(),
-                routineTimeByHabitId[habit.id],
-                projectNameByHabitId[habit.id],
-            )
-            writeNoteIfChanged("habits", filename, content)
-            noteFilenames[habit.id] = filename.removeSuffix(".md")
-        }
-
-        val indexContent = habitIndexGenerator.generate(habits, completions, noteFilenames, routineTimeByHabitId)
-        if (fileAccess.readHabitsFile() != indexContent) {
-            fileAccess.writeHabitsFile(indexContent)
-        }
-    }
-
-    suspend fun importHabits(): ParsedHabits {
-        val allHabits = mutableListOf<Habit>()
-        val allCompletions = mutableListOf<HabitCompletion>()
-        val parsedNotes = mutableListOf<Pair<app.tsosu.data.markdown.habitnote.ParsedHabitNote, RoutineTime?>>()
-        val projectNameByHabit = mutableMapOf<String, String>()
-        // Read individual HabitNote files
-        val noteFiles = fileAccess.listFolder("habits")
-        val seenHabitIds = mutableSetOf<String>()
-        for (filename in noteFiles) {
-            if (!filename.endsWith(".md")) continue
-            val content = fileAccess.readFileInFolder("habits", filename) ?: continue
-            try {
-                val parsed = habitNoteParser.parse(content)
-                // Legacy pre-id-suffix files and new files can both exist for the same id
-                if (parsed.habit.id in seenHabitIds) continue
-                seenHabitIds.add(parsed.habit.id)
-                allHabits.add(parsed.habit)
-                allCompletions.addAll(parsed.completions)
-                parsedNotes.add(parsed to parsed.routineTime)
-                parsed.projectName?.let { name ->
-                    projectNameByHabit[parsed.habit.id] = name
-                }
-            } catch (_: Exception) {
-                // skip malformed files
-            }
-        }
-
-        // Also parse the habits.md index: note-file habits win by id, and
-        // index-only lines (hand-added in Obsidian) supplement them. This
-        // covers no-notes, mixed, and all-notes vaults uniformly.
-        val indexRoutineByHabitId = mutableMapOf<String, RoutineTime>()
-        val indexContent = fileAccess.readHabitsFile()
-        if (indexContent != null) {
-            try {
-                val indexParsed = habitParser.parse(indexContent)
-                for (habit in indexParsed.habits) {
-                    if (habit.id in seenHabitIds) continue
-                    seenHabitIds.add(habit.id)
-                    allHabits.add(habit)
-                }
-                allCompletions.addAll(indexParsed.completions)
-                indexRoutineByHabitId.putAll(indexParsed.routineTimeByHabitId)
-            } catch (_: Exception) {
-                // skip malformed index
-            }
-        }
-
-        return ParsedHabits(
-            habits = allHabits,
-            completions = allCompletions,
-            routineTimeByHabitId = indexRoutineByHabitId,
-            parsedNotes = parsedNotes,
-            projectNameByHabitId = projectNameByHabit,
-        )
-    }
-
+    /**
+     * Daily note habit checklist is the recurring-task series: completed =
+     * today's occurrence recorded in the task's completions.
+     */
     suspend fun exportDailyNote(
         date: LocalDate,
-        habits: List<Habit>,
-        completedHabitIds: Set<String>,
+        recurringTasks: List<Task>,
+        completedTaskIds: Set<String>,
     ) {
         fileAccess.ensureFolder("daily")
-        val content = dailyNoteWriter.write(date, habits, completedHabitIds)
+        val content = dailyNoteWriter.write(date, recurringTasks, completedTaskIds)
         writeNoteIfChanged("daily", dailyNoteWriter.filename(date), content)
     }
 
