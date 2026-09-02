@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tsosu.R
 import app.tsosu.domain.model.Task
+import app.tsosu.ui.util.recurrenceDisplayLabel
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.ui.components.KonfettiOverlay
@@ -247,7 +248,7 @@ fun RecurringTaskRow(
                 }
                 task.recurrenceRule?.let {
                     Text(
-                        text = "🔁 ${RecurrenceParser.toDisplayLabel(it)}",
+                        text = "🔁 ${recurrenceDisplayLabel(it)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

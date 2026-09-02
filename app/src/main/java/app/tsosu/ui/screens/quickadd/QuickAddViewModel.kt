@@ -12,6 +12,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
@@ -39,10 +43,14 @@ class QuickAddViewModel @Inject constructor(
                 projectRepository.getAllProjects().first()
                     .firstOrNull { it.title.equals(name, ignoreCase = true) }?.id
             }
+            // A rule with no date yet gets its first occurrence due today.
+            val effectiveDueDate = dueDate ?: recurrenceRule?.let {
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.atTime(0, 0)
+            }
             val task = Task(
                 title = title,
                 priority = priority,
-                dueDate = dueDate,
+                dueDate = effectiveDueDate,
                 reminderTime = reminderTime,
                 recurrenceRule = recurrenceRule,
                 projectId = projectId,

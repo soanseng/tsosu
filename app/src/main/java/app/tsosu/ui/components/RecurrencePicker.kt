@@ -44,7 +44,7 @@ enum class RecurrencePreset(val rrule: String?) {
     }
 }
 
-private val RecurrencePreset.labelRes: Int
+val RecurrencePreset.labelRes: Int
     get() = when (this) {
         RecurrencePreset.NONE -> R.string.recurrence_none
         RecurrencePreset.DAILY -> R.string.recurrence_daily
