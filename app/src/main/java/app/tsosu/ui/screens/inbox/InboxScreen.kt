@@ -12,6 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -33,7 +37,10 @@ import app.tsosu.ui.components.TaskListItem
 fun InboxScreen(
     viewModel: InboxViewModel = hiltViewModel(),
     onTaskClick: (String) -> Unit = {},
-) {
+    isVaultConfigured: Boolean = true,
+    onSelectFolder: () -> Unit = {},
+)
+{
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val staleIds by viewModel.staleIds.collectAsStateWithLifecycle()
     val selectedIds by viewModel.selectedIds.collectAsStateWithLifecycle()
@@ -100,6 +107,44 @@ fun InboxScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            if (!isVaultConfigured) {
+                item(key = "vault-setup") {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        ),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Icon(
+                                    Icons.Default.FolderOpen,
+                                    contentDescription = stringResource(R.string.focus_vault_setup_title),
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                                Text(
+                                    stringResource(R.string.focus_vault_setup_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                stringResource(R.string.focus_vault_setup_desc),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Button(onClick = onSelectFolder) {
+                                Text(stringResource(R.string.settings_select_folder))
+                            }
+                        }
+                    }
+                }
+            }
             item {
                 Row(
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -143,12 +188,12 @@ fun InboxScreen(
             if (tasks.isEmpty()) {
                 item {
                     Text(
-                        "Inbox zero!",
+                        text = stringResource(R.string.inbox_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        "New tasks without a due date appear here.",
+                        text = stringResource(R.string.inbox_empty_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

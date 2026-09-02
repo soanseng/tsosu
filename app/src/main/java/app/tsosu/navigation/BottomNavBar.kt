@@ -16,7 +16,8 @@ import app.tsosu.R
 @Composable
 fun BottomNavBar(
     navController: NavController,
-    focusPendingCount: Int = 0,
+    inboxPendingCount: Int = 0,
+    todayPendingCount: Int = 0,
     habitsPendingCount: Int = 0,
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -25,14 +26,15 @@ fun BottomNavBar(
     NavigationBar {
         Screen.bottomNavItems.forEach { screen ->
             val title = when (screen) {
-                Screen.Focus -> stringResource(R.string.nav_focus)
+                Screen.Inbox -> stringResource(R.string.nav_inbox)
+                Screen.Today -> stringResource(R.string.nav_today)
                 Screen.Habits -> stringResource(R.string.nav_habits)
-                Screen.Calendar -> stringResource(R.string.nav_calendar)
                 Screen.Upcoming -> stringResource(R.string.nav_upcoming)
                 else -> screen.title
             }
             val badgeCount = when (screen) {
-                Screen.Focus -> focusPendingCount
+                Screen.Inbox -> inboxPendingCount
+                Screen.Today -> todayPendingCount
                 Screen.Habits -> habitsPendingCount
                 else -> 0
             }

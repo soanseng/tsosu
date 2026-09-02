@@ -23,8 +23,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -60,16 +58,13 @@ import app.tsosu.data.markdown.MarkdownPreferences
 import app.tsosu.navigation.BottomNavBar
 import app.tsosu.navigation.Screen
 import app.tsosu.navigation.TsosuNavHost
-import app.tsosu.ui.screens.filter.FilterSheet
-import app.tsosu.ui.screens.focus.FocusViewModel
-import app.tsosu.ui.screens.habitdetail.HabitDetailSheet
 import app.tsosu.ui.screens.habits.HabitsViewModel
-import app.tsosu.ui.screens.pickone.PickOneSheet
-import app.tsosu.ui.screens.quickadd.QuickAddHabitSheet
+import app.tsosu.ui.screens.inbox.InboxViewModel
 import app.tsosu.ui.screens.quickadd.QuickAddTaskSheet
 import app.tsosu.ui.screens.quickadd.QuickAddViewModel
 import app.tsosu.ui.screens.search.SearchSheet
 import app.tsosu.ui.screens.taskdetail.TaskDetailSheet
+import app.tsosu.ui.screens.today.TodayViewModel
 import app.tsosu.ui.widget.QuickAddTileService
 import app.tsosu.ui.theme.DarkModeOption
 import app.tsosu.ui.theme.ThemePreferences
@@ -95,8 +90,6 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var markdownPreferences: MarkdownPreferences
     @Inject lateinit var vaultChangeWatcher: VaultChangeWatcher
     @Inject lateinit var gamificationRepository: GamificationRepository
-    @Inject lateinit var savedViewPreferences: app.tsosu.ui.screens.filter.SavedViewPreferences
-    @Inject lateinit var projectRepository: app.tsosu.domain.repository.ProjectRepository
 
     private var lastSyncTime = 0L
     private val snackbarHostState = SnackbarHostState()
@@ -143,8 +136,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 var quickAddInitialDate by remember { mutableStateOf<kotlinx.datetime.LocalDateTime?>(null) }
-                var showAddHabit by remember { mutableStateOf(false) }
-                var showPickOne by remember { mutableStateOf(false) }
                 val notifPermissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission(),
                 ) { }
@@ -158,15 +149,12 @@ class MainActivity : AppCompatActivity() {
                         notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 }
-                var showFilter by remember { mutableStateOf(false) }
                 var showSearch by remember { mutableStateOf(false) }
                 var editingTaskId by remember {
                     mutableStateOf(intent.getStringExtra("taskId") ?: null)
                 }
-                var editingHabitId by remember {
-                    mutableStateOf(intent.getStringExtra("habitId") ?: null)
-                }
-                val focusViewModel: FocusViewModel = hiltViewModel()
+                val inboxViewModel: InboxViewModel = hiltViewModel()
+                val todayViewModel: TodayViewModel = hiltViewModel()
                 val habitsViewModel: HabitsViewModel = hiltViewModel()
                 val energy by gamificationRepository.energy().collectAsState(initial = 0)
                 val isVaultConfigured by syncRepository.isConfigured()
@@ -174,7 +162,6 @@ class MainActivity : AppCompatActivity() {
                 val scope = rememberCoroutineScope()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
-                val isOnHabitsTab = currentRoute == Screen.Habits.route
 
                 val folderPicker = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.OpenDocumentTree()
@@ -195,24 +182,29 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
-                        val focusState by focusViewModel.uiState.collectAsState()
-                        var showViewMenu by remember { mutableStateOf(false) }
-                        val currentView = Screen.viewModes.firstOrNull { it.route == currentRoute }
-                            ?: Screen.Focus
                         TopAppBar(
                             title = {
-                                TextButton(onClick = { showViewMenu = true }) {
-                                    Icon(currentView.icon, contentDescription = null)
-                                    Text(
-                                        when (currentView) {
-                                            Screen.Focus -> stringResource(R.string.view_focus)
-                                            Screen.Inbox -> stringResource(R.string.view_inbox)
-                                            Screen.Kanban -> stringResource(R.string.view_kanban)
-                                            Screen.Calendar -> stringResource(R.string.view_calendar)
-                                            Screen.Upcoming -> stringResource(R.string.view_upcoming)
-                                            else -> stringResource(R.string.app_name)
+                                Text(
+                                    stringResource(
+                                        when (currentRoute) {
+                                            Screen.Inbox.route -> R.string.nav_inbox
+                                            Screen.Today.route -> R.string.nav_today
+                                            Screen.Habits.route -> R.string.nav_habits
+                                            Screen.Upcoming.route -> R.string.nav_upcoming
+                                            Screen.Calendar.route -> R.string.nav_calendar
+                                            else -> R.string.app_name
                                         },
-                                    )
+                                    ),
+                                )
+                            },
+                            actions = {
+                                Text(
+                                    "⚡$energy",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(end = 8.dp),
+                                )
+                                var showViewMenu by remember { mutableStateOf(false) }
+                                IconButton(onClick = { showViewMenu = true }) {
                                     Icon(
                                         Icons.Default.ExpandMore,
                                         contentDescription = stringResource(R.string.view_switcher),
@@ -224,18 +216,7 @@ class MainActivity : AppCompatActivity() {
                                 ) {
                                     Screen.viewModes.forEach { screen ->
                                         DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    when (screen) {
-                                                        Screen.Focus -> stringResource(R.string.view_focus)
-                                                        Screen.Inbox -> stringResource(R.string.view_inbox)
-                                                        Screen.Kanban -> stringResource(R.string.view_kanban)
-                                                        Screen.Calendar -> stringResource(R.string.view_calendar)
-                                                        Screen.Upcoming -> stringResource(R.string.view_upcoming)
-                                                        else -> screen.title
-                                                    },
-                                                )
-                                            },
+                                            text = { Text(stringResource(R.string.nav_calendar)) },
                                             leadingIcon = { Icon(screen.icon, contentDescription = null) },
                                             onClick = {
                                                 showViewMenu = false
@@ -251,32 +232,6 @@ class MainActivity : AppCompatActivity() {
                                             },
                                         )
                                     }
-                                    HorizontalDivider()
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.review_title)) },
-                                        leadingIcon = { Icon(Screen.WeeklyReview.icon, contentDescription = null) },
-                                        onClick = {
-                                            showViewMenu = false
-                                            navController.navigate(Screen.WeeklyReview.route)
-                                        },
-                                    )
-                                }
-                            },
-                            actions = {
-                                Text(
-                                    "⚡$energy",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(end = 8.dp),
-                                )
-                                IconButton(onClick = { showFilter = true }) {
-                                    Icon(
-                                        imageVector = if (focusState.isFiltered) {
-                                            Icons.Default.FilterAltOff
-                                        } else {
-                                            Icons.Default.FilterAlt
-                                        },
-                                        contentDescription = stringResource(R.string.cd_filter),
-                                    )
                                 }
                                 IconButton(onClick = { showSearch = true }) {
                                     Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
@@ -290,38 +245,26 @@ class MainActivity : AppCompatActivity() {
                         )
                     },
                     bottomBar = {
-                        val focusState by focusViewModel.uiState.collectAsState()
+                        val inboxTasks by inboxViewModel.tasks.collectAsState()
+                        val todayCount by todayViewModel.pendingCount.collectAsState()
                         val habitsState by habitsViewModel.uiState.collectAsState()
                         BottomNavBar(
                             navController = navController,
-                            focusPendingCount = focusState.totalCount - focusState.completedCount,
+                            inboxPendingCount = inboxTasks.size,
+                            todayPendingCount = todayCount,
                             habitsPendingCount = habitsState.totalCount - habitsState.completedCount,
                         )
                     },
                     floatingActionButton = {
                         FloatingActionButton(
                             onClick = {
-                                if (isOnHabitsTab) showAddHabit = true
-                                else {
-                                    quickAddInitialDate = null
-                                    showAddTask = true
-                                }
-                            },
-                            modifier = Modifier.pointerInput(isOnHabitsTab) {
-                                detectTapGestures(
-                                    onLongPress = {
-                                        if (!isOnHabitsTab) showPickOne = true
-                                    },
-                                )
+                                quickAddInitialDate = null
+                                showAddTask = true
                             },
                         ) {
                             Icon(
                                 Icons.Default.Add,
-                                contentDescription = if (isOnHabitsTab) {
-                                    stringResource(R.string.quick_add_habit_title)
-                                } else {
-                                    stringResource(R.string.quick_add_task_title)
-                                },
+                                contentDescription = stringResource(R.string.quick_add_task_title),
                             )
                         }
                     },
@@ -329,9 +272,9 @@ class MainActivity : AppCompatActivity() {
                     TsosuNavHost(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding),
-                        focusViewModel = focusViewModel,
+                        todayViewModel = todayViewModel,
                         onTaskClick = { taskId -> editingTaskId = taskId },
-                        onHabitClick = { habitId -> editingHabitId = habitId },
+                        onHabitClick = { },
                         onQuickAddDate = { javaDate ->
                             quickAddInitialDate = kotlinx.datetime.LocalDateTime(
                                 kotlinx.datetime.LocalDate(javaDate.year, javaDate.monthValue, javaDate.dayOfMonth),
@@ -344,20 +287,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                if (showAddHabit) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showAddHabit = false },
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    ) {
-                        QuickAddHabitSheet(
-                            onDismiss = { showAddHabit = false },
-                            onAdd = { title, tinyVersion, routineTime, reminderTime ->
-                                habitsViewModel.createRecurringTask(title, tinyVersion, routineTime, reminderTime)
-                                showAddHabit = false
-                            },
-                        )
-                    }
-                }
                 if (showAddTask) {
                     val quickAddViewModel: QuickAddViewModel = hiltViewModel()
                     ModalBottomSheet(
@@ -393,27 +322,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                editingHabitId?.let { habitId ->
-                    ModalBottomSheet(
-                        onDismissRequest = { editingHabitId = null },
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    ) {
-                        HabitDetailSheet(
-                            habitId = habitId,
-                            onDismiss = { editingHabitId = null },
-                        )
-                    }
-                }
-
-                if (showPickOne) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showPickOne = false },
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    ) {
-                        PickOneSheet(onDismiss = { showPickOne = false })
-                    }
-                }
-
                 if (showSearch) {
                     ModalBottomSheet(
                         onDismissRequest = { showSearch = false },
@@ -424,41 +332,11 @@ class MainActivity : AppCompatActivity() {
                                 showSearch = false
                                 editingTaskId = task.id
                             },
-                            onToggleDone = { taskId -> focusViewModel.onToggleDone(taskId) },
+                            onToggleDone = { taskId -> inboxViewModel.toggleDone(taskId) },
                         )
                     }
                 }
 
-                if (showFilter) {
-                    val currentFilter by focusViewModel.filterSpec.collectAsState()
-                    val currentSort by focusViewModel.sortSpec.collectAsState()
-                    val savedViews by savedViewPreferences.views.collectAsState(initial = emptyList())
-                    val projects by projectRepository.getAllProjects()
-                        .collectAsState(initial = emptyList())
-                    val scope = rememberCoroutineScope()
-                    ModalBottomSheet(
-                        onDismissRequest = { showFilter = false },
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    ) {
-                        FilterSheet(
-                            currentFilter = currentFilter,
-                            currentSort = currentSort,
-                            projects = projects,
-                            savedViews = savedViews,
-                            onApply = { filter, sort ->
-                                focusViewModel.applyFilter(filter, sort)
-                            },
-                            onClear = { focusViewModel.clearFilter() },
-                            onDismiss = { showFilter = false },
-                            onSaveView = { name, filter, sort ->
-                                scope.launch { savedViewPreferences.save(name, filter, sort) }
-                            },
-                            onDeleteView = { name ->
-                                scope.launch { savedViewPreferences.delete(name) }
-                            },
-                        )
-                    }
-                }
             }
         }
     }

@@ -1,6 +1,5 @@
-package app.tsosu.ui.screens.upcoming
+package app.tsosu.ui.screens.today
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,14 +18,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tsosu.R
 import app.tsosu.ui.components.KonfettiOverlay
 import app.tsosu.ui.components.TaskListItem
-import app.tsosu.R
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun UpcomingScreen(
-    viewModel: UpcomingViewModel = hiltViewModel(),
+fun TodayScreen(
+    viewModel: TodayViewModel = hiltViewModel(),
     onTaskClick: (String) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -40,31 +38,50 @@ fun UpcomingScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (state.groups.isEmpty()) {
+        if (state.overdue.isEmpty() && state.today.isEmpty()) {
             item {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    text = stringResource(R.string.upcoming_empty),
+                    text = stringResource(R.string.today_empty),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.upcoming_empty_hint),
-                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
 
-        state.groups.forEach { group ->
-            stickyHeader(key = group.label) {
+        if (state.overdue.isNotEmpty()) {
+            item(key = "overdue-header") {
                 Text(
-                    text = group.label,
+                    text = stringResource(R.string.today_overdue),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
             }
-            items(group.tasks, key = { it.id }) { task ->
+            items(state.overdue, key = { "overdue-${it.id}" }) { task ->
+                TaskListItem(
+                    task = task,
+                    onToggleDone = { id ->
+                        viewModel.toggleDone(id)
+                        konfettiTrigger.intValue++
+                    },
+                    onStatusChange = { id, status ->
+                        viewModel.setStatus(id, status)
+                    },
+                    onClick = { onTaskClick(it.id) },
+                    modifier = Modifier.animateItem(),
+                )
+            }
+        }
+
+        if (state.today.isNotEmpty()) {
+            item(key = "today-header") {
+                Text(
+                    text = stringResource(R.string.nav_today),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
+            items(state.today, key = { it.id }) { task ->
                 TaskListItem(
                     task = task,
                     onToggleDone = { id ->

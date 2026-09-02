@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,7 +61,9 @@ fun CalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel(),
     onTaskClick: (String) -> Unit = {},
     onQuickAddDate: (java.time.LocalDate) -> Unit = {},
-) {
+    onGoToday: () -> Unit = {},
+)
+{
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val showExternal by viewModel.showExternal.collectAsStateWithLifecycle()
     val konfettiTrigger = remember { mutableIntStateOf(0) }
@@ -77,6 +80,16 @@ fun CalendarScreen(
             onPrevious = viewModel::previousMonth,
             onNext = viewModel::nextMonth,
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            AssistChip(
+                onClick = onGoToday,
+                label = { Text(stringResource(R.string.nav_today)) },
+            )
+        }
 
         SubscriptionBar(
             urls = state.subscriptions,

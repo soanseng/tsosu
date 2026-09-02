@@ -40,6 +40,11 @@ class TaskRepositoryImpl(
         return taskDao.getTodayTasks(start, end).map { it.map { e -> e.toDomain() } }
     }
 
+    override fun getOverdueTasks(): Flow<List<Task>> {
+        val (start, _) = todayRange()
+        return taskDao.getOverdueTasks(start).map { it.map { e -> e.toDomain() } }
+    }
+
     override fun getUpcomingTasks(days: Int): Flow<List<Task>> {
         val now = Clock.System.now()
         val start = now.toEpochMilliseconds()

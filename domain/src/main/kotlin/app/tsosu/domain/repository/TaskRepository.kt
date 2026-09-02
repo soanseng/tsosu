@@ -9,6 +9,7 @@ import kotlinx.datetime.LocalDate
 interface TaskRepository {
     fun getInboxTasks(): Flow<List<Task>>
     fun getTodayTasks(): Flow<List<Task>>
+    fun getOverdueTasks(): Flow<List<Task>>
     fun getUpcomingTasks(days: Int = 7): Flow<List<Task>>
     fun getTasksForProject(projectId: String): Flow<List<Task>>
     fun getTask(taskId: String): Flow<Task?>

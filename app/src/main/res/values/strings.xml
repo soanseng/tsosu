@@ -9,6 +9,11 @@
     <string name="nav_upcoming">Upcoming</string>
     <string name="nav_calendar">Calendar</string>
     <string name="nav_pick_one">Pick One</string>
+    <string name="nav_today">Today</string>
+    <string name="today_empty">Nothing due today.</string>
+    <string name="today_overdue">Overdue</string>
+    <string name="inbox_empty_hint">New tasks without a due date appear here.</string>
+    <string name="upcoming_empty_hint">Add due dates to your tasks to see them here.</string>
 
     <!-- Focus Screen -->
     <string name="focus_title">Focus 3</string>

@@ -9,6 +9,11 @@
     <string name="nav_upcoming">即將到來</string>
     <string name="nav_calendar">日曆</string>
     <string name="nav_pick_one">選一個</string>
+    <string name="nav_today">今天</string>
+    <string name="today_empty">今天沒有到期任務。</string>
+    <string name="today_overdue">逾期</string>
+    <string name="inbox_empty_hint">沒有到期日的新任務會出現在這裡。</string>
+    <string name="upcoming_empty_hint">為任務加上到期日，就會出現在這裡。</string>
 
     <!-- Focus Screen -->
     <string name="focus_title">專注 3</string>
