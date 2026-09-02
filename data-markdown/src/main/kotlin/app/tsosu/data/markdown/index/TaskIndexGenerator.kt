@@ -22,7 +22,9 @@ class TaskIndexGenerator {
         appendLine("## Inbox")
         grouped[null]
             ?.sortedBy { it.position }
-            ?.forEach { appendLine(formatIndexTask(it, noteFilenames, conflictIds)) }
+            ?.forEach {
+                appendIndexTaskWithHistory(it, noteFilenames, conflictIds)
+            }
         appendLine()
 
         // Emit named project sections in alphabetical order
@@ -35,7 +37,9 @@ class TaskIndexGenerator {
                 appendLine("## $sectionName")
                 projectTasks
                     .sortedBy { it.position }
-                    .forEach { appendLine(formatIndexTask(it, noteFilenames, conflictIds)) }
+                    .forEach {
+                        appendIndexTaskWithHistory(it, noteFilenames, conflictIds)
+                    }
                 appendLine()
             }
     }
@@ -52,6 +56,39 @@ class TaskIndexGenerator {
         // before the 🆔 field.
         val slug = noteFilenames[task.id] ?: return line
         return line.replaceFirst(" \uD83C\uDD94 ", " [[tasks/$slug]] \uD83C\uDD94 ")
+    }
+
+    /**
+     * Obsidian keeps one DONE line per completed occurrence of a recurring
+     * task; Tsosu's single row would otherwise erase that history on every
+     * push. Emit the most recent [HISTORY_LINES] completions as DONE lines
+     * above the active line; the importer folds them back idempotently.
+     */
+    private fun StringBuilder.appendIndexTaskWithHistory(
+        task: Task,
+        noteFilenames: Map<String, String>,
+        conflictIds: Set<String>,
+    ) {
+        if (task.recurrenceRule != null) {
+            task.completions
+                .sortedDescending()
+                .take(HISTORY_LINES)
+                .forEach { date ->
+                    val done = task.copy(
+                        status = app.tsosu.domain.model.TaskStatus.DONE,
+                        completedDate = kotlinx.datetime.LocalDateTime(
+                            date,
+                            kotlinx.datetime.LocalTime(0, 0),
+                        ),
+                    )
+                    appendLine(serializer.formatTask(done))
+                }
+        }
+        appendLine(formatIndexTask(task, noteFilenames, conflictIds))
+    }
+
+    private companion object {
+        const val HISTORY_LINES = 10
     }
 
     private fun StringBuilder.appendFrontmatter() {

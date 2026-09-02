@@ -585,7 +585,6 @@ class RecurrenceParser {
 
             return baseLabel + untilLabel
         }
-
         /** English ordinal suffix: 1st, 2nd, 3rd, 4th, 11th–13th. */
         private fun ordinalEn(n: Int): String = when {
             n % 100 in 11..13 -> "th"
@@ -643,8 +642,10 @@ class RecurrenceParser {
                     else -> "every month"
                 }
                 "YEARLY" -> "every year"
-                // Unknown structure: raw rule without the prefix, never invent.
-                else -> return rule
+                // Unknown structure: return the original untouched (prefix
+                // included) so the round trip is byte-identical; the parser
+                // reads RRULE:-prefixed text verbatim.
+                else -> return rrule
             }
             return base + until
         }

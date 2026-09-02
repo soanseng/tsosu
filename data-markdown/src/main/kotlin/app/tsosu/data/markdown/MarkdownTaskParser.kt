@@ -149,8 +149,10 @@ class MarkdownTaskParser {
                     LocalTime(hour, minute)
                 }
 
-                // Extract recurrence: legacy lines carry RRULE: verbatim;
-                // Obsidian lines carry rrule.js English → parse to RRULE.
+                // Extract recurrence: legacy RRULE verbatim; Obsidian English
+                // parsed to RRULE; unrecognized text stored as-is so a rewrite
+                // never drops the user's rule (the expander treats it as
+                // non-recurring until a parser update understands it).
                 val recurrenceText = recurrenceRegex.find(rawContent)
                     ?.groupValues?.get(1)?.trim()
                 val recurrenceRule = when {
@@ -158,7 +160,7 @@ class MarkdownTaskParser {
                     recurrenceText.startsWith("RRULE:") -> recurrenceText
                     else -> when (val parsed = RecurrenceParser().parse(recurrenceText)) {
                         is RecurrenceResult.Success -> parsed.rrule
-                        is RecurrenceResult.Unrecognized -> null
+                        is RecurrenceResult.Unrecognized -> recurrenceText
                     }
                 }
 

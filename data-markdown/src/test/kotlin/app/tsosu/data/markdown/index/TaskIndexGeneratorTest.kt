@@ -338,6 +338,43 @@ class TaskIndexGeneratorTest {
         assertFalse(taskLine.contains("\uD83D\uDE10medium"), "Energy stays in SQLite/YAML only")
     }
 
+    @Test
+    fun `recurring task emits newest-first completion history lines`() {
+        val recurring = task(
+            id = "h1",
+            title = "Meditate",
+            recurrenceRule = "RRULE:FREQ=DAILY",
+            dueDate = LocalDateTime.parse("2026-03-22T00:00:00"),
+        ).copy(
+            completions = listOf(
+                kotlinx.datetime.LocalDate(2026, 3, 20),
+                kotlinx.datetime.LocalDate(2026, 3, 21),
+            ),
+        )
+
+        val result = generator.generate(listOf(recurring), emptyMap(), emptyMap())
+        val taskLines = result.lines().filter { it.startsWith("- [") }
+
+        assertEquals(3, taskLines.size, "Two history lines + one active line")
+        assertTrue(taskLines[0].startsWith("- [x]"), "Newest history first")
+        assertTrue(taskLines[0].contains("\u2705 2026-03-21"), "Newest date on first line")
+        assertTrue(taskLines[1].contains("\u2705 2026-03-20"), "Older date second")
+        assertTrue(taskLines[2].startsWith("- [ ]"), "Active line last")
+        assertTrue(taskLines[2].contains("\uD83D\uDCC5"), "Active line keeps due date")
+    }
+
+    @Test
+    fun `non-recurring task emits no history lines`() {
+        val plain = task(id = "p1", title = "One-off").copy(
+            completions = listOf(kotlinx.datetime.LocalDate(2026, 3, 20)),
+        )
+
+        val result = generator.generate(listOf(plain), emptyMap(), emptyMap())
+        val taskLines = result.lines().filter { it.startsWith("- [") }
+
+        assertEquals(1, taskLines.size)
+    }
+
     // --- Mixed wikilink and inline tasks ---
 
     @Test

@@ -837,4 +837,16 @@ class MarkdownTaskParserTest {
         assertEquals("Numbered task", result.tasks[1].title)
         assertEquals("Plus task", result.tasks[2].title)
     }
+
+    @Test
+    fun `unrecognized recurrence text kept verbatim for lossless rewrite`() {
+        val markdown = """
+            - [ ] Water plants 🔁 every month on the last day 🆔 w1
+        """.trimIndent()
+
+        val task = parser.parse(markdown).tasks[0]
+
+        assertEquals("every month on the last day", task.recurrenceRule)
+        assertEquals("Water plants", task.title)
+    }
 }

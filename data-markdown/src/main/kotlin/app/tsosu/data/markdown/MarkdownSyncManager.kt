@@ -5,6 +5,7 @@ import app.tsosu.data.markdown.index.TaskIndexGenerator
 import app.tsosu.data.markdown.tasknote.TaskNoteParser
 import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.LocalDate
 
 class MarkdownSyncManager(
@@ -63,14 +64,35 @@ class MarkdownSyncManager(
             }
         }
 
-        // 2. Read index file for inline-only tasks
+        // 2. Read index file for inline-only tasks. Obsidian completing a
+        // recurring task leaves a DONE line (✅ date) plus a spawned TODO
+        // line — both carry the same 🆔 — so fold by id: the TODO line is
+        // the active occurrence, DONE lines contribute their ✅ dates to
+        // completions. Idempotent: re-importing the same file yields the
+        // same merged completions.
         val indexContent = fileAccess.readTasksFile()
         if (indexContent != null) {
             val indexParsed = taskParser.parse(indexContent)
-            for (task in indexParsed.tasks) {
-                if (task.id !in noteTaskIds) {
-                    allTasks.add(task)
+            val inlineById = indexParsed.tasks
+                .filter { it.id !in noteTaskIds }
+                .groupBy { it.id }
+            for ((_, lines) in inlineById) {
+                val active = lines.lastOrNull { it.status != TaskStatus.DONE }
+                if (active == null) {
+                    // A lone DONE line is a finished one-off (or a series at
+                    // rest): keep it exactly as parsed.
+                    allTasks.add(lines.last())
+                    continue
                 }
+                val historyDates = lines
+                    .filter { it.status == TaskStatus.DONE }
+                    .mapNotNull { it.completedDate?.date }
+                val merged = if (historyDates.isEmpty()) {
+                    active
+                } else {
+                    active.copy(completions = (active.completions + historyDates).distinct().sorted())
+                }
+                allTasks.add(merged)
             }
             for ((id, section) in indexParsed.projectSections) {
                 if (id !in projectSections) {

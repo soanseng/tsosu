@@ -270,4 +270,46 @@ class MarkdownSyncManagerTest {
             })
         }
     }
+
+    @Test
+    fun `obsidian done plus spawned pair folds into one recurring task`() = runTest {
+        val index = """
+            ---
+            tsosu: v1
+            generated: true
+            ---
+
+            ## Inbox
+            - [x] Meditate 🔁 every day 🆔 med-1 ➕ 2026-09-01 📅 2026-09-02 ✅ 2026-09-02
+            - [ ] Meditate 🔁 every day 🆔 med-1 ➕ 2026-09-01 📅 2026-09-03
+        """.trimIndent()
+        coEvery { fileAccess.listFolder("tasks") } returns emptyList()
+        coEvery { fileAccess.readTasksFile() } returns index
+
+        val result = manager.importTasks()
+
+        assertEquals(1, result.tasks.size)
+        val merged = result.tasks[0]
+        assertEquals("med-1", merged.id)
+        assertEquals(TaskStatus.TODO, merged.status)
+        assertEquals(kotlinx.datetime.LocalDate(2026, 9, 3), merged.dueDate?.date)
+        assertEquals(listOf(kotlinx.datetime.LocalDate(2026, 9, 2)), merged.completions)
+        assertEquals("RRULE:FREQ=DAILY", merged.recurrenceRule)
+    }
+
+    @Test
+    fun `single done non-recurring line still imports as done`() = runTest {
+        val index = """
+            ## Inbox
+            - [x] One-off task 🆔 one-1 ✅ 2026-09-02
+        """.trimIndent()
+        coEvery { fileAccess.listFolder("tasks") } returns emptyList()
+        coEvery { fileAccess.readTasksFile() } returns index
+
+        val result = manager.importTasks()
+
+        assertEquals(1, result.tasks.size)
+        assertEquals(TaskStatus.DONE, result.tasks[0].status)
+        assertTrue(result.tasks[0].completions.isEmpty(), "Plain task: no completions fold")
+    }
 }
