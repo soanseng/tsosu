@@ -107,7 +107,7 @@ A task line uses the [Obsidian Tasks](https://publish.obsidian.md/tasks/Introduc
 | `- [ ]` `[/]` `[!]` `[>]` `[x]` `[-]` | todo / in-progress / on-hold / planned / done / cancelled |
 | `🆔 id` | stable task id (also accepts the legacy `<!-- id:... -->`) |
 | `⛔ id1,id2` | depends on other tasks |
-| `🔺 ⏫ 🔼 🔽 ⏬` | priority |
+| `🔺 ⏫ 🔼 🔽 ⏬` | priority — note: Tsosu reads `⏫` as its top level (URGENT), one notch above the same emoji's meaning in Obsidian |
 | `🔁 every …` | recurrence, rrule.js English — `every day`, `every 2 weeks on Monday, Friday`, `every month on the 15th` |
 | `➕ 🛫 ⏳ 📅 ❌ ✅` | created / start / scheduled / due / cancelled / done dates |
 | `[[tasks/slug]]` | link to the per-task note (tasks with a description) |
