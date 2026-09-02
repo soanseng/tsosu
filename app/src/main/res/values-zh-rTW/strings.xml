@@ -206,6 +206,7 @@
     <string name="task_detail_ok">確定</string>
     <string name="quick_add_priority">優先級</string>
     <string name="quick_add_reminder">提醒</string>
+    <string name="quick_add_add_reminder">新增提醒</string>
     <string name="quick_add_recurrence">重複</string>
     <string name="recurrence_weekdays">平日</string>
     <string name="recurrence_monthly">每月</string>

@@ -378,7 +378,7 @@ fun QuickAddTaskSheet(
                 Spacer(Modifier.padding(start = 4.dp))
                 Text(
                     reminderTime?.let { "%02d:%02d".format(it.hour, it.minute) }
-                        ?: "Add reminder",
+                        ?: stringResource(R.string.quick_add_add_reminder),
                 )
             }
             if (reminderTime != null) {
