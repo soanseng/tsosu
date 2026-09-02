@@ -60,9 +60,23 @@ class MarkdownSyncRepository(
         )
         lastImportedCount = importedTasks.tasks.size
 
-        // 3. Merge: upsert imported data into Room (external edits win for conflicts)
+        // 3. Merge: upsert imported data into Room (external edits win for
+        //    conflicts). Completions are append-only history: the vault only
+        //    carries the last HISTORY lines, so union with Room to never
+        //    truncate older occurrences.
+        val roomById = roomBefore.associateBy { it.id }
         for (task in importedTasks.tasks) {
-            taskDao.upsert(task.toEntity())
+            val existing = roomById[task.id]
+            val merged = if (existing != null && task.completions.isNotEmpty()) {
+                task.copy(
+                    completions = (task.completions + existing.completions)
+                        .distinct()
+                        .sorted(),
+                )
+            } else {
+                task
+            }
+            taskDao.upsert(merged.toEntity())
         }
 
         preferences.setLastSync(System.currentTimeMillis())
