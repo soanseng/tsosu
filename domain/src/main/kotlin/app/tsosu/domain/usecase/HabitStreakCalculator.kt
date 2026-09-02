@@ -51,6 +51,10 @@ object HabitStreakCalculator {
      * anchor, i.e. the day a freeze would bridge to extend the streak.
      * Only recent gaps qualify ([maxGapDaysAgo]); bridging ancient
      * history would waste a freeze on a streak the user has long left.
+     *
+     * A gap only counts when an earlier completion exists below it —
+     * completing a series for the very first time must not "bridge"
+     * yesterday and inflate the streak.
      */
     fun firstGapBeforeStreak(
         distinctDates: Set<LocalDate>,
@@ -68,6 +72,9 @@ object HabitStreakCalculator {
         }
         // cursor is the first missing day right below the streak.
         if (cursor >= anchor) return null
+        // Nothing completed before the gap: this is the streak's birth,
+        // not a break — no freeze needed.
+        if (distinctDates.none { it < cursor }) return null
         val oldestBridgeable = today.minus(maxGapDaysAgo.toLong(), DateTimeUnit.DAY)
         return cursor.takeIf { it >= oldestBridgeable }
     }

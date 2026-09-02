@@ -74,6 +74,7 @@ class HabitStreakCalculatorTest {
         val dates = setOf(
             LocalDate.parse("2026-08-16"),
             LocalDate.parse("2026-08-15"),
+            LocalDate.parse("2026-08-13"),
         )
         assertEquals(LocalDate.parse("2026-08-14"), HabitStreakCalculator.firstGapBeforeStreak(dates, today))
     }
@@ -100,6 +101,7 @@ class HabitStreakCalculatorTest {
             LocalDate.parse("2026-08-15"),
             LocalDate.parse("2026-08-14"),
             LocalDate.parse("2026-08-13"),
+            LocalDate.parse("2026-08-11"),
         )
         // Gap at 2026-08-12 = today - 4? No: today-3 = 08-13; gap 08-13 IS a
         // completion here. The first missing day is 08-12 (4 days ago) → null.
@@ -108,6 +110,32 @@ class HabitStreakCalculatorTest {
         assertEquals(
             LocalDate.parse("2026-08-12"),
             HabitStreakCalculator.firstGapBeforeStreak(dates, today, maxGapDaysAgo = 5),
+        )
+    }
+
+    @Test
+    fun `first-ever completion has no bridgeable gap`() {
+        // Completing a brand-new series must not "bridge" yesterday —
+        // a freeze would be wasted and the streak inflated to 2.
+        assertEquals(
+            null,
+            HabitStreakCalculator.firstGapBeforeStreak(setOf(today), today),
+        )
+    }
+
+    @Test
+    fun `gap with earlier completion below it is bridgeable`() {
+        // Streak 8/15-8/16, missed 8/14, completed 8/13 → 8/14 is a break.
+        assertEquals(
+            LocalDate.parse("2026-08-14"),
+            HabitStreakCalculator.firstGapBeforeStreak(
+                setOf(
+                    LocalDate.parse("2026-08-13"),
+                    LocalDate.parse("2026-08-15"),
+                    today,
+                ),
+                today,
+            ),
         )
     }
 }

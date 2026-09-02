@@ -15,6 +15,9 @@ interface StreakShieldDao {
     @Query("SELECT COUNT(*) FROM streak_shields WHERE habitId = :habitId")
     suspend fun countForHabit(habitId: String): Int
 
+    @Query("SELECT COUNT(*) FROM streak_shields WHERE habitId = :habitId AND date = :date")
+    suspend fun exists(habitId: String, date: Long): Int
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(shield: StreakShieldEntity)
 

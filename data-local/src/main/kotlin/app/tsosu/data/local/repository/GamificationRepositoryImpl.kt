@@ -39,13 +39,12 @@ class GamificationRepositoryImpl(
     }
 
     override suspend fun shieldGap(habitId: String, gapEpochDays: Long): Boolean {
-        // Idempotent: record the bridged day first; only charge a freeze
-        // when this call is the one that actually inserted it.
-        val before = streakShieldDao.countForHabit(habitId)
+        // Idempotent per (id, day); a freeze is only spent when this call is
+        // the one that actually bridges — and never when the balance is empty.
+        if (streakShieldDao.exists(habitId, gapEpochDays) > 0) return true
+        if (gamificationDao.spendFreeze() <= 0) return false
         streakShieldDao.insert(StreakShieldEntity(habitId, gapEpochDays))
-        val after = streakShieldDao.countForHabit(habitId)
-        if (after == before) return true // already shielded
-        return gamificationDao.spendFreeze() > 0
+        return true
     }
 
     override fun shieldedDates(habitId: String): Flow<List<Long>> =
