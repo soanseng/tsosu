@@ -521,6 +521,38 @@ class RecurrenceParserTest {
         assertEquals("Every day until Aug 31", RecurrenceParser.toDisplayLabel("RRULE:FREQ=DAILY;UNTIL=20260831T235959Z"))
     }
 
+    // ── Obsidian Tasks (rrule.js) text round-trip ──
+
+    @Test
+    fun `obsidian text round trips every supported rrule shape`() {
+        val cases = linkedMapOf(
+            "RRULE:FREQ=DAILY" to "every day",
+            "RRULE:FREQ=DAILY;INTERVAL=2" to "every 2 days",
+            "RRULE:FREQ=WEEKLY" to "every week",
+            "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR" to "every weekday",
+            "RRULE:FREQ=WEEKLY;BYDAY=TU" to "every week on Tuesday",
+            "RRULE:FREQ=WEEKLY;BYDAY=MO,FR" to "every week on Monday, Friday",
+            "RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,FR" to "every 2 weeks on Monday, Friday",
+            "RRULE:FREQ=MONTHLY" to "every month",
+            "RRULE:FREQ=MONTHLY;BYMONTHDAY=15" to "every month on the 15th",
+            "RRULE:FREQ=MONTHLY;BYMONTHDAY=1" to "every month on the 1st",
+            "RRULE:FREQ=MONTHLY;INTERVAL=2;BYMONTHDAY=15" to "every 2 months on the 15th",
+            "RRULE:FREQ=YEARLY" to "every year",
+        )
+        for ((rrule, text) in cases) {
+            assertEquals(text, RecurrenceParser.toObsidianText(rrule), "toObsidianText($rrule)")
+            assertSuccess(rrule, parser.parse(text))
+        }
+    }
+
+    @Test
+    fun `obsidian text round trips until date`() {
+        val year = java.time.Year.now().value
+        val rrule = "RRULE:FREQ=DAILY;UNTIL=${year}0930T235959Z"
+        assertEquals("every day until Sep 30", RecurrenceParser.toObsidianText(rrule))
+        assertSuccess(rrule, parser.parse("every day until Sep 30"))
+    }
+
     private fun assertSuccess(expectedRrule: String, result: RecurrenceResult) {
         assertTrue(result is RecurrenceResult.Success, "Expected Success but got $result")
         assertEquals(expectedRrule, (result as RecurrenceResult.Success).rrule)

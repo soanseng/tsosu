@@ -73,7 +73,7 @@ class MarkdownTaskSerializerTest {
         val result = serializer.serialize(listOf(task()))
 
         assertTrue(result.contains("- [ ] Buy groceries"), "Should have unchecked checkbox")
-        assertTrue(result.contains("<!-- id:test-id-1 -->"), "Should have hidden ID comment")
+        assertTrue(result.contains("\uD83C\uDD94 test-id-1"), "Should have Obsidian id")
     }
 
     @Test
@@ -138,17 +138,16 @@ class MarkdownTaskSerializerTest {
             taskLine.contains("\uD83D\uDCC5 2026-04-01"),
             "Due date present"
         )
-        assertTrue(taskLine.contains("\u26A1high"), "Energy level present")
-        assertTrue(
-            taskLine.contains("\uD83C\uDF45 30m"),
-            "Estimate present"
-        )
+        assertFalse(taskLine.contains("\u26A1high"), "Energy is Tsosu-only, not written")
+        assertFalse(taskLine.contains("\uD83C\uDF45 30m"), "Estimate is Tsosu-only, not written")
         assertTrue(taskLine.contains("\u23EB"), "Priority present")
-        assertTrue(
-            taskLine.contains("<!-- id:test-id-1 -->"),
-            "ID comment present"
-        )
+        assertTrue(taskLine.contains("\uD83C\uDD94 test-id-1"), "Id present")
         assertTrue(taskLine.contains("\u2795 2026-03-20"), "Created date present")
+        // Golden field order: title, 🆔, priority, ➕ created, 📅 due
+        assertEquals(
+            "- [ ] Deep work session \uD83C\uDD94 test-id-1 ⏫ ➕ 2026-03-20 📅 2026-04-01",
+            taskLine,
+        )
     }
 
     @Test
@@ -206,14 +205,14 @@ class MarkdownTaskSerializerTest {
     }
 
     @Test
-    fun `energy level always emitted even for MEDIUM`() {
+    fun `energy level not written to markdown line`() {
         val result = serializer.serialize(
             listOf(task(energyLevel = EnergyLevel.MEDIUM))
         )
         val taskLine = result.lines().first { it.startsWith("- [") }
-        assertTrue(
+        assertFalse(
             taskLine.contains("\uD83D\uDE10medium"),
-            "MEDIUM energy should be emitted"
+            "Energy stays in SQLite/YAML only",
         )
     }
 
@@ -344,32 +343,33 @@ class MarkdownTaskSerializerTest {
     }
 
     @Test
-    fun `reminder time emits alarm clock emoji`() {
+    fun `reminder time not written to markdown line`() {
         val result = serializer.serialize(
             listOf(task(reminderTime = LocalTime(14, 30)))
         )
         val taskLine = result.lines().first { it.startsWith("- [") }
-        assertTrue(taskLine.contains("\u23F0 14:30"), "Should have reminder time")
+        assertFalse(taskLine.contains("\u23F0"), "Reminder stays in SQLite/YAML only")
     }
 
     @Test
-    fun `reminder time pads single digit hours and minutes`() {
+    fun `single-digit reminder also absent`() {
         val result = serializer.serialize(
             listOf(task(reminderTime = LocalTime(9, 5)))
         )
         val taskLine = result.lines().first { it.startsWith("- [") }
-        assertTrue(taskLine.contains("\u23F0 09:05"), "Should have zero-padded reminder time")
+        assertFalse(taskLine.contains("\u23F0"), "Reminder stays in SQLite/YAML only")
     }
 
     @Test
-    fun `recurrence rule emits repeat emoji`() {
+    fun `recurrence rule emits rrule-js english`() {
         val result = serializer.serialize(
-            listOf(task(recurrenceRule = "every week"))
+            listOf(task(recurrenceRule = "RRULE:FREQ=DAILY"))
         )
         val taskLine = result.lines().first { it.startsWith("- [") }
+        assertFalse(taskLine.contains("RRULE"), "Raw RRULE never written")
         assertTrue(
-            taskLine.contains("\uD83D\uDD01 every week"),
-            "Should have recurrence rule"
+            taskLine.contains("\uD83D\uDD01 every day"),
+            "Should have rrule.js English",
         )
     }
 

@@ -309,6 +309,27 @@ class RecurrenceParser {
             return success("FREQ=YEARLY")
         }
 
+        // "every (N) weeks on Tuesday" / "every 2 weeks on Monday, Friday" —
+        // rrule.js toText() phrasing (Obsidian Tasks). Must run before the
+        // DAYS_EN catch-all, which would swallow "week on ...".
+        WEEKLY_DAYS_ON_EN.matchEntire(folded)?.let { match ->
+            val n = match.groupValues[1].toIntOrNull()
+            val days = parseDayNamesEnglish(match.groupValues[2])
+            if (!days.isNullOrEmpty()) {
+                val interval = if (n != null && n > 1) ";INTERVAL=$n" else ""
+                return success("FREQ=WEEKLY$interval;BYDAY=${days.joinToString(",")}")
+            }
+        }
+
+        // "every N months on the 15th" — rrule.js phrasing
+        MONTHLY_INTERVAL_DAY_EN.matchEntire(folded)?.let { match ->
+            val n = match.groupValues[1].toInt()
+            val day = match.groupValues[2].toInt()
+            if (n > 1 && day in 1..31) {
+                return success("FREQ=MONTHLY;INTERVAL=$n;BYMONTHDAY=$day")
+            }
+        }
+
         // "every N days/weeks/months/years"
         INTERVAL_EN.matchEntire(folded)?.let { match ->
             val n = match.groupValues[1].toInt()
@@ -438,8 +459,15 @@ class RecurrenceParser {
             "晚上" to kotlinx.datetime.LocalTime(21, 0),
         )
 
-        private val MONTHLY_DAY_EN = Regex("""every month on the (\d+)(?:st|nd|rd|th)""")
         private val OTHER_EN = Regex("""every other (days?|weeks?|months?|years?)""")
+        private val MONTHLY_DAY_EN = Regex("""every month on the (\d+)(?:st|nd|rd|th)""")
+        private val WEEKLY_DAYS_ON_EN = Regex("""every(?: (\d+))? weeks? on (.+)""")
+        private val MONTHLY_INTERVAL_DAY_EN = Regex("""every (\d+) months? on the (\d+)(?:st|nd|rd|th)""")
+        private val RRULE_DAY_FULL = mapOf(
+            "MO" to "Monday", "TU" to "Tuesday", "WE" to "Wednesday", "TH" to "Thursday",
+            "FR" to "Friday", "SA" to "Saturday", "SU" to "Sunday",
+        )
+
         private val DAYS_EN = Regex("""every (.+)""")
         private val INTERVAL_EN = Regex("""every (\d+) (days?|weeks?|months?|years?)""")
 
@@ -556,6 +584,69 @@ class RecurrenceParser {
             } ?: ""
 
             return baseLabel + untilLabel
+        }
+
+        /** English ordinal suffix: 1st, 2nd, 3rd, 4th, 11th–13th. */
+        private fun ordinalEn(n: Int): String = when {
+            n % 100 in 11..13 -> "th"
+            n % 10 == 1 -> "st"
+            n % 10 == 2 -> "nd"
+            n % 10 == 3 -> "rd"
+            else -> "th"
+        }.let { "$n$it" }
+
+        /**
+         * Obsidian Tasks (rrule.js) English for an RRULE — the 🔁 payload we
+         * write to markdown. ASCII only; Chinese recurrence is not valid in
+         * Obsidian. Round-trips through [parse] for every supported shape.
+         */
+        fun toObsidianText(rrule: String): String {
+            val rule = rrule.removePrefix("RRULE:")
+            val parts = rule.split(";").mapNotNull { segment ->
+                val split = segment.split("=", limit = 2)
+                if (split.size == 2) split[0] to split[1] else null
+            }.toMap()
+            val interval = parts["INTERVAL"]?.toIntOrNull() ?: 1
+            val byDay = parts["BYDAY"]
+            val byMonthDay = parts["BYMONTHDAY"]?.toIntOrNull()
+
+            val until = parts["UNTIL"]?.let { u ->
+                val month = u.substring(4, 6).toIntOrNull()
+                val day = u.substring(6, 8).toIntOrNull()
+                if (month != null && day != null && month in 1..12) {
+                    " until ${MONTHS_EN_DISPLAY[month - 1]} $day"
+                } else {
+                    ""
+                }
+            } ?: ""
+
+            val base = when (parts["FREQ"]) {
+                "DAILY" -> if (interval > 1) "every $interval days" else "every day"
+                "WEEKLY" -> when {
+                    byDay == "MO,TU,WE,TH,FR" && interval == 1 -> "every weekday"
+                    byDay != null -> {
+                        val names = byDay.split(",").mapNotNull { RRULE_DAY_FULL[it] }
+                        if (names.isEmpty()) {
+                            if (interval > 1) "every $interval weeks" else "every week"
+                        } else {
+                            val prefix = if (interval > 1) "every $interval weeks" else "every week"
+                            "$prefix on ${names.joinToString(", ")}"
+                        }
+                    }
+                    interval > 1 -> "every $interval weeks"
+                    else -> "every week"
+                }
+                "MONTHLY" -> when {
+                    byMonthDay != null && interval > 1 -> "every $interval months on the ${ordinalEn(byMonthDay)}"
+                    byMonthDay != null -> "every month on the ${ordinalEn(byMonthDay)}"
+                    interval > 1 -> "every $interval months"
+                    else -> "every month"
+                }
+                "YEARLY" -> "every year"
+                // Unknown structure: raw rule without the prefix, never invent.
+                else -> return rule
+            }
+            return base + until
         }
     }
 }

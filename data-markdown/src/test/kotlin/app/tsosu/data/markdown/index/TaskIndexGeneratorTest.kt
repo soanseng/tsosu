@@ -82,8 +82,8 @@ class TaskIndexGeneratorTest {
             "Conflicted task should carry marker, got: $taskLine",
         )
         assertTrue(
-            taskLine.contains("<!-- id:a1b2 -->"),
-            "Marker must not replace id comment, got: $taskLine",
+            taskLine.contains("\uD83C\uDD94 a1b2"),
+            "Marker must not displace id, got: $taskLine",
         )
     }
 
@@ -113,8 +113,8 @@ class TaskIndexGeneratorTest {
             "Should contain wikilink, got: $taskLine",
         )
         assertTrue(
-            taskLine.contains("[[tasks/buy-groceries]] <!-- id:a1b2 -->"),
-            "Wikilink should appear before id comment, got: $taskLine",
+            taskLine.contains("[[tasks/buy-groceries]] \uD83C\uDD94 a1b2"),
+            "Wikilink should appear before id, got: $taskLine",
         )
     }
 
@@ -126,7 +126,7 @@ class TaskIndexGeneratorTest {
         val taskLine = result.lines().first { it.startsWith("- [") }
 
         assertFalse(taskLine.contains("[["), "Should not contain wikilink")
-        assertTrue(taskLine.contains("<!-- id:x1y2 -->"), "Should still have id comment")
+        assertTrue(taskLine.contains("\uD83C\uDD94 x1y2"), "Should still have id")
     }
 
     // --- Grouping ---
@@ -270,7 +270,7 @@ class TaskIndexGeneratorTest {
                 energyLevel = EnergyLevel.HIGH,
                 estimatedMinutes = 30,
                 reminderTime = LocalTime(14, 30),
-                recurrenceRule = "every week",
+                recurrenceRule = "RRULE:FREQ=WEEKLY",
             ),
         )
         val noteFilenames = mapOf("full-1" to "deep-work-session")
@@ -283,13 +283,13 @@ class TaskIndexGeneratorTest {
         assertTrue(taskLine.contains("\u23F3 2026-03-28"), "Scheduled date present")
         assertTrue(taskLine.contains("\uD83D\uDEEB 2026-03-24"), "Start date present")
         assertTrue(taskLine.contains("\u2795 2026-03-20"), "Created date present")
-        assertTrue(taskLine.contains("\u23F0 14:30"), "Reminder time present")
+        assertFalse(taskLine.contains("\u23F0"), "Reminder time is Tsosu-only, not written")
         assertTrue(taskLine.contains("\uD83D\uDD01 every week"), "Recurrence rule present")
-        assertTrue(taskLine.contains("\u26A1high"), "Energy level present")
-        assertTrue(taskLine.contains("\uD83C\uDF45 30m"), "Estimate present")
+        assertFalse(taskLine.contains("\u26A1high"), "Energy is Tsosu-only, not written")
+        assertFalse(taskLine.contains("\uD83C\uDF45 30m"), "Estimate is Tsosu-only, not written")
         assertTrue(taskLine.contains("\u23EB"), "Priority present")
         assertTrue(taskLine.contains("[[tasks/deep-work-session]]"), "Wikilink present")
-        assertTrue(taskLine.contains("<!-- id:full-1 -->"), "ID comment present")
+        assertTrue(taskLine.contains("\uD83C\uDD94 full-1"), "Id present")
     }
 
     @Test
@@ -328,14 +328,14 @@ class TaskIndexGeneratorTest {
     }
 
     @Test
-    fun `energy level always emitted`() {
+    fun `energy level not written to index line`() {
         val result = generator.generate(
             listOf(task(energyLevel = EnergyLevel.MEDIUM)),
             emptyMap(),
             emptyMap(),
         )
         val taskLine = result.lines().first { it.startsWith("- [") }
-        assertTrue(taskLine.contains("\uD83D\uDE10medium"), "MEDIUM energy should be emitted")
+        assertFalse(taskLine.contains("\uD83D\uDE10medium"), "Energy stays in SQLite/YAML only")
     }
 
     // --- Mixed wikilink and inline tasks ---

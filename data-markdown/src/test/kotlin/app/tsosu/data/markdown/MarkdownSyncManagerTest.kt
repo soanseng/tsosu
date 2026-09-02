@@ -70,7 +70,7 @@ class MarkdownSyncManagerTest {
             fileAccess.ensureFolder("tasks")
             fileAccess.writeTasksFile(withArg { content ->
                 assertTrue(content.contains("Write tests"), "Should contain task title")
-                assertTrue(content.contains("<!-- id:abc-123 -->"), "Should contain task id")
+                assertTrue(content.contains("\uD83C\uDD94 abc-123"), "Should contain task id")
             })
         }
     }

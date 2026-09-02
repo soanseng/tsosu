@@ -45,13 +45,13 @@ class TaskIndexGenerator {
         noteFilenames: Map<String, String>,
         conflictIds: Set<String>,
     ): String {
-        val baseLine = serializer.formatTask(task)
         val conflictMarker = if (task.id in conflictIds) " <!-- conflict -->" else ""
+        val line = serializer.formatTask(task) + conflictMarker
 
-        // Insert wikilink (and conflict marker) before the id comment
-        val idComment = "<!-- id:${task.id} -->"
-        val slug = noteFilenames[task.id] ?: return baseLine.replace(idComment, "$idComment$conflictMarker")
-        return baseLine.replace(idComment, "[[tasks/$slug]] $idComment$conflictMarker")
+        // Wikilink to the per-task note goes into the description, right
+        // before the 🆔 field.
+        val slug = noteFilenames[task.id] ?: return line
+        return line.replaceFirst(" \uD83C\uDD94 ", " [[tasks/$slug]] \uD83C\uDD94 ")
     }
 
     private fun StringBuilder.appendFrontmatter() {

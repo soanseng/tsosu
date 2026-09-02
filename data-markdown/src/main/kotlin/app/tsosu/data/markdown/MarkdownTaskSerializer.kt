@@ -4,6 +4,7 @@ import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import app.tsosu.domain.recurrence.RecurrenceParser
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -41,28 +42,42 @@ class MarkdownTaskSerializer {
             }
     }
 
+    /**
+     * One line in Obsidian Tasks default emoji format (field order follows
+     * their TaskLayoutComponent enum): description, 🆔, priority, 🔁,
+     * ➕ created, 🛫 start, ⏳ scheduled, 📅 due, ❌ cancelled, ✅ done.
+     * Tsosu-only trailers (⏰ energy 🍅) are never written; they live in
+     * SQLite and in the YAML of the per-task notes under the tasks folder.
+     */
     internal fun formatTask(task: Task): String = buildString {
         // Checkbox with extended status marker
         append("- [${task.status.checkboxMarker}] ")
 
-        // Title
+        // Title (may carry #tags — Obsidian parses tags anywhere in the body)
         append(task.title)
 
-        // Completion date (only for DONE tasks)
-        if (task.status == TaskStatus.DONE) {
-            val localDate = (task.completedDate?.date
-                ?: task.updatedAt.toLocalDateTime(TimeZone.UTC).date)
-            append(" \u2705 $localDate")
+        // Obsidian Tasks id
+        append(" \uD83C\uDD94 ${task.id}")
+
+        // Priority (NONE is omitted)
+        if (task.priority != Priority.NONE) {
+            append(" ${task.priority.emoji}")
         }
 
-        // Cancelled date (only for CANCELLED tasks)
-        if (task.status == TaskStatus.CANCELLED && task.cancelledDate != null) {
-            append(" \u274C ${task.cancelledDate!!.date}")
+        // Recurrence as rrule.js English, never raw RRULE
+        task.recurrenceRule?.let {
+            append(" \uD83D\uDD01 ${RecurrenceParser.toObsidianText(it)}")
         }
 
-        // Due date
-        if (task.dueDate != null) {
-            append(" \uD83D\uDCC5 ${task.dueDate!!.date}")
+        // Created date (always, derived from createdAt)
+        val createdDate = task.createdAt
+            .toLocalDateTime(TimeZone.UTC)
+            .date
+        append(" \u2795 $createdDate")
+
+        // Start date
+        if (task.startDate != null) {
+            append(" \uD83D\uDEEB ${task.startDate!!.date}")
         }
 
         // Scheduled date
@@ -70,48 +85,22 @@ class MarkdownTaskSerializer {
             append(" \u23F3 ${task.scheduledDate!!.date}")
         }
 
-        // Start date
-        if (task.startDate != null) {
-            append(" \uD83D\uDEEB ${task.startDate!!.date}")
+        // Due date
+        if (task.dueDate != null) {
+            append(" \uD83D\uDCC5 ${task.dueDate!!.date}")
         }
 
-        // Created date (derived from createdAt)
-        val createdDate = task.createdAt
-            .toLocalDateTime(TimeZone.UTC)
-            .date
-        append(" \u2795 $createdDate")
-
-        // Reminder time
-        if (task.reminderTime != null) {
-            val h = task.reminderTime!!.hour.toString().padStart(2, '0')
-            val m = task.reminderTime!!.minute.toString().padStart(2, '0')
-            append(" \u23F0 $h:$m")
+        // Cancelled date (only for CANCELLED tasks)
+        if (task.status == TaskStatus.CANCELLED && task.cancelledDate != null) {
+            append(" \u274C ${task.cancelledDate!!.date}")
         }
 
-        // Recurrence rule
-        if (task.recurrenceRule != null) {
-            append(" \uD83D\uDD01 ${task.recurrenceRule}")
+        // Completion date (only for DONE tasks)
+        if (task.status == TaskStatus.DONE) {
+            val localDate = (task.completedDate?.date
+                ?: task.updatedAt.toLocalDateTime(TimeZone.UTC).date)
+            append(" \u2705 $localDate")
         }
-
-        // Energy level (always emitted)
-        when (task.energyLevel) {
-            EnergyLevel.HIGH -> append(" \u26A1high")
-            EnergyLevel.MEDIUM -> append(" \uD83D\uDE10medium")
-            EnergyLevel.LOW -> append(" \uD83E\uDEABlow")
-        }
-
-        // Estimated minutes
-        if (task.estimatedMinutes != null) {
-            append(" \uD83C\uDF45 ${task.estimatedMinutes}m")
-        }
-
-        // Priority (NONE is omitted)
-        if (task.priority != Priority.NONE) {
-            append(" ${task.priority.emoji}")
-        }
-
-        // Hidden ID
-        append(" <!-- id:${task.id} -->")
     }
 
     private fun StringBuilder.appendFrontmatter() {

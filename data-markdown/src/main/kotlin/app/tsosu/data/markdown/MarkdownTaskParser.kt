@@ -5,6 +5,8 @@ import app.tsosu.domain.model.Priority
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import kotlinx.datetime.LocalDate
+import app.tsosu.domain.recurrence.RecurrenceParser
+import app.tsosu.domain.recurrence.RecurrenceResult
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Clock
@@ -20,16 +22,19 @@ data class ParsedTasks(
 
 class MarkdownTaskParser {
 
-    private val taskLineRegex = Regex("""^- \[([ xX/!>\-])] (.+)$""")
+    private val taskLineRegex = Regex("""^\s*(?:[-*+]|\d+[.)])\s+\[(.)\]\s+(.+)$""")
     private val idRegex = Regex("""<!-- id:(\S+) -->""")
-    private val dueDateRegex = Regex("""\uD83D\uDCC5 (\d{4}-\d{2}-\d{2})""")
+    private val idEmojiRegex = Regex("""\uD83C\uDD94\s*([a-zA-Z0-9-_]+)""")
+    private val dueDateRegex = Regex("""(?:\uD83D\uDCC5|\uD83D\uDCC6|\uD83D\uDDD3) (\d{4}-\d{2}-\d{2})""")
     private val completionRegex = Regex("""\u2705 (\d{4}-\d{2}-\d{2})""")
     private val cancelledDateRegex = Regex("""\u274C (\d{4}-\d{2}-\d{2})""")
-    private val scheduledDateRegex = Regex("""\u23F3 (\d{4}-\d{2}-\d{2})""")
+    private val scheduledDateRegex = Regex("""(?:\u23F3|\u231B) (\d{4}-\d{2}-\d{2})""")
     private val startDateRegex = Regex("""\uD83D\uDEEB (\d{4}-\d{2}-\d{2})""")
     private val createdDateRegex = Regex("""\u2795 (\d{4}-\d{2}-\d{2})""")
     private val reminderTimeRegex = Regex("""\u23F0 (\d{2}):(\d{2})""")
-    private val recurrenceRegex = Regex("""\uD83D\uDD01 ([^⚡😐🪫🍅⏫🔺🔼🔽⏬<]+)""")
+    // Obsidian recurrence charset is [a-zA-Z0-9, !]; also accept RRULE
+    // payload chars (=;:) so legacy Tsosu lines keep importing.
+    private val recurrenceRegex = Regex("""\uD83D\uDD01\s*([A-Za-z0-9, !=;:]+)""")
     private val energyHighRegex = Regex("""\u26A1high""")
     private val energyMediumRegex = Regex("""\uD83D\uDE10medium""")
     private val energyLowRegex = Regex("""\uD83E\uDEABlow""")
@@ -85,9 +90,10 @@ class MarkdownTaskParser {
                 val status = TaskStatus.fromCheckboxChar(checkboxChar)
                 val rawContent = taskMatch.groupValues[2]
 
-                // Extract id
-                val idMatch = idRegex.find(rawContent)
-                val id = idMatch?.groupValues?.get(1) ?: Uuid.random().toString()
+                // Extract id: Obsidian 🆔 wins, legacy HTML comment fallback
+                val id = idEmojiRegex.find(rawContent)?.groupValues?.get(1)
+                    ?: idRegex.find(rawContent)?.groupValues?.get(1)
+                    ?: Uuid.random().toString()
 
                 // Extract due date
                 val dueDateMatch = dueDateRegex.find(rawContent)
@@ -95,7 +101,6 @@ class MarkdownTaskParser {
                     val date = LocalDate.parse(it.groupValues[1])
                     LocalDateTime(date, LocalTime(0, 0))
                 }
-
                 // Extract completion date
                 val completionDateMatch = completionRegex.find(rawContent)
                 val completedDate = if (status == TaskStatus.DONE && completionDateMatch != null) {
@@ -144,9 +149,18 @@ class MarkdownTaskParser {
                     LocalTime(hour, minute)
                 }
 
-                // Extract recurrence rule
-                val recurrenceMatch = recurrenceRegex.find(rawContent)
-                val recurrenceRule = recurrenceMatch?.groupValues?.get(1)?.trim()
+                // Extract recurrence: legacy lines carry RRULE: verbatim;
+                // Obsidian lines carry rrule.js English → parse to RRULE.
+                val recurrenceText = recurrenceRegex.find(rawContent)
+                    ?.groupValues?.get(1)?.trim()
+                val recurrenceRule = when {
+                    recurrenceText == null -> null
+                    recurrenceText.startsWith("RRULE:") -> recurrenceText
+                    else -> when (val parsed = RecurrenceParser().parse(recurrenceText)) {
+                        is RecurrenceResult.Success -> parsed.rrule
+                        is RecurrenceResult.Unrecognized -> null
+                    }
+                }
 
                 // Extract energy level
                 val energyLevel = when {
@@ -160,18 +174,19 @@ class MarkdownTaskParser {
                 val estimateMatch = estimateRegex.find(rawContent)
                 val estimatedMinutes = estimateMatch?.groupValues?.get(1)?.toIntOrNull()
 
-                // Extract priority
+                // Extract priority (Obsidian ⏬ Lowest maps to LOW — Tsosu has no LOWEST)
                 val priority = when {
                     priorityHighestRegex.containsMatchIn(rawContent) -> Priority.URGENT
                     priorityHighRegex.containsMatchIn(rawContent) -> Priority.HIGH
                     priorityMediumRegex.containsMatchIn(rawContent) -> Priority.MEDIUM
                     priorityLowRegex.containsMatchIn(rawContent) -> Priority.LOW
-                    priorityLowestRegex.containsMatchIn(rawContent) -> Priority.NONE
+                    priorityLowestRegex.containsMatchIn(rawContent) -> Priority.LOW
                     else -> Priority.NONE
                 }
 
                 // Clean title: strip all metadata markers, wikilinks, and id comment
                 val title = rawContent
+                    .replace(idEmojiRegex, "")
                     .replace(idRegex, "")
                     .replace(wikilinkRegex, "")
                     .replace(dueDateRegex, "")

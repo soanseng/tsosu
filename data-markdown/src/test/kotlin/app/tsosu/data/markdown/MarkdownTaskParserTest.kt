@@ -219,8 +219,10 @@ class MarkdownTaskParserTest {
         assertEquals(original.title, task.title)
         assertEquals(original.done, task.done)
         assertEquals(original.priority, task.priority)
-        assertEquals(original.energyLevel, task.energyLevel)
-        assertEquals(original.estimatedMinutes, task.estimatedMinutes)
+        // Energy/estimate are Tsosu-only and no longer written inline: they
+        // do not survive an inline-only round-trip (they live in YAML notes).
+        assertEquals(EnergyLevel.MEDIUM, task.energyLevel)
+        assertNull(task.estimatedMinutes)
         assertEquals(original.dueDate?.date, task.dueDate?.date)
     }
 
@@ -316,7 +318,7 @@ class MarkdownTaskParserTest {
         assertEquals(Priority.HIGH, result.tasks[1].priority)
         assertEquals(Priority.MEDIUM, result.tasks[2].priority)
         assertEquals(Priority.LOW, result.tasks[3].priority)
-        assertEquals(Priority.NONE, result.tasks[4].priority)  // LOWEST maps to NONE
+        assertEquals(Priority.LOW, result.tasks[4].priority)  // Obsidian ⏬ Lowest → LOW
     }
 
     // --- Extended status tests ---
@@ -548,7 +550,7 @@ class MarkdownTaskParserTest {
         assertEquals(1, result.tasks.size)
         val task = result.tasks[0]
         assertEquals("Water plants", task.title)
-        assertEquals("every week", task.recurrenceRule)
+        assertEquals("RRULE:FREQ=WEEKLY", task.recurrenceRule)
     }
 
     @Test
@@ -566,7 +568,7 @@ class MarkdownTaskParserTest {
         val result = parser.parse(markdown)
 
         assertEquals(1, result.tasks.size)
-        assertEquals("every 2 weeks on Monday", result.tasks[0].recurrenceRule)
+        assertEquals("RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO", result.tasks[0].recurrenceRule)
     }
 
     @Test
@@ -598,7 +600,7 @@ class MarkdownTaskParserTest {
         assertEquals(Instant.parse("2026-03-15T00:00:00Z"), task.createdAt)
         assertEquals(9, task.reminderTime?.hour)
         assertEquals(0, task.reminderTime?.minute)
-        assertEquals("every day", task.recurrenceRule)
+        assertEquals("RRULE:FREQ=DAILY", task.recurrenceRule)
     }
 
     @Test
@@ -615,7 +617,7 @@ class MarkdownTaskParserTest {
             scheduledDate = LocalDateTime.parse("2026-04-28T09:00:00"),
             startDate = LocalDateTime.parse("2026-04-25T09:00:00"),
             reminderTime = LocalTime(8, 0),
-            recurrenceRule = "every month",
+            recurrenceRule = "RRULE:FREQ=MONTHLY",
             priority = Priority.MEDIUM,
             energyLevel = EnergyLevel.HIGH,
             estimatedMinutes = 60,
@@ -634,12 +636,13 @@ class MarkdownTaskParserTest {
         assertEquals(original.title, task.title)
         assertEquals(original.status, task.status)
         assertEquals(original.priority, task.priority)
-        assertEquals(original.energyLevel, task.energyLevel)
-        assertEquals(original.estimatedMinutes, task.estimatedMinutes)
+        // Tsosu-only fields don't survive inline round-trip
+        assertEquals(EnergyLevel.MEDIUM, task.energyLevel)
+        assertNull(task.estimatedMinutes)
+        assertNull(task.reminderTime)
         assertEquals(original.dueDate?.date, task.dueDate?.date)
         assertEquals(original.scheduledDate?.date, task.scheduledDate?.date)
         assertEquals(original.startDate?.date, task.startDate?.date)
-        assertEquals(original.reminderTime, task.reminderTime)
         assertEquals(original.recurrenceRule, task.recurrenceRule)
     }
 
@@ -738,5 +741,100 @@ class MarkdownTaskParserTest {
                 "Status should round-trip for $status"
             )
         }
+    }
+
+    // --- Obsidian Tasks compatibility ---
+
+    @Test
+    fun `obsidian doc example due date line parses`() {
+        val markdown = """
+            - [ ] Remember to do that important thing 📅 2022-12-17
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(1, result.tasks.size)
+        val task = result.tasks[0]
+        assertEquals("Remember to do that important thing", task.title)
+        assertEquals(2022, task.dueDate?.year)
+        assertEquals(12, task.dueDate?.monthNumber)
+        assertEquals(17, task.dueDate?.dayOfMonth)
+        assertNotNull(task.id, "Fresh UUID id assigned when no 🆔 present")
+    }
+
+    @Test
+    fun `obsidian recurrence with scheduled date parses to rrule`() {
+        val markdown = """
+            - [ ] Send Kate a birthday card 🔁 every week on Tuesday ⏳ 2023-01-04
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(1, result.tasks.size)
+        val task = result.tasks[0]
+        assertEquals("Send Kate a birthday card", task.title)
+        assertEquals("RRULE:FREQ=WEEKLY;BYDAY=TU", task.recurrenceRule)
+        assertEquals(2023, task.scheduledDate?.year)
+        assertEquals(1, task.scheduledDate?.monthNumber)
+        assertEquals(4, task.scheduledDate?.dayOfMonth)
+    }
+
+    @Test
+    fun `obsidian id emoji parsed`() {
+        val markdown = """
+            - [ ] Stretch 🔁 every day 📅 2026-09-02 🆔 stretch-1
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(1, result.tasks.size)
+        val task = result.tasks[0]
+        assertEquals("stretch-1", task.id)
+        assertEquals("RRULE:FREQ=DAILY", task.recurrenceRule)
+        assertEquals("Stretch", task.title)
+    }
+
+    @Test
+    fun `every 2 days with obsidian id parses interval`() {
+        val markdown = """
+            - [ ] Stretch 🔁 every 2 days 📅 2026-09-02 🆔 stretch-1
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals("RRULE:FREQ=DAILY;INTERVAL=2", result.tasks[0].recurrenceRule)
+        assertEquals("stretch-1", result.tasks[0].id)
+    }
+
+    @Test
+    fun `legacy rrule line with html id still imports`() {
+        val markdown = """
+            ## Inbox
+            - [ ] Old 🔁 RRULE:FREQ=WEEKLY;BYDAY=TU <!-- id:old -->
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(1, result.tasks.size)
+        assertEquals("old", result.tasks[0].id)
+        assertEquals("RRULE:FREQ=WEEKLY;BYDAY=TU", result.tasks[0].recurrenceRule)
+        assertEquals("Old", result.tasks[0].title)
+    }
+
+    @Test
+    fun `star and numbered list markers parse`() {
+        val markdown = """
+            ## Inbox
+            * [ ] Star task
+            1. [ ] Numbered task
+            + [ ] Plus task
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(3, result.tasks.size)
+        assertEquals("Star task", result.tasks[0].title)
+        assertEquals("Numbered task", result.tasks[1].title)
+        assertEquals("Plus task", result.tasks[2].title)
     }
 }
