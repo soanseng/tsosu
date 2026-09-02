@@ -8,6 +8,8 @@ import app.tsosu.domain.model.Priority
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.ui.components.RecurrencePreset
 import app.tsosu.ui.components.labelRes
+import java.time.format.TextStyle
+import java.util.Locale
 
 /** Localized energy label with emoji prefix, e.g. "🫫 低". */
 @Composable
@@ -31,13 +33,67 @@ fun Priority.localizedName(): String = stringResource(
     },
 )
 
+private val DAY_CODES = listOf("MO", "TU", "WE", "TH", "FR", "SA", "SU") // index = ISO day - 1
+
+private fun dayCodeName(code: String): String? {
+    val iso = DAY_CODES.indexOf(code) + 1
+    if (iso == 0) return null
+    return java.time.DayOfWeek.of(iso).getDisplayName(TextStyle.SHORT, Locale.getDefault())
+}
+
 /**
- * Localized recurrence label: preset rules use string resources; custom
- * rules fall back to the parser's English display label.
+ * Fully localized recurrence label: preset rules use string resources; custom
+ * rules are composed from their RRULE parts (interval / weekdays /
+ * day-of-month / until) instead of the parser's English-only text.
  */
 @Composable
-fun recurrenceDisplayLabel(rrule: String): String = when (val preset = RecurrencePreset.fromRrule(rrule)) {
-    RecurrencePreset.NONE -> rrule
-    RecurrencePreset.CUSTOM -> RecurrenceParser.toDisplayLabel(rrule)
-    else -> stringResource(preset.labelRes)
+fun recurrenceDisplayLabel(rrule: String): String {
+    val preset = RecurrencePreset.fromRrule(rrule)
+    if (preset != RecurrencePreset.CUSTOM) return stringResource(preset.labelRes)
+
+    val kv = rrule.removePrefix("RRULE:").split(";").mapNotNull { seg ->
+        seg.split("=", limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
+    }.toMap()
+    val interval = kv["INTERVAL"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+    val byDay = kv["BYDAY"]
+    val byMonthDay = kv["BYMONTHDAY"]?.toIntOrNull()
+
+    val base = when (kv["FREQ"]) {
+        "DAILY" -> stringResource(R.string.recurrence_every_n_days, interval)
+        "WEEKLY" -> {
+            val days = byDay
+                ?.split(",")
+                ?.mapNotNull { dayCodeName(it) }
+                .orEmpty()
+            when {
+                days.isNotEmpty() && interval > 1 ->
+                    stringResource(R.string.recurrence_every_n_weeks, interval) +
+                        " " + stringResource(R.string.recurrence_weekly_on, days.joinToString("、"))
+                days.isNotEmpty() ->
+                    stringResource(R.string.recurrence_weekly_on, days.joinToString("、"))
+                else -> stringResource(R.string.recurrence_every_n_weeks, interval)
+            }
+        }
+        "MONTHLY" -> when {
+            byMonthDay != null && interval > 1 ->
+                stringResource(R.string.recurrence_every_n_months_on_day, interval, byMonthDay)
+            byMonthDay != null ->
+                stringResource(R.string.recurrence_monthly_on_day, byMonthDay)
+            else -> stringResource(R.string.recurrence_every_n_months, interval)
+        }
+        "YEARLY" -> stringResource(R.string.recurrence_every_year)
+        // Unknown structure: keep the raw rule visible rather than English prose.
+        else -> rrule
+    }
+
+    val until = kv["UNTIL"]?.take(8)?.let { digits ->
+        val month = digits.substring(4, 6).toIntOrNull()
+        val day = digits.substring(6, 8).toIntOrNull()
+        if (month != null && day != null && month in 1..12) {
+            base + stringResource(R.string.recurrence_until_short, "$month/$day")
+        } else {
+            null
+        }
+    }
+    return until ?: base
 }

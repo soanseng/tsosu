@@ -296,4 +296,18 @@
     <string name="task_edit">編輯</string>
     <string name="task_set_focus_today">設為今日 Focus</string>
     <string name="view_switcher">檢視</string>
+    <string name="recurrence_every_n_days">每 %d 天</string>
+    <string name="recurrence_every_n_weeks">每 %d 週</string>
+    <string name="recurrence_every_n_months">每 %d 月</string>
+    <string name="recurrence_every_n_months_on_day">每 %1$d 月 %2$d 號</string>
+    <string name="recurrence_every_year">每年</string>
+    <string name="recurrence_weekly_on">的 %s</string>
+    <string name="recurrence_monthly_on_day">每月 %d 號</string>
+    <string name="recurrence_until_short">，到 %s</string>
+    <string name="recurrence_builder_freq">頻率</string>
+    <string name="recurrence_unit_day">天</string>
+    <string name="recurrence_unit_week">週</string>
+    <string name="recurrence_unit_month">月</string>
+    <string name="recurrence_builder_weekdays">每週幾</string>
+    <string name="recurrence_builder_month_day">每月幾號</string>
 </resources>

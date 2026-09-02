@@ -188,7 +188,6 @@
     <string name="task_detail_ok">OK</string>
     <string name="recurrence_weekdays">Weekdays</string>
     <string name="recurrence_monthly">Monthly</string>
-    <string name="recurrence_unrecognized">Couldn\'t read that. Try "every 2 days".</string>
     <string name="task_detail_next_due">Next</string>
     <string name="task_detail_repeats">Repeats: %s</string>
     <string name="quick_add_recurrence_hint">e.g. every 2 days</string>
@@ -310,11 +309,25 @@
     <string name="recurrence_help_priority_title">Priority shorthand</string>
     <string name="recurrence_help_priority_body">Add p1 to p4 anywhere in the title: p1 = Urgent, p2 = High, p3 = Medium, p4 = Low. Case-insensitive ("P2" works), must be a standalone word ("ap1" doesn\'t match); the last token wins. The token is stripped from the saved title and pre-selects the priority chip.</string>
 
-    <!-- Accessibility -->
+    <string name="recurrence_unrecognized">Couldn\'t read that. Try \"every 2 days\".</string>
     <string name="a11y_pick_date">Pick date</string>
     <string name="a11y_pick_time">Pick time</string>
     <string name="tile_quick_add">Quick add</string>
     <string name="task_edit">Edit</string>
     <string name="task_set_focus_today">Set as today\'s Focus</string>
     <string name="view_switcher">Views</string>
+    <string name="recurrence_every_n_days">Every %d days</string>
+    <string name="recurrence_every_n_weeks">Every %d weeks</string>
+    <string name="recurrence_every_n_months">Every %d months</string>
+    <string name="recurrence_every_n_months_on_day">Every %1$d months on day %2$d</string>
+    <string name="recurrence_every_year">Every year</string>
+    <string name="recurrence_weekly_on">on %s</string>
+    <string name="recurrence_monthly_on_day">Monthly on day %d</string>
+    <string name="recurrence_until_short"> until %s</string>
+    <string name="recurrence_builder_freq">Frequency</string>
+    <string name="recurrence_unit_day">Days</string>
+    <string name="recurrence_unit_week">Weeks</string>
+    <string name="recurrence_unit_month">Months</string>
+    <string name="recurrence_builder_weekdays">On weekdays</string>
+    <string name="recurrence_builder_month_day">Day of month</string>
 </resources>

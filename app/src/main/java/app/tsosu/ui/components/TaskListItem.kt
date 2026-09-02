@@ -443,6 +443,8 @@ private fun buildDetailString(
 private fun isOverdue(task: Task): Boolean {
     val due = task.dueDate ?: return false
     if (task.status.isTerminal) return false
-    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    return due < now
+    // Date-based: a task due today is never overdue, whatever the time —
+    // Quick-Add habits default to today 00:00 and must not wear the pill.
+    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return due.date < today
 }
