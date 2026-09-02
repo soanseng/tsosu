@@ -125,6 +125,8 @@ Obsidian's model splits a completed occurrence into a `[x] … ✅ date` line pl
 
 ### Cross-device
 
+New to the plugin? The website has a [four-step Obsidian Tasks quick start](https://soanseng.github.io/tsosu/#obsidian-guide).
+
 | Where | How |
 |-------|-----|
 | **Phone** | Tsosu app — capture, habits, streaks, reminders |

@@ -128,9 +128,6 @@
   footer .links { margin-bottom: 10px; }
   footer .links a { margin: 0 10px; }
 
-  @media (max-width: 600px) {
-    header { padding-top: 48px; }
-    .install { padding: 22px; }
   /* Screenshots */
   .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 8px; }
   .gallery a { display: block; }
@@ -139,6 +136,30 @@
     box-shadow: 0 4px 14px rgba(0,0,0,.06); display: block;
   }
   .gallery figcaption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 6px; }
+
+  /* Obsidian guide */
+  .btn-ghost {
+    background: transparent; color: var(--accent);
+    border: 1.5px solid var(--accent); padding: 12px 22px;
+  }
+  pre.tasks-q {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.6;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  @media (max-width: 600px) {
+    header { padding-top: 48px; }
+    .install { padding: 22px; }
+    .wrap { padding: 0 16px; }
+    section { padding: 36px 0; }
+    h2 { font-size: 24px; }
+    .grid { grid-template-columns: 1fr; }
+    .gallery { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    table { font-size: 14px; }
+    th, td { padding: 10px 12px; }
+  }
 </style>
 </head>
 <body>
@@ -153,6 +174,7 @@
   <div class="cta-row">
     <a class="btn btn-primary" href="#install" data-i18n="cta_install"></a>
     <a class="btn btn-secondary" href="https://github.com/soanseng/tsosu" target="_blank" rel="noopener" data-i18n="cta_github"></a>
+    <a class="btn btn-ghost" href="https://publish.obsidian.md/tasks/" target="_blank" rel="noopener" data-i18n="cta_obsidian"></a>
   </div>
   <p class="badges"><span class="ver">v1.3.0</span><span data-i18n="badges"></span></p>
 </header>
@@ -296,13 +318,35 @@
 <section class="wrap" id="sync">
   <h2 data-i18n="sync_title"></h2>
   <p class="section-sub" data-i18n="sync_sub"></p>
+  <div class="table-scroll">
   <table>
     <tr><th data-i18n="sync_th1"></th><th data-i18n="sync_th2"></th></tr>
     <tr><td>📱 <span data-i18n="sync_r1c1"></span></td><td data-i18n-html="sync_r1c2"></td></tr>
     <tr><td>💻 <span data-i18n="sync_r2c1"></span></td><td data-i18n-html="sync_r2c2"></td></tr>
     <tr><td>⌨️ <span data-i18n="sync_r3c1"></span></td><td data-i18n="sync_r3c2"></td></tr>
   </table>
+  </div>
   <p style="margin-top:16px;font-size:15px;color:var(--muted)" data-i18n-html="sync_note"></p>
+</section>
+
+<section class="wrap" id="obsidian-guide">
+  <h2 data-i18n="og_title"></h2>
+  <p class="section-sub" data-i18n="og_sub"></p>
+  <ol class="steps">
+    <li data-i18n-html="og_s1"></li>
+    <li data-i18n-html="og_s2"></li>
+    <li data-i18n-html="og_s3"></li>
+    <li data-i18n-html="og_s4"></li>
+  </ol>
+  <h3 style="margin:18px 0 8px" data-i18n="og_q_title"></h3>
+  <pre class="tasks-q">```tasks
+not done
+path does not include daily
+due before in 7 days
+group by due
+```</pre>
+  <p class="alt" data-i18n-html="og_q_note"></p>
+</section>
 </section>
 
 <section class="wrap">
@@ -375,6 +419,15 @@
       g3: "<strong>習慣</strong>：循環任務自動集中在這，分早晨／隨時／晚間。勾下去，🔥 連續天數立刻 +1。",
       g4: "<strong>自訂重複</strong>：詳情 → 重複 → 自訂 → 用晶片選每 2 天、每週幾、每月幾號。",
       g5: "<strong>完成紀錄</strong>：點任務標題開詳情，捲到「完成紀錄」看全部歷史。",
+      cta_obsidian: "Obsidian Tasks ↗",
+      og_title: "Obsidian Tasks 快速上手",
+      og_sub: "手機 Tsosu、電腦 Obsidian，共用同一份 vault——四步接起來。",
+      og_s1: "<strong>安裝</strong>：電腦裝 <a href=\"https://publish.obsidian.md/tasks/Introduction\" target=\"_blank\" rel=\"noopener\">Obsidian</a> 與 Tasks 社群插件（設定 → 社群插件 → 搜尋 Tasks）。",
+      og_s2: "<strong>同步資料夾</strong>：手機 Tsosu 設定選同一個資料夾，用 <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> 或 Obsidian Sync 讓兩邊同步。",
+      og_s3: "<strong>查詢</strong>：在任意筆記貼上下方的 <code>tasks</code> 程式碼區塊，切到閱讀模式就會變成清單——已排序、可分組、可點勾。",
+      og_s4: "<strong>兩邊勾</strong>：在 Obsidian 勾完成的循環任務會拆成完成行＋新行，Tsosu 下次同步自動摺進 🔥 連續紀錄；反向亦然。",
+      og_q_title: "查詢範例：未來七天的任務",
+      og_q_note: "還有 <code>done</code>、<code>group by project</code>、<code>sort by priority</code> 等寫法——完整文件見 <a href=\"https://publish.obsidian.md/tasks/Queries/About+Queries\" target=\"_blank\" rel=\"noopener\">官方 Queries 指南</a>。",
       g6: "<strong>遊戲化說明</strong>：點頂欄 ⚡ 或習慣頁 ⓘ——能量怎麼賺、護盾怎麼用、連續怎麼算。",
       g7: "<strong>連接 vault</strong>：設定 → 選資料夾（Obsidian vault 最理想）→ tasks.md 就是你的任務庫。",
       g8: "<strong>電腦端</strong>：Obsidian 裝 Tasks 插件，同一份 vault 直接查詢、勾選、編輯。",
@@ -461,7 +514,16 @@
       install_title: "Install",
       install_sub: "Obtainium is recommended — it tracks GitHub Releases directly and notifies you about updates.",
       install_h3: "Via Obtainium (recommended)",
-      step1: "Install <a href=\"https://github.com/ImranR98/Obtainium\" target=\"_blank\" rel=\"noopener\">Obtainium</a> from Google Play or F-Droid.",
+      cta_obsidian: "Obsidian Tasks ↗",
+      og_title: "Obsidian Tasks quick start",
+      og_sub: "Tsosu on the phone, Obsidian on the desktop, one shared vault — four steps.",
+      og_s1: "<strong>Install</strong>: on your desktop, install <a href=\"https://publish.obsidian.md/tasks/Introduction\" target=\"_blank\" rel=\"noopener\">Obsidian</a> and the Tasks community plugin (Settings → Community plugins → search “Tasks”).",
+      og_s2: "<strong>Share the folder</strong>: point Tsosu at the same folder on the phone and sync it with <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> or Obsidian Sync.",
+      og_s3: "<strong>Query</strong>: paste the <code>tasks</code> code block below into any note and switch to reading view — it becomes a live, grouped, checkable list.",
+      og_s4: "<strong>Tick from either side</strong>: a recurring task ticked in Obsidian splits into a done line + a new line; Tsosu folds it into your 🔥 streak on the next sync — and vice versa.",
+      og_q_title: "Example query: the next seven days",
+      og_q_note: "Also try <code>done</code>, <code>group by project</code>, <code>sort by priority</code> — full syntax in the <a href=\"https://publish.obsidian.md/tasks/Queries/About+Queries\" target=\"_blank\" rel=\"noopener\">official Queries guide</a>.",
+      step1: "Install Obtainium from Google Play or F-Droid.",
       step2: "Open Obtainium and tap the <strong>＋</strong> button to add an app.",
       step3: "Set the source to <strong>GitHub</strong> and enter <span class=\"path\">soanseng/tsosu</span>",
       step4: "Tap <strong>Add</strong> — the latest APK downloads automatically, and future releases trigger update notifications.",

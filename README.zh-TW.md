@@ -123,6 +123,8 @@ Obsidian 的模型會把一次完成拆成 `[x] … ✅ 日期` 加一條新的 
 
 ### 跨裝置
 
+第一次用該插件？官網有[四步 Obsidian Tasks 快速上手](https://soanseng.github.io/tsosu/#obsidian-guide)。
+
 | 裝置 | 用法 |
 |------|------|
 | **手機** | Tsosu——捕捉、習慣、連續紀錄、提醒 |
