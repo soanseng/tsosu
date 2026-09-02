@@ -131,8 +131,14 @@
   @media (max-width: 600px) {
     header { padding-top: 48px; }
     .install { padding: 22px; }
-    .lang-switch { top: 12px; right: 16px; }
+  /* Screenshots */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 8px; }
+  .gallery a { display: block; }
+  .gallery img {
+    width: 100%; border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(0,0,0,.06); display: block;
   }
+  .gallery figcaption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -148,15 +154,27 @@
     <a class="btn btn-primary" href="#install" data-i18n="cta_install"></a>
     <a class="btn btn-secondary" href="https://github.com/soanseng/tsosu" target="_blank" rel="noopener" data-i18n="cta_github"></a>
   </div>
-  <p class="badges"><span class="ver">v1.2.0</span><span data-i18n="badges"></span></p>
+  <p class="badges"><span class="ver">v1.3.0</span><span data-i18n="badges"></span></p>
 </header>
+
+<section class="wrap" id="shots" style="padding-top:8px">
+  <div class="gallery">
+    <figure><a href="screenshots/inbox.png" target="_blank"><img src="screenshots/inbox.png" alt="Inbox" loading="lazy"></a><figcaption data-i18n="shot1"></figcaption></figure>
+    <figure><a href="screenshots/today.png" target="_blank"><img src="screenshots/today.png" alt="Today" loading="lazy"></a><figcaption data-i18n="shot2"></figcaption></figure>
+    <figure><a href="screenshots/habits.png" target="_blank"><img src="screenshots/habits.png" alt="Habits" loading="lazy"></a><figcaption data-i18n="shot3"></figcaption></figure>
+    <figure><a href="screenshots/recurrence-builder.png" target="_blank"><img src="screenshots/recurrence-builder.png" alt="Recurrence builder" loading="lazy"></a><figcaption data-i18n="shot4"></figcaption></figure>
+    <figure><a href="screenshots/detail-history.png" target="_blank"><img src="screenshots/detail-history.png" alt="Completion history" loading="lazy"></a><figcaption data-i18n="shot5"></figcaption></figure>
+    <figure><a href="screenshots/gamification-help.png" target="_blank"><img src="screenshots/gamification-help.png" alt="Gamification help" loading="lazy"></a><figcaption data-i18n="shot6"></figcaption></figure>
+  </div>
+</section>
 
 <section class="wrap" id="features">
   <h2 data-i18n="features_title"></h2>
   <p class="section-sub" data-i18n="features_sub"></p>
   <div class="grid">
     <div class="card">
-      <span class="icon">🎯</span>
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">📥</span>
       <h3 data-i18n="c1_t"></h3>
       <p data-i18n="c1_p"></p>
     </div>
@@ -166,20 +184,18 @@
       <p data-i18n="c2_p"></p>
     </div>
     <div class="card">
-      <span class="new" data-i18n="chip"></span>
       <span class="icon">⚡</span>
       <h3 data-i18n="c3_t"></h3>
       <p data-i18n="c3_p"></p>
     </div>
     <div class="card">
-      <span class="new" data-i18n="chip"></span>
       <span class="icon">✍️</span>
       <h3 data-i18n="c4_t"></h3>
       <p data-i18n="c4_p"></p>
     </div>
     <div class="card">
       <span class="new" data-i18n="chip"></span>
-      <span class="icon">🗂</span>
+      <span class="icon">📜</span>
       <h3 data-i18n="c5_t"></h3>
       <p data-i18n="c5_p"></p>
     </div>
@@ -189,56 +205,54 @@
       <p data-i18n="c6_p"></p>
     </div>
     <div class="card">
-      <span class="icon">🎲</span>
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">🤝</span>
       <h3 data-i18n="c7_t"></h3>
       <p data-i18n="c7_p"></p>
     </div>
     <div class="card">
-      <span class="icon">⏰</span>
+      <span class="new" data-i18n="chip"></span>
+      <span class="icon">⛔</span>
       <h3 data-i18n="c8_t"></h3>
       <p data-i18n="c8_p"></p>
     </div>
     <div class="card">
-      <span class="icon">📅</span>
+      <span class="icon">⏰</span>
       <h3 data-i18n="c9_t"></h3>
       <p data-i18n="c9_p"></p>
     </div>
     <div class="card">
-      <span class="icon">📝</span>
+      <span class="icon">📅</span>
       <h3 data-i18n="c10_t"></h3>
       <p data-i18n="c10_p"></p>
     </div>
     <div class="card">
-      <span class="icon">📥</span>
+      <span class="icon">📝</span>
       <h3 data-i18n="c11_t"></h3>
       <p data-i18n="c11_p"></p>
     </div>
     <div class="card">
-      <span class="icon">🌐</span>
+      <span class="icon">🔍</span>
       <h3 data-i18n="c12_t"></h3>
       <p data-i18n="c12_p"></p>
     </div>
     <div class="card">
-      <span class="new" data-i18n="chip"></span>
-      <span class="icon">🔗</span>
+      <span class="icon">🌐</span>
       <h3 data-i18n="c13_t"></h3>
       <p data-i18n="c13_p"></p>
     </div>
     <div class="card">
-      <span class="new" data-i18n="chip"></span>
-      <span class="icon">🔍</span>
+      <span class="icon">🔗</span>
       <h3 data-i18n="c14_t"></h3>
       <p data-i18n="c14_p"></p>
     </div>
     <div class="card">
-      <span class="new" data-i18n="chip"></span>
-      <span class="icon">🍅</span>
+      <span class="icon">📥</span>
       <h3 data-i18n="c15_t"></h3>
       <p data-i18n="c15_p"></p>
     </div>
     <div class="card">
-      <span class="new" data-i18n="chip"></span>
-      <span class="icon">🔔</span>
+      <span class="icon">🧰</span>
       <h3 data-i18n="c16_t"></h3>
       <p data-i18n="c16_p"></p>
     </div>
@@ -319,53 +333,53 @@
       cta_install: "立即安裝",
       cta_github: "GitHub 原始碼",
       badges: "Android 原生（Kotlin + Compose）・免費・無廣告・無分析追蹤",
-      chip: "1.2.0 新",
+      chip: "1.3 新",
       features_title: "為什麼是 Tsosu？",
       features_sub: "多數任務管理器是為神經典型大腦設計的——逾期數字、無盡選項、落後時的罪惡感。Tsosu 不一樣。",
-      c1_t: "Focus 3——「只要挑三件。」",
-      c1_p: "每天只挑 3 件今日任務，其餘收進可摺疊的「無日期」區。完成 3 件就放煙火慶祝——其他都是加分。",
-      c2_t: "每日習慣——「把事情變小。」",
-      c2_p: "兩分鐘習慣、彈性連續紀錄（中斷暫停不歸零 🔥）、7 天進度條、早晚例行分組、特定星期幾排程。靈感來自《原子習慣》。",
-      c3_t: "能量與連續護盾",
-      c3_p: "完成任務與習慣賺 ⚡ 能量；花 ⚡30 買護盾，漏掉的一天自動補上，連續紀錄照樣延續。Duolingo 式激勵，沒有罪惡感。",
-      c4_t: "速記語法",
-      c4_p: "標題直接打「Buy milk every mon」「p1」「every morning until 8/31」——重複規則、優先級、起訖日期自動解析。同樣的關鍵字在 Obsidian 也通。",
-      c5_t: "板面與儲存檢視",
-      c5_p: "看板依專案分欄，欄下顯示連結的習慣；清單/板面隨時切換。篩選條件（專案、到期日、優先級、能量）可存成具名檢視。",
+      c1_t: "收件匣為起點——四個分頁就夠了",
+      c1_p: "收件匣、今天、習慣、即將到來；日曆收在頂欄選單。番茄鐘、看板、每週回顧、儲存檢視都拿掉了——刻意的安靜。",
+      c2_t: "習慣就是循環任務——「把事情變小。」",
+      c2_p: "帶重複規則的任務自動出現在習慣分頁，依早晨／隨時／晚間分組，附迷你版（兩分鐘版）與 🔥 連續天數。靈感來自《原子習慣》。",
+      c3_t: "能量、護盾、連續——有動力沒罪惡",
+      c3_p: "每完成一個任務 +2⚡；❄ 護盾 ⚡30（最多 2 個）。漏了一天？3 天內補完成，自動用 ❄ 補上，🔥 不中斷。點頂欄 ⚡ 就有完整說明。",
+      c4_t: "速記語法＋勾選式重複 builder",
+      c4_p: "標題直接打「every 2 days」「每週一二三」「p1」；「自訂」重複用晶片組：每 N 天／週／月、星期幾多選、每月幾號。",
+      c5_t: "完成紀錄",
+      c5_p: "打開任務就知道完成了幾次、分別在哪一天（超過 5 筆自動收合）。習慣的成長軌跡一目瞭然。",
       c6_t: "無羞愧 UI",
-      c6_p: "每個像素都檢視過羞愧與焦慮觸發點。週回顧只看你完成了什麼，絕口不提沒做的。",
-      c7_t: "「幫我挑一件」",
-      c7_p: "選擇癱瘓是真的。選擇你現在的精力等級，骰子隨機挑一件符合的任務——「就做這件 ✓」。",
-      c8_t: "任務提醒",
-      c8_p: "每個任務可設提醒時間，到期當天準時通知。點通知直接開任務、直接完成。重開機與同步後自動重排。",
-      c9_t: "日曆自動同步",
-      c9_p: "任務設日期 → 自動建日曆事件；改日期 → 事件跟著搬；完成 → 事件移除。從日曆點日期快速新增，支援 CalDAV 與 Google 日曆。",
-      c10_t: "Markdown Vault",
-      c10_p: "一切皆純文字 Markdown，存在你自己的資料夾。在 Obsidian、nvim 或任何編輯器雙向編輯，變更自動偵測、自動回流。",
-      c11_t: "Todoist 匯入",
-      c11_p: "從設定匯入 Todoist CSV 匯出檔——任務自動去重、寫成 Markdown、推進你的 vault。",
-      c12_t: "English / 繁體中文",
-      c12_p: "App 內一鍵切換語言。設定裡附重複與速記語法教學、版本資訊。",
-      c13_t: "隨手捕獲",
-      c13_p: "從任何 App 用系統分享把文字送進速記；選字選單也能直接加。再把 Tsosu 磁貼拉進快捷設定，一鍵開始記。語音輸入也在速記裡。",
-      c14_t: "搜尋運算子與新語法",
-      c14_p: "頂欄搜尋支援 status:done、due:<=7d、due:overdue、#tag 等運算子；速記標題新增 @project（自動歸檔）與 due:今天 / due:下週。",
-      c15_t: "番茄鐘與完整備份",
-      c15_p: "Focus 頁內建番茄鐘（15/3、25/5、50/10），專注分鐘自動記到任務上；設定可一鍵完整 JSON 備份／還原所有資料。",
-      c16_t: "更體貼的提醒",
-      c16_p: "提醒通知可稍後 10 分；設了開始日期的任務會在開始時間獨立提醒；每天早晚各一次溫和摘要。另有 TickTick 匯入、ICS 日曆訂閱與生物辨識鎖。",
-      guide_title: "1.2.0 怎麼用",
-      guide_sub: "十六項新功能的快速上手指南。",
-      g1: "<strong>分享捕獲</strong>：任何 App 裡分享文字 → 選 Tsosu → 速記自動帶入並解析語法。",
-      g2: "<strong>快捷設定磁貼</strong>：下拉快捷設定 → 編輯 → 把「快速新增任務」拖進來，之後一鍵開速記。",
-      g3: "<strong>語音輸入</strong>：速記標題列點 🎤 說出任務，說完自動解析。",
-      g4: "<strong>速記語法</strong>：標題打「繳房租 @家裡 due:明天 p1」→ 自動歸檔專案、設到期日、優先級。",
-      g5: "<strong>搜尋運算子</strong>：頂欄 🔍 輸入「status:todo due:<=7d #errands」之類的查詢。",
-      g6: "<strong>批次操作</strong>：收件匣右上「選取」→ 勾多筆 → 完成／改天再說／刪除。",
-      g7: "<strong>番茄鐘</strong>：Focus 頁選預設、挑任務、開始；專注結束分鐘數自動累計到該任務。",
-      g8: "<strong>每日摘要</strong>：設定 → 開啟「每日摘要」，早 8 點看今天計畫、晚 8 點慶祝收穫。",
-      g9: "<strong>備份與還原</strong>：設定 → Backup 匯出 JSON；還原會置換全部資料（先備份再玩）。",
-      g10: "<strong>日曆訂閱</strong>：日曆頁 → 「新增」→ 貼上 .ics 網址（Google/Nextcloud 私人網址），外部事件以色點顯示。",
+      c6_p: "每個像素都檢視過羞愧與焦慮觸發點。今天到期的任務永遠不會被標「逾期」；沒有紅色警告計數。",
+      c7_t: "Obsidian Tasks 原生格式",
+      c7_p: "tasks.md 每行都是該插件的原生 emoji 格式（🆔、🔁 every week on Tuesday、⛔、完整日期組）。在 Obsidian 勾任務，回手機同步就摺進連續紀錄；反向亦然。",
+      c8_t: "依賴與完整日期",
+      c8_p: "Obsidian 的 ⛔ dependsOn、⏳ 排程與 🛫 開始日期都能讀取、儲存、顯示。兩邊的欄位語意一致。",
+      c9_t: "任務提醒",
+      c9_p: "每個任務可設提醒時間，到期當天準時通知。點通知直接開任務、直接完成。重開機與時區變更後自動重排。",
+      c10_t: "日曆同步與 ICS 訂閱",
+      c10_p: "任務設日期 → 自動建日曆事件；完成 → 事件移除。可訂閱外部 .ics 行事曆（色點疊加），也能把任務匯出成 ICS。",
+      c11_t: "Markdown Vault",
+      c11_p: "一切皆純文字 Markdown，存在你自己的資料夾。在 Obsidian、nvim 或任何編輯器雙向編輯，變更自動偵測、自動回流。",
+      c12_t: "搜尋運算子",
+      c12_p: "頂欄搜尋支援 status:done、due:<=7d、due:overdue、#tag 等運算子；速記標題支援 @project 與 due:今天。",
+      c13_t: "English / 繁體中文",
+      c13_p: "App 內一鍵切換語言。設定裡附重複與速記語法教學、遊戲化說明。",
+      c14_t: "隨手捕獲",
+      c14_p: "從任何 App 用系統分享把文字送進速記；選字選單也能直接加。快捷設定磁貼一鍵開始，語音輸入也在速記裡。",
+      c15_t: "Todoist 與 TickTick 匯入",
+      c15_p: "從設定匯入 Todoist 或 TickTick 的 CSV 匯出檔——任務自動去重、解析重複規則、寫進你的 vault。",
+      c16_t: "備份、匯出與 App 鎖",
+      c16_p: "一鍵完整 JSON 備份／還原；早晚溫和摘要通知；生物辨識 App 鎖；Material You 動態配色。",
+      guide_title: "1.3 快速上手",
+      guide_sub: "十分鐘上手的十個步驟。",
+      g1: "<strong>收件匣</strong>：用 ＋ 或系統分享把想到的事丟進收件匣，標題打「every day」「每 2 天」自動變習慣。",
+      g2: "<strong>今天</strong>：「逾期」與「今天」兩區——今天到期的不會被標逾期。完成就打勾，有彩帶。",
+      g3: "<strong>習慣</strong>：循環任務自動集中在這，分早晨／隨時／晚間。勾下去，🔥 連續天數立刻 +1。",
+      g4: "<strong>自訂重複</strong>：詳情 → 重複 → 自訂 → 用晶片選每 2 天、每週幾、每月幾號。",
+      g5: "<strong>完成紀錄</strong>：點任務標題開詳情，捲到「完成紀錄」看全部歷史。",
+      g6: "<strong>遊戲化說明</strong>：點頂欄 ⚡ 或習慣頁 ⓘ——能量怎麼賺、護盾怎麼用、連續怎麼算。",
+      g7: "<strong>連接 vault</strong>：設定 → 選資料夾（Obsidian vault 最理想）→ tasks.md 就是你的任務庫。",
+      g8: "<strong>電腦端</strong>：Obsidian 裝 Tasks 插件，同一份 vault 直接查詢、勾選、編輯。",
+      g9: "<strong>提醒與摘要</strong>：任務設 ⏰ 時間；設定開「每日摘要」，早 8 點看計畫、晚 8 點慶祝。",
+      g10: "<strong>備份</strong>：設定 → Backup 一鍵 JSON 備份；還原會置換全部資料（先備份再玩）。",
       install_title: "安裝",
       install_sub: "推薦使用 Obtainium——直接追蹤 GitHub Releases，新版自動通知更新。",
       install_h3: "透過 Obtainium 安裝（推薦）",
@@ -377,14 +391,16 @@
       sync_title: "跨裝置同步",
       sync_sub: "本地優先——100% 離線可用、無帳號。資料是純 Markdown 檔案，用任何檔案同步工具帶到每台裝置。",
       sync_th1: "裝置", sync_th2: "使用方式",
-      sync_r1c1: "手機", sync_r1c2: "Tsosu App（完整 UI、習慣追蹤、Focus 3、提醒）",
-      sync_r2c1: "電腦", sync_r2c2: "Obsidian + <a href=\"https://publish.obsidian.md/tasks/\" target=\"_blank\" rel=\"noopener\">Tasks 外掛</a>——核取方塊、到期日、篩選器",
+      sync_r1c1: "手機", sync_r1c2: "Tsosu App（速記、習慣與 🔥 連續、提醒）",
+      sync_r2c1: "電腦", sync_r2c2: "Obsidian + <a href=\"https://publish.obsidian.md/tasks/\" target=\"_blank\" rel=\"noopener\">Tasks 外掛</a>——同一份 tasks.md，原生格式查詢與勾選",
       sync_r3c1: "終端機", sync_r3c2: "nvim / 任何文字編輯器——就只是 Markdown",
-      sync_note: "資料夾用 <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> 或 Obsidian Sync 同步，任務就出現在每台裝置上。檔案格式完整文件見 <a href=\"https://github.com/soanseng/tsosu#vault-data-format\">README</a>。",
+      sync_note: "資料夾用 <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> 或 Obsidian Sync 同步，任務就出現在每台裝置上。在 Obsidian 勾完成的循環任務，下次同步會自動摺進 Tsosu 的連續紀錄。檔案格式完整文件見 <a href=\"https://github.com/soanseng/tsosu#markdown-vault--the-obsidian-tasks-format\">README</a>。",
       privacy_t: "隱私至上",
       privacy_p: "無帳號、無伺服器、無分析、無追蹤、不收集任何資料。你的任務只存在你自己的裝置與 vault 裡。",
       footer_download: "下載", footer_install: "安裝", footer_lang: "English",
       footer_tagline: "Tsosu 做事 — 做事，用你的方式。",
+      shot1: "收件匣", shot2: "今天", shot3: "習慣",
+      shot4: "自訂重複 builder", shot5: "完成紀錄", shot6: "能量與護盾說明",
       switch_to: "EN"
     },
     en: {
@@ -395,53 +411,53 @@
       cta_install: "Get Tsosu",
       cta_github: "Source on GitHub",
       badges: "Native Android (Kotlin + Compose) · Free · No ads · No analytics",
-      chip: "NEW 1.2.0",
+      chip: "NEW 1.3",
       features_title: "Why Tsosu?",
       features_sub: "Most task managers are designed for neurotypical brains — overdue counters, endless options, guilt when you fall behind. Tsosu is different.",
-      c1_t: "Focus 3 — “Just pick three.”",
-      c1_p: "Pick only 3 tasks for today; the rest folds into a collapsible “no date” section. Complete all 3 and the fireworks fly — everything else is bonus.",
-      c2_t: "Daily habits — “Make it small.”",
-      c2_p: "Two-minute habits, flexible streaks (they pause, not reset 🔥), a 7-day progress bar, morning/evening routines, and specific-weekday schedules. Inspired by Atomic Habits.",
-      c3_t: "Energy & streak freezes",
-      c3_p: "Completing tasks and habits earns ⚡ energy; spend ⚡30 on a freeze that automatically bridges a missed day so your streak survives. Duolingo-style motivation, minus the guilt.",
-      c4_t: "Quick-add syntax",
-      c4_p: "Type “Buy milk every mon”, “p1”, or “every morning until 8/31” right in the title — recurrence, priority, and date bounds are parsed automatically. The same words work in Obsidian.",
-      c5_t: "Board & saved views",
-      c5_p: "A kanban board with a column per project — real names, attached habits — plus a list/board toggle. Save any filter combination (project, due date, priority, energy) as a named view.",
+      c1_t: "Inbox first — four tabs, no noise",
+      c1_p: "Inbox, Today, Habits, Upcoming; Calendar tucked into the top-bar menu. Pomodoro timers, kanban boards, weekly review and saved filters are gone — deliberately.",
+      c2_t: "Habits are recurring tasks — “make it small.”",
+      c2_p: "Any task with a recurrence rule shows up on the Habits tab, grouped by morning / anytime / evening, with a tiny two-minute version and 🔥 streaks. Inspired by Atomic Habits.",
+      c3_t: "Energy, shields, streaks — momentum without guilt",
+      c3_p: "+2⚡ per completed task; a ❄ shield costs ⚡30 (max 2). Missed a day? Complete within 3 days and a ❄ bridges it automatically — your 🔥 survives. Tap the ⚡ for the full explanation.",
+      c4_t: "Quick-add syntax + tick-box recurrence builder",
+      c4_p: "Type “every 2 days”, “每週一二三” or “p1” right in the title; or build custom recurrence with chips: every N days / weeks / months, weekdays, day of month.",
+      c5_t: "Completion history",
+      c5_p: "Open any task to see how many times and when it was completed (compact past 5). The growth trail of a habit at a glance.",
       c6_t: "No-shame UI",
-      c6_p: "Every pixel is reviewed for shame and anxiety triggers. The weekly review shows only what you completed — never what you didn't.",
-      c7_t: "“Pick one for me”",
-      c7_p: "Decision paralysis is real. Pick your current energy level and the dice chooses a matching task — “just do this one ✓”.",
-      c8_t: "Task reminders",
-      c8_p: "Set a reminder time per task; a notification fires on the due date. Tap to open, mark done straight from the notification. Resyncs after reboot and every vault sync.",
-      c9_t: "Calendar auto-sync",
-      c9_p: "Set a date → an event appears; change it → the event moves; complete the task → it's removed. Quick-add from the calendar carries the tapped day. CalDAV & Google Calendar.",
-      c10_t: "Markdown vault",
-      c10_p: "Everything is plain markdown in a folder you own. Edit from Obsidian, nvim, or any editor — changes are auto-detected and flow back in.",
-      c11_t: "Todoist import",
-      c11_p: "Import your Todoist CSV export from Settings — tasks are deduplicated, written as markdown, and pushed into your vault.",
-      c12_t: "English / 繁體中文",
-      c12_p: "Switch languages in-app. Settings includes a recurrence & quick-syntax reference and a version footer.",
-      c13_t: "Capture from anywhere",
-      c13_p: "Share text into quick add from any app — or straight from the text-selection menu. Add the Quick Settings tile for one-tap capture; voice input lives in quick add too.",
-      c14_t: "Search operators & new syntax",
-      c14_p: "Top-bar search understands status:done, due:<=7d, due:overdue and #tag; quick-add titles gain @project (auto-filed) and due:today / due:next week.",
-      c15_t: "Pomodoro & full backup",
-      c15_p: "A built-in pomodoro in Focus (15/3, 25/5, 50/10) logs focused minutes onto the attached task; Settings exports/restores everything as JSON.",
-      c16_t: "Kinder reminders",
-      c16_p: "Snooze notifications 10 minutes; tasks with a start date get their own “time to begin” nudge; gentle morning and evening digests. Plus TickTick import, ICS calendar subscriptions and a biometric app lock.",
-      guide_title: "How to use 1.2.0",
-      guide_sub: "A quick guide to the sixteen new features.",
-      g1: "<strong>Share capture</strong>: share text from any app → pick Tsosu → quick add opens pre-parsed.",
-      g2: "<strong>Quick Settings tile</strong>: pull down Quick Settings → edit → drag in the Tsosu tile for one-tap quick add.",
-      g3: "<strong>Voice input</strong>: tap 🎤 in the quick-add title and speak your task.",
-      g4: "<strong>Quick-add syntax</strong>: type “pay rent @Home due:tomorrow p1” → project, due date and priority are set automatically.",
-      g5: "<strong>Search operators</strong>: tap 🔍 in the top bar and try “status:todo due:<=7d #errands”.",
-      g6: "<strong>Bulk actions</strong>: Inbox → Select → check several → complete / someday / delete.",
-      g7: "<strong>Pomodoro</strong>: Focus tab → pick a preset, attach a task, start; minutes accumulate on the task.",
-      g8: "<strong>Daily digest</strong>: Settings → enable Daily digest for an 8am plan and an 8pm celebration.",
-      g9: "<strong>Backup & restore</strong>: Settings → Backup exports JSON; restore replaces everything (backup first!).",
-      g10: "<strong>Calendar subscriptions</strong>: Calendar tab → Add → paste an .ics URL (Google/Nextcloud private address); external events show as colored dots.",
+      c6_p: "Every pixel reviewed for shame and anxiety triggers. A task due today is never labelled “overdue”; there are no red warning counters.",
+      c7_t: "Native Obsidian Tasks format",
+      c7_p: "Every tasks.md line uses the plugin's own emoji format (🆔, 🔁 every week on Tuesday, ⛔, the full date set). Tick a task in Obsidian and the next sync folds it into Tsosu's streak history — and vice versa.",
+      c8_t: "Dependencies & full dates",
+      c8_p: "Obsidian's ⛔ dependsOn, ⏳ scheduled and 🛫 start dates are read, stored and shown. Field semantics match on both sides.",
+      c9_t: "Task reminders",
+      c9_p: "Set a reminder time per task; a notification fires on the due date. Tap to open, mark done straight from the notification. Resyncs after reboot and timezone changes.",
+      c10_t: "Calendar sync & ICS subscriptions",
+      c10_p: "Set a date → an event appears; complete → it's removed. Subscribe to external .ics calendars (colored-dot overlay) or export your tasks as ICS.",
+      c11_t: "Markdown vault",
+      c11_p: "Everything is plain markdown in a folder you own. Edit from Obsidian, nvim, or any editor — changes are auto-detected and flow back in.",
+      c12_t: "Search operators",
+      c12_p: "Top-bar search understands status:done, due:<=7d, due:overdue and #tag; quick-add titles support @project and due:today.",
+      c13_t: "English / 繁體中文",
+      c13_p: "Switch languages in-app. Settings includes a recurrence & quick-syntax reference and the gamification explainer.",
+      c14_t: "Capture from anywhere",
+      c14_p: "Share text into quick add from any app — or straight from the text-selection menu. Quick Settings tile for one tap; voice input built in.",
+      c15_t: "Todoist & TickTick import",
+      c15_p: "Import a Todoist or TickTick CSV export from Settings — tasks are deduplicated, recurrence rules parsed, and written into your vault.",
+      c16_t: "Backup, export & app lock",
+      c16_p: "One-tap full JSON backup / restore; gentle morning and evening digests; biometric app lock; Material You theming.",
+      guide_title: "Getting started with 1.3",
+      guide_sub: "Ten steps, ten minutes.",
+      g1: "<strong>Inbox</strong>: throw everything into Inbox with ＋ or system share; type “every day” / “every 2 days” in the title to make it a habit.",
+      g2: "<strong>Today</strong>: two gentle sections — overdue and due-today. A task due today is never “overdue”. Tick to complete; confetti included.",
+      g3: "<strong>Habits</strong>: recurring tasks gather here, grouped morning / anytime / evening. Tick one and 🔥 goes up immediately.",
+      g4: "<strong>Custom recurrence</strong>: task detail → Repeats → Custom → pick every 2 days, weekdays, or day of month with chips.",
+      g5: "<strong>History</strong>: tap a task title and scroll to “History” to see every completion date.",
+      g6: "<strong>Gamification</strong>: tap the ⚡ in the top bar (or ⓘ on Habits) — how energy is earned, how shields work, how streaks count.",
+      g7: "<strong>Connect a vault</strong>: Settings → pick a folder (an Obsidian vault is ideal) → tasks.md is your task store.",
+      g8: "<strong>Desktop</strong>: install the Tasks plugin in Obsidian and query, tick and edit the same vault natively.",
+      g9: "<strong>Reminders & digests</strong>: set ⏰ per task; enable the daily digest for an 8am plan and an 8pm celebration.",
+      g10: "<strong>Backup</strong>: Settings → Backup exports everything as JSON; restore replaces it all (backup first!).",
       install_title: "Install",
       install_sub: "Obtainium is recommended — it tracks GitHub Releases directly and notifies you about updates.",
       install_h3: "Via Obtainium (recommended)",
@@ -453,14 +469,16 @@
       sync_title: "Cross-device sync",
       sync_sub: "Local-first — 100% offline, no account. Your data is plain markdown files; carry it to every device with any file-sync tool.",
       sync_th1: "Where", sync_th2: "How",
-      sync_r1c1: "Phone", sync_r1c2: "Tsosu app (full UI, habit tracking, Focus 3, reminders)",
-      sync_r2c1: "Desktop", sync_r2c2: "Obsidian + <a href=\"https://publish.obsidian.md/tasks/\" target=\"_blank\" rel=\"noopener\">Tasks plugin</a> — checkboxes, due dates, filters",
+      sync_r1c1: "Phone", sync_r1c2: "Tsosu app (capture, habits & 🔥 streaks, reminders)",
+      sync_r2c1: "Desktop", sync_r2c2: "Obsidian + <a href=\"https://publish.obsidian.md/tasks/\" target=\"_blank\" rel=\"noopener\">Tasks plugin</a> — the same tasks.md, native queries and checkboxes",
       sync_r3c1: "Terminal", sync_r3c2: "nvim / any text editor — it's just markdown",
-      sync_note: "Sync the folder with <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> or Obsidian Sync and your tasks appear on every device. The full file-format documentation lives in the <a href=\"https://github.com/soanseng/tsosu#vault-data-format\">README</a>.",
+      sync_note: "Sync the folder with <a href=\"https://syncthing.net/\" target=\"_blank\" rel=\"noopener\">Syncthing</a> or Obsidian Sync and your tasks appear on every device. A recurring task ticked in Obsidian folds into Tsosu's streak history on the next sync. Full format docs in the <a href=\"https://github.com/soanseng/tsosu#markdown-vault--the-obsidian-tasks-format\">README</a>.",
       privacy_t: "Privacy first",
       privacy_p: "No account, no server, no analytics, no tracking, no data collection. Your tasks live only on your devices and in your vault.",
       footer_download: "Download", footer_install: "Install", footer_lang: "中文",
       footer_tagline: "Tsosu 做事 — getting things done, your way.",
+      shot1: "Inbox", shot2: "Today", shot3: "Habits",
+      shot4: "Recurrence builder", shot5: "Completion history", shot6: "Energy & shields",
       switch_to: "中文"
     }
   };
