@@ -68,6 +68,7 @@ import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.ui.util.UxHintPreferences
 import app.tsosu.ui.util.rememberHaptic
+import app.tsosu.ui.util.descriptionExcerpt
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -262,7 +263,7 @@ private fun TaskListItemContent(
                 onDismissRequest = { showActionMenu = false },
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.task_edit)) },
+                    text = { Text(stringResource(R.string.task_view)) },
                     onClick = {
                         showActionMenu = false
                         haptic.tick()
@@ -332,6 +333,16 @@ private fun TaskListItemContent(
                                 .padding(horizontal = 5.dp, vertical = 1.dp),
                         )
                     }
+                }
+                val excerpt = remember(task.description) { descriptionExcerpt(task.description) }
+                if (excerpt.isNotEmpty()) {
+                    Text(
+                        text = excerpt,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 val details = buildDetailString(task, todayStr, tomorrowStr, noDateStr)
                 if (details.isNotEmpty()) {

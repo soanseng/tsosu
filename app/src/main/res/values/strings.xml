@@ -168,6 +168,11 @@
 
     <!-- Task Detail Sheet -->
     <string name="task_detail_title">Edit Task</string>
+    <string name="task_detail_view_title">Task</string>
+    <string name="task_detail_links">Links</string>
+    <string name="task_detail_link_open">Open link</string>
+    <string name="task_detail_no_description">No description yet.</string>
+    <string name="task_view">View</string>
     <string name="task_detail_field_title">Title</string>
     <string name="task_detail_field_description">Description</string>
     <string name="task_detail_status">Status</string>

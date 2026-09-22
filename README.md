@@ -60,6 +60,7 @@ Four tabs, one mental model:
 - **Habits** — every recurring task, grouped by 🌅 morning / ☀️ anytime / 🌙 evening, with 🔥 streaks. **A habit in Tsosu is just a task with a recurrence rule** — one unified model, no separate habit database.
 - **Upcoming** — what's ahead. Calendar lives in the top-bar ⌄ menu.
 - **Categories** — also in the ⌄ menu: every open task grouped by its category, with an "uncategorized" bucket at the end. Categories are projects in the vault, so they round-trip to Obsidian like everything else.
+- **Read first, edit on purpose** — a task row shows the first line of its description, so you rarely need to open one. Tap a task for a read-only view (status, dates, category, description, and every link found in it); tap **Edit** when you actually want to change something.
 
 ### ⚡ Energy, ❄ Shields, 🔥 Streaks — momentum without guilt
 

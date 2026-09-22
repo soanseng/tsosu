@@ -186,6 +186,11 @@
     <string name="vault_setup_title">設定你的 vault</string>
     <string name="vault_setup_desc">連結 markdown 資料夾，與 Obsidian、nvim 或其他工具同步。</string>
     <string name="task_detail_title">編輯任務</string>
+    <string name="task_detail_view_title">任務</string>
+    <string name="task_detail_links">相關連結</string>
+    <string name="task_detail_link_open">開啟連結</string>
+    <string name="task_detail_no_description">還沒有描述。</string>
+    <string name="task_view">檢視</string>
     <string name="task_detail_field_title">標題</string>
     <string name="task_detail_field_description">描述</string>
     <string name="task_detail_status">狀態</string>

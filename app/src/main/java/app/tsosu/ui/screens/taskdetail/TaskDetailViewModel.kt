@@ -45,6 +45,7 @@ data class TaskDetailState(
     val completions: List<LocalDate> = emptyList(),
     val reminderTime: LocalTime? = null,
     val routineTime: RoutineTime? = null,
+    val tinyVersion: String? = null,
     val projectId: String? = null,
     val projects: List<Project> = emptyList(),
     val saved: Boolean = false,
@@ -95,6 +96,7 @@ class TaskDetailViewModel @Inject constructor(
                         dependsOn = task.dependsOn,
                         reminderTime = task.reminderTime,
                         routineTime = task.routineTime,
+                        tinyVersion = task.tinyVersion,
                         projectId = task.projectId,
                     )
                 }
