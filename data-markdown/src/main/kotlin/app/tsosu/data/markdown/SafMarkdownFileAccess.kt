@@ -69,6 +69,14 @@ class SafMarkdownFileAccess(
         writeAtomically(subfolder, filename, content)
     }
 
+    override suspend fun deleteFileInFolder(folderName: String, filename: String) {
+        val folderUri = folderUriProvider() ?: return
+        val root = DocumentFile.fromTreeUri(context, folderUri) ?: return
+        val subfolder = root.findFile(folderName) ?: return
+        if (!subfolder.isDirectory) return
+        subfolder.findFile(filename)?.delete()
+    }
+
     /**
      * Crash-safe write via [AtomicFileWriter] (temp + rename); see that
      * class for the failure semantics.

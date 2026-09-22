@@ -21,6 +21,7 @@ class MarkdownSyncManager(
         tasks: List<Task>,
         projectNames: Map<String, String>,
         conflictIds: Set<String> = emptySet(),
+        removedTaskIds: Set<String> = emptySet(),
     ) {
         fileAccess.ensureFolder("tasks")
         val noteFilenames = mutableMapOf<String, String>()
@@ -33,6 +34,15 @@ class MarkdownSyncManager(
                 writeNoteIfChanged("tasks", filename, content)
                 noteFilenames[task.id] = filename.removeSuffix(".md")
             }
+        }
+
+        // Notes of tasks deleted in the app outlive them, and the next import
+        // would resurrect the task from that file — drop them here.
+        if (removedTaskIds.isNotEmpty()) {
+            val suffixes = removedTaskIds.map { "-${it.take(8)}.md" }
+            fileAccess.listFolder("tasks")
+                .filter { name -> suffixes.any(name::endsWith) }
+                .forEach { fileAccess.deleteFileInFolder("tasks", it) }
         }
 
         // Regenerate index; skip write when unchanged (incremental sync)
@@ -116,6 +126,17 @@ class MarkdownSyncManager(
         fileAccess.ensureFolder("daily")
         val content = dailyNoteWriter.write(date, recurringTasks, completedTaskIds)
         writeNoteIfChanged("daily", dailyNoteWriter.filename(date), content)
+    }
+
+    /**
+     * Deletes the note file of [taskId]. Notes are named `<slug>-<id8>.md`,
+     * so the id suffix identifies the file without needing the title.
+     */
+    suspend fun removeTaskNote(taskId: String) {
+        val suffix = "-${taskId.take(8)}.md"
+        fileAccess.listFolder("tasks")
+            .filter { it.endsWith(suffix) }
+            .forEach { fileAccess.deleteFileInFolder("tasks", it) }
     }
 
     /**

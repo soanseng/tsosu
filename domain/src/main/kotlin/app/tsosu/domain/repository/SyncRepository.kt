@@ -19,4 +19,10 @@ interface SyncRepository {
     /** Pull then push — full round-trip (setup, manual sync, import). */
     suspend fun sync(): Result<SyncResult>
     suspend fun disconnect()
+
+    /**
+     * Removes the vault note belonging to a task the app just deleted.
+     * Without this the note outlives the task and the next import resurrects it.
+     */
+    suspend fun removeTaskNote(taskId: String)
 }

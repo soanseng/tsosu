@@ -8,5 +8,6 @@ interface MarkdownFileAccess {
     suspend fun listFolder(folderName: String): List<String>
     suspend fun readFileInFolder(folderName: String, filename: String): String?
     suspend fun writeFileInFolder(folderName: String, filename: String, content: String)
+    suspend fun deleteFileInFolder(folderName: String, filename: String)
     suspend fun ensureFolder(folderName: String)
 }

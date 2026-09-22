@@ -11,6 +11,7 @@ import app.tsosu.data.local.repository.TaskRepositoryImpl
 import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.TaskRepository
+import app.tsosu.domain.repository.SyncRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,8 +28,16 @@ object RepositoryModule {
         taskDao: TaskDao,
         watcher: VaultChangeWatcher,
         gamification: GamificationRepository,
+        syncRepository: SyncRepository,
     ): TaskRepository =
-        TaskRepositoryImpl(taskDao, { _, _, _ -> watcher.pushSoon() }, gamification)
+        TaskRepositoryImpl(
+            taskDao,
+            onTaskChanged = { taskId, operation, _ ->
+                if (operation == "DELETE") syncRepository.removeTaskNote(taskId)
+                watcher.pushSoon()
+            },
+            gamification = gamification,
+        )
 
     @Provides
     @Singleton

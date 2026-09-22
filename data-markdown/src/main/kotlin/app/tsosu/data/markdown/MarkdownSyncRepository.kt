@@ -91,7 +91,10 @@ class MarkdownSyncRepository(
         val tasks = taskDao.getAllTasks().first().map { it.toDomain() }
         val projects = projectDao.getAll().first()
         val projectNames = projects.associate { it.id to it.title }
-        syncManager.exportTasks(tasks, projectNames, conflictIds)
+        // Ids we exported last time but no longer have: their notes must go
+        // too, or the next import brings the deleted task back.
+        val removedTaskIds = preferences.getTaskHashes().keys - tasks.map { it.id }.toSet()
+        syncManager.exportTasks(tasks, projectNames, conflictIds, removedTaskIds)
 
         // Export today's daily note from the recurring-task (habit) series
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -116,6 +119,10 @@ class MarkdownSyncRepository(
     override suspend fun disconnect() {
         preferences.clear()
         _syncState.value = SyncState.IDLE
+    }
+
+    override suspend fun removeTaskNote(taskId: String) {
+        runCatching { syncManager.removeTaskNote(taskId) }
     }
 
     private suspend fun <T> wrapSyncState(action: suspend () -> Result<T>): Result<T> {

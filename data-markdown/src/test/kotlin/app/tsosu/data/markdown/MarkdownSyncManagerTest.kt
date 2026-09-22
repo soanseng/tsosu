@@ -160,6 +160,43 @@ class MarkdownSyncManagerTest {
     }
 
     @Test
+    fun `exportTasks removes notes of tasks that no longer exist`() = runTest {
+        val tasks = listOf(task(id = "keep1234", title = "Keep me"))
+        coEvery { fileAccess.listFolder("tasks") } returns listOf(
+            "keep-me-keep1234.md",
+            "gone-task-abc99999.md",
+        )
+
+        manager.exportTasks(tasks, emptyMap(), removedTaskIds = setOf("abc99999"))
+
+        coVerify(exactly = 1) { fileAccess.deleteFileInFolder("tasks", "gone-task-abc99999.md") }
+        coVerify(exactly = 0) { fileAccess.deleteFileInFolder("tasks", "keep-me-keep1234.md") }
+    }
+
+    @Test
+    fun `exportTasks deletes nothing when no task was removed`() = runTest {
+        val tasks = listOf(task(id = "keep1234", title = "Keep me"))
+        coEvery { fileAccess.listFolder("tasks") } returns listOf("keep-me-keep1234.md")
+
+        manager.exportTasks(tasks, emptyMap())
+
+        coVerify(exactly = 0) { fileAccess.deleteFileInFolder(any(), any()) }
+    }
+
+    @Test
+    fun `removeTaskNote deletes only the note belonging to that task`() = runTest {
+        coEvery { fileAccess.listFolder("tasks") } returns listOf(
+            "meal-plan-8b0f0fd2.md",
+            "meal-plan-ffffffff.md",
+            "legacy-no-id.md",
+        )
+
+        manager.removeTaskNote("8b0f0fd2-3612-4da4-b803-3fc9301e4024")
+
+        coVerify(exactly = 1) { fileAccess.deleteFileInFolder("tasks", "meal-plan-8b0f0fd2.md") }
+    }
+
+    @Test
     fun `a routine slot survives the vault round trip`() = runTest {
         // No description: the note exists only because of the Tsosu-only
         // fields. Before that rule, the inline tasks.md line (which cannot
