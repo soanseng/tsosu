@@ -5,6 +5,7 @@ import app.tsosu.data.local.dao.TaskDao
 import app.tsosu.data.local.mapper.toDomain
 import app.tsosu.data.local.mapper.toEntity
 import app.tsosu.domain.repository.SyncRepository
+import app.tsosu.domain.model.Project
 import app.tsosu.domain.repository.SyncResult
 import app.tsosu.domain.repository.SyncState
 import kotlinx.coroutines.flow.Flow
@@ -60,6 +61,19 @@ class MarkdownSyncRepository(
         )
         lastImportedCount = importedTasks.tasks.size
 
+        // Categories travel as section names ("## 論文") or note frontmatter
+        // ("project:"). Resolve them back to project ids — creating the
+        // project when the vault mentions one Room doesn't know — or every
+        // pull would wipe the category off inline tasks.
+        val sectionNames = importedTasks.projectSections.values.toSet()
+        val knownProjects = projectDao.getAll().first()
+        val newProjects = sectionNames
+            .filter { name -> knownProjects.none { it.title.equals(name, ignoreCase = true) } }
+            .map { name -> Project(title = name).toEntity() }
+        newProjects.forEach { projectDao.insert(it) }
+        val projectIdByTitle = (knownProjects.map { it.title.lowercase() to it.id } +
+            newProjects.map { it.title.lowercase() to it.id }).toMap()
+
         // 3. Merge: upsert imported data into Room (external edits win for
         //    conflicts). Completions are append-only history: the vault only
         //    carries the last HISTORY lines, so union with Room to never
@@ -76,7 +90,11 @@ class MarkdownSyncRepository(
             } else {
                 task
             }
-            taskDao.upsert(merged.toEntity())
+            val withCategory = merged.copy(
+                projectId = importedTasks.projectSections[task.id]
+                    ?.let { projectIdByTitle[it.lowercase()] },
+            )
+            taskDao.upsert(withCategory.toEntity())
         }
 
         preferences.setLastSync(System.currentTimeMillis())

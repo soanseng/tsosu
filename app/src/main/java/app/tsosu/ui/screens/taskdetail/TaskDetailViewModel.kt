@@ -16,6 +16,7 @@ import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -156,12 +157,16 @@ class TaskDetailViewModel @Inject constructor(
         _state.value = _state.value.copy(projectId = projectId)
     }
 
-    /** Creates a category and selects it; a duplicate name reuses the existing one. */
+    /**
+     * Creates a category and selects it; a duplicate name reuses the existing
+     * one. Lookup goes to the repository, not the UI-state snapshot — the
+     * snapshot is empty until the collector emits, which minted duplicates.
+     */
     fun createCategory(name: String) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
         viewModelScope.launch {
-            val existing = _state.value.projects
+            val existing = projectRepository.getAllProjects().first()
                 .firstOrNull { it.title.equals(trimmed, ignoreCase = true) }
             val project = existing
                 ?: projectRepository.createProject(Project(title = trimmed)).getOrNull()
