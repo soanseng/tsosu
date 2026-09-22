@@ -249,7 +249,7 @@ fun InboxScreen(
                             } else {
                                 Icons.Default.KeyboardArrowDown
                             },
-                            contentDescription = stringResource(R.string.task_view),
+                            contentDescription = null, // decorative: the header text carries the meaning
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
