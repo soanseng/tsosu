@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -600,6 +601,14 @@ private fun TaskOverview(
     state: TaskDetailState,
     onOpenLink: (String) -> Unit,
 ) {
+    Text(
+        text = state.title,
+        style = MaterialTheme.typography.headlineSmall,
+        textDecoration = if (state.status.isTerminal) TextDecoration.LineThrough else null,
+    )
+
+    Spacer(Modifier.height(8.dp))
+
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = state.status.icon(),
@@ -631,7 +640,7 @@ private fun TaskOverview(
             } else {
                 R.string.task_detail_next_due
             },
-            value = "${due.monthNumber}/${due.dayOfMonth}/${due.year}",
+            value = "${due.year}/${due.monthNumber}/${due.dayOfMonth}",
         )
     }
     state.recurrenceRule?.let {
