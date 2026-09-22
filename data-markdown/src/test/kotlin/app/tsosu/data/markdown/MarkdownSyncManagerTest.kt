@@ -5,10 +5,12 @@ import app.tsosu.data.markdown.index.TaskIndexGenerator
 import app.tsosu.data.markdown.tasknote.TaskNoteParser
 import app.tsosu.data.markdown.tasknote.TaskNoteSerializer
 import app.tsosu.domain.model.Task
+import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.TaskStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -155,6 +157,38 @@ class MarkdownSyncManagerTest {
         coVerify(exactly = 0) {
             fileAccess.writeFileInFolder("tasks", any(), any())
         }
+    }
+
+    @Test
+    fun `a routine slot survives the vault round trip`() = runTest {
+        // No description: the note exists only because of the Tsosu-only
+        // fields. Before that rule, the inline tasks.md line (which cannot
+        // carry them) was the task's only vault home and the slot was lost.
+        val habit = recurringTask(id = "h1", title = "Meditate").copy(
+            routineTime = RoutineTime.MORNING,
+            tinyVersion = "Sit for one minute",
+        )
+        val note = slot<String>()
+        coEvery { fileAccess.readFileInFolder("tasks", any()) } returns null
+        coEvery { fileAccess.writeFileInFolder("tasks", any(), capture(note)) } returns Unit
+
+        manager.exportTasks(listOf(habit), emptyMap())
+
+        coVerify { fileAccess.writeFileInFolder("tasks", match { it.startsWith("meditate-") }, any()) }
+        assertTrue(
+            note.captured.contains("routine: morning"),
+            "Note must carry the routine slot, got: ${note.captured}",
+        )
+
+        // The note is what import reads back.
+        coEvery { fileAccess.listFolder("tasks") } returns listOf("meditate-h1.md")
+        coEvery { fileAccess.readFileInFolder("tasks", "meditate-h1.md") } returns note.captured
+        coEvery { fileAccess.readTasksFile() } returns null
+
+        val imported = manager.importTasks()
+
+        assertEquals(RoutineTime.MORNING, imported.tasks.single().routineTime)
+        assertEquals("Sit for one minute", imported.tasks.single().tinyVersion)
     }
 
     @Test

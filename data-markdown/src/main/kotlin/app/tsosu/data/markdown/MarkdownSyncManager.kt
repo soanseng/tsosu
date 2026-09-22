@@ -129,7 +129,15 @@ class MarkdownSyncManager(
         }
     }
 
+    /**
+     * Task notes carry what the inline Obsidian line cannot express:
+     * description, subtasks, and the Tsosu-only fields (tiny version, routine
+     * slot). A habit with neither description nor subtasks still needs a note
+     * as soon as one of those fields is set — otherwise the field is dropped
+     * on the next vault round-trip, because the inline line never holds it.
+     */
     private fun shouldCreateTaskNote(task: Task): Boolean {
-        return task.description.isNotBlank() || task.subtasks.isNotEmpty()
+        return task.description.isNotBlank() || task.subtasks.isNotEmpty() ||
+            task.tinyVersion != null || task.routineTime != null
     }
 }
