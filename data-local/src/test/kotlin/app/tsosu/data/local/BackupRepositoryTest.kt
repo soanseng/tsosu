@@ -77,4 +77,18 @@ class BackupRepositoryTest {
         assertEquals(7, db.gamificationDao().getEnergy())
     }
 
+    @Test
+    fun `restoring a backup without gamification leaves a usable row`() = runBlocking {
+        db.gamificationDao().awardEnergy(5)
+        val backupWithoutGamification = repo.decode(repo.exportJson())
+            .copy(gamification = null)
+
+        repo.restore(backupWithoutGamification)
+
+        // Not null: the row exists so the next award lands and the UI can read 0.
+        assertEquals(0, db.gamificationDao().getEnergy())
+        db.gamificationDao().awardEnergy(2)
+        assertEquals(2, db.gamificationDao().getEnergy())
+    }
+
 }

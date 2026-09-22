@@ -71,6 +71,10 @@ class BackupRepository(
             data.streakShields.forEach { streakShieldDao.insert(it) }
             data.tasks.forEach { taskDao.insert(it) }
             data.gamification?.let { gamificationDao.insertRow(it) }
+            // A backup without the gamification row must not leave the table
+            // empty: reads would show null and (before the seed-row fix) every
+            // later award silently did nothing.
+            gamificationDao.ensureRow()
         }
     }
 }
