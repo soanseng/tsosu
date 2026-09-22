@@ -3,6 +3,7 @@ package app.tsosu.ui.screens.inbox
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.domain.repository.TaskRepository
+import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.usecase.GetStaleTaskIdsUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
@@ -32,6 +33,7 @@ class InboxViewModelBulkTest {
     private val toggleDone = mockk<ToggleTaskDoneUseCase>()
     private val setStatus = mockk<SetTaskStatusUseCase>()
     private val scheduler = mockk<ReminderScheduler>(relaxed = true)
+    private val projectRepository = mockk<ProjectRepository>(relaxed = true)
     private val staleIds = mockk<GetStaleTaskIdsUseCase>()
 
     private fun task(id: String) = Task(id = id, title = "t-$id")
@@ -53,7 +55,7 @@ class InboxViewModelBulkTest {
 
     @Test
     fun `toggleSelection adds then removes`() = runTest(dispatcher) {
-        val vm = InboxViewModel(taskRepository, toggleDone, scheduler, setStatus, staleIds)
+        val vm = InboxViewModel(taskRepository, projectRepository, toggleDone, scheduler, setStatus, staleIds)
         vm.toggleSelection("a")
         vm.toggleSelection("b")
         assertEquals(setOf("a", "b"), vm.selectedIds.value)
@@ -63,7 +65,7 @@ class InboxViewModelBulkTest {
 
     @Test
     fun `bulkComplete completes each selected task and clears selection`() = runTest(dispatcher) {
-        val vm = InboxViewModel(taskRepository, toggleDone, scheduler, setStatus, staleIds)
+        val vm = InboxViewModel(taskRepository, projectRepository, toggleDone, scheduler, setStatus, staleIds)
         vm.toggleSelection("a")
         vm.toggleSelection("b")
         vm.bulkComplete()
@@ -77,7 +79,7 @@ class InboxViewModelBulkTest {
 
     @Test
     fun `bulkSomeday parks each selected task`() = runTest(dispatcher) {
-        val vm = InboxViewModel(taskRepository, toggleDone, scheduler, setStatus, staleIds)
+        val vm = InboxViewModel(taskRepository, projectRepository, toggleDone, scheduler, setStatus, staleIds)
         vm.toggleSelection("a")
         vm.bulkSomeday()
         dispatcher.scheduler.advanceUntilIdle()
@@ -87,7 +89,7 @@ class InboxViewModelBulkTest {
 
     @Test
     fun `bulkDelete deletes and cancels alarms`() = runTest(dispatcher) {
-        val vm = InboxViewModel(taskRepository, toggleDone, scheduler, setStatus, staleIds)
+        val vm = InboxViewModel(taskRepository, projectRepository, toggleDone, scheduler, setStatus, staleIds)
         coEvery { taskRepository.deleteTask(any()) } returns Result.success(Unit)
         vm.toggleSelection("x")
         vm.bulkDelete()

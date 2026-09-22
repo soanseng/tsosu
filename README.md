@@ -55,7 +55,7 @@ Grab the latest `.apk` from the [Releases page](https://github.com/soanseng/tsos
 
 Four tabs, one mental model:
 
-- **Inbox** — everything you captured with no date yet. Clear it, don't fear it.
+- **Inbox** — everything undated: loose tasks first, then each category as a fold. Clear it, don't fear it.
 - **Today** — overdue and due-today in two gentle sections. A task due today is never labelled "overdue".
 - **Habits** — every recurring task, grouped by 🌅 morning / ☀️ anytime / 🌙 evening, with 🔥 streaks. **A habit in Tsosu is just a task with a recurrence rule** — one unified model, no separate habit database.
 - **Upcoming** — what's ahead. Calendar lives in the top-bar ⌄ menu.

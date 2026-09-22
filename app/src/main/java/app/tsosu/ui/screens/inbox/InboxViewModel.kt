@@ -2,14 +2,17 @@ package app.tsosu.ui.screens.inbox
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tsosu.domain.model.Project
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.GetStaleTaskIdsUseCase
 import app.tsosu.domain.usecase.SetTaskStatusUseCase
 import app.tsosu.domain.usecase.ToggleTaskDoneUseCase
 import app.tsosu.notification.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,9 +20,22 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** One fold in the inbox: the category and its undated tasks. */
+data class InboxCategory(
+    val project: Project,
+    val tasks: List<Task>,
+)
+
+/** The inbox shows every undated task: loose ones first, then one fold per category. */
+data class InboxGroups(
+    val uncategorized: List<Task> = emptyList(),
+    val categories: List<InboxCategory> = emptyList(),
+)
+
 @HiltViewModel
 class InboxViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
+    private val projectRepository: ProjectRepository,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
     private val reminderScheduler: ReminderScheduler,
     private val setTaskStatus: SetTaskStatusUseCase,
@@ -28,6 +44,24 @@ class InboxViewModel @Inject constructor(
 
     val tasks: StateFlow<List<Task>> = taskRepository.getInboxTasks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val uiState: StateFlow<InboxGroups> = combine(
+        taskRepository.getInboxTasks(),
+        projectRepository.getAllProjects(),
+    ) { tasks, projects ->
+        val buckets = projects.associate { it.id to mutableListOf<Task>() }
+        val loose = mutableListOf<Task>()
+        for (task in tasks) {
+            val bucket = task.projectId?.let { buckets[it] }
+            if (bucket != null) bucket += task else loose += task
+        }
+        InboxGroups(
+            uncategorized = loose,
+            categories = projects.map { project ->
+                InboxCategory(project, buckets[project.id].orEmpty())
+            }.filter { it.tasks.isNotEmpty() },
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), InboxGroups())
 
     /** Tasks untouched for 2+ weeks — surfaced as a gentle clean-up suggestion, never forced. */
     val staleIds: StateFlow<List<String>> = getStaleTaskIds(olderThanDays = 14)

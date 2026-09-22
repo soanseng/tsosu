@@ -1,5 +1,6 @@
 package app.tsosu.ui.screens.inbox
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,15 +12,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Card
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,10 +46,13 @@ fun InboxScreen(
 )
 {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val groups by viewModel.uiState.collectAsStateWithLifecycle()
     val staleIds by viewModel.staleIds.collectAsStateWithLifecycle()
     val selectedIds by viewModel.selectedIds.collectAsStateWithLifecycle()
     var selectionMode by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    // Categories start folded: the loose list is what needs triage today.
+    val expandedCategories = remember { mutableStateMapOf<String, Boolean>() }
 
     if (confirmDelete) {
         androidx.compose.material3.AlertDialog(
@@ -199,30 +206,102 @@ fun InboxScreen(
                     )
                 }
             }
-            items(tasks, key = { it.id }) { task ->
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    if (selectionMode) {
-                        androidx.compose.material3.Checkbox(
-                            checked = task.id in selectedIds,
-                            onCheckedChange = { viewModel.toggleSelection(task.id) },
+            items(groups.uncategorized, key = { it.id }) { task ->
+                InboxTaskRow(
+                    task = task,
+                    selectionMode = selectionMode,
+                    selected = task.id in selectedIds,
+                    onToggleSelection = viewModel::toggleSelection,
+                    onToggleDone = viewModel::toggleDone,
+                    onStatusChange = viewModel::setStatus,
+                    onTaskClick = onTaskClick,
+                )
+            }
+
+            // Filed-but-undated tasks stay in the inbox, folded under their
+            // category so the loose list stays the star of the screen.
+            groups.categories.forEach { group ->
+                val expanded = expandedCategories[group.project.id] == true
+                item(key = "fold-${group.project.id}") {
+                    Row(
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                expandedCategories[group.project.id] = !expanded
+                            }
+                            .padding(top = 10.dp, bottom = 4.dp),
+                    ) {
+                        Text(
+                            text = "📁 ${group.project.title}",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = group.tasks.size.toString(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Icon(
+                            imageVector = if (expanded) {
+                                Icons.Default.KeyboardArrowUp
+                            } else {
+                                Icons.Default.KeyboardArrowDown
+                            },
+                            contentDescription = stringResource(R.string.task_view),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    TaskListItem(
-                        task = task,
-                        onToggleDone = { if (!selectionMode) viewModel.toggleDone(it) },
-                        onStatusChange = { id, status -> if (!selectionMode) viewModel.setStatus(id, status) },
-                        onClick = {
-                            if (selectionMode) {
-                                viewModel.toggleSelection(task.id)
-                            } else {
-                                onTaskClick(task.id)
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
+                }
+                if (expanded) {
+                    items(group.tasks, key = { it.id }) { task ->
+                        InboxTaskRow(
+                            task = task,
+                            selectionMode = selectionMode,
+                            selected = task.id in selectedIds,
+                            onToggleSelection = viewModel::toggleSelection,
+                            onToggleDone = viewModel::toggleDone,
+                            onStatusChange = viewModel::setStatus,
+                            onTaskClick = onTaskClick,
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun InboxTaskRow(
+    task: app.tsosu.domain.model.Task,
+    selectionMode: Boolean,
+    selected: Boolean,
+    onToggleSelection: (String) -> Unit,
+    onToggleDone: (String) -> Unit,
+    onStatusChange: (String, app.tsosu.domain.model.TaskStatus) -> Unit,
+    onTaskClick: (String) -> Unit,
+) {
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        if (selectionMode) {
+            androidx.compose.material3.Checkbox(
+                checked = selected,
+                onCheckedChange = { onToggleSelection(task.id) },
+            )
+        }
+        TaskListItem(
+            task = task,
+            onToggleDone = { if (!selectionMode) onToggleDone(it) },
+            onStatusChange = { id, status -> if (!selectionMode) onStatusChange(id, status) },
+            onClick = {
+                if (selectionMode) {
+                    onToggleSelection(task.id)
+                } else {
+                    onTaskClick(task.id)
+                }
+            },
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 

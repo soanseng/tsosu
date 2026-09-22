@@ -23,9 +23,8 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     fun getById(taskId: String): Flow<TaskEntity?>
 
-    @Query("SELECT * FROM tasks WHERE projectId IS NULL AND dueDate IS NULL AND status < 4 ORDER BY position")
+    @Query("SELECT * FROM tasks WHERE dueDate IS NULL AND status < 4 ORDER BY position")
     fun getInboxTasks(): Flow<List<TaskEntity>>
-
     @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :startOfDay AND :endOfDay AND status < 4 ORDER BY position")
     fun getTodayTasks(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
 
