@@ -23,6 +23,7 @@ import android.content.Intent
 import android.speech.RecognizerIntent
 import app.tsosu.domain.recurrence.QuickAddGrammar
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -58,10 +59,12 @@ import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.domain.recurrence.RecurrenceResult
 import app.tsosu.domain.recurrence.TitlePriority
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.Project
 import app.tsosu.domain.model.RoutineTime
 import app.tsosu.ui.components.RecurrencePicker
 import app.tsosu.ui.util.rememberHaptic
 import app.tsosu.ui.util.localizedName
+import app.tsosu.ui.util.localizedLabel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.todayIn
 import kotlinx.datetime.DateTimeUnit
@@ -77,10 +80,11 @@ import kotlinx.datetime.toLocalDateTime
 @Composable
 fun QuickAddTaskSheet(
     onDismiss: () -> Unit,
-    onAdd: (title: String, priority: Priority, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?, projectName: String?, routineTime: RoutineTime?, tinyVersion: String?) -> Unit,
+    onAdd: (title: String, priority: Priority, dueDate: LocalDateTime?, reminderTime: LocalTime?, recurrenceRule: String?, projectName: String?, routineTime: RoutineTime?, tinyVersion: String?, projectId: String?, newCategoryName: String?) -> Unit,
     initialDueDate: LocalDateTime? = null,
     initialTitle: String? = null,
     initialRecurrenceRule: String? = null,
+    projects: List<Project> = emptyList(),
 )
 {
     val haptic = rememberHaptic()
@@ -106,6 +110,9 @@ fun QuickAddTaskSheet(
     var tinyVersion by remember { mutableStateOf("") }
     var cleanTitle by remember { mutableStateOf("") }
     var showRecurrenceHelp by remember { mutableStateOf(false) }
+    var selectedProjectId by remember { mutableStateOf<String?>(null) }
+    var showNewCategory by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
 
     fun applyTitleInput(newValue: String) {
         // Detect p1-p4 priority token first, then the recurrence pattern,
@@ -283,6 +290,59 @@ fun QuickAddTaskSheet(
             }
         }
 
+        // Keep the chip in sync with a detected @token: the chip is the
+        // single source of truth on submit.
+        LaunchedEffect(detectedProjectName, projects) {
+            val name = detectedProjectName ?: return@LaunchedEffect
+            selectedProjectId = projects
+                .firstOrNull { it.title.equals(name, ignoreCase = true) }?.id
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(stringResource(R.string.quick_add_category), style = MaterialTheme.typography.labelLarge)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            FilterChip(
+                selected = selectedProjectId == null,
+                onClick = {
+                    haptic.tick()
+                    selectedProjectId = null
+                },
+                label = { Text(stringResource(R.string.category_none)) },
+            )
+            projects.forEach { project ->
+                FilterChip(
+                    selected = selectedProjectId == project.id,
+                    onClick = {
+                        haptic.tick()
+                        selectedProjectId = project.id
+                    },
+                    label = { Text(project.title) },
+                )
+            }
+            // A name typed in the dialog is created on submit; show it now so
+            // the choice is visible instead of silently pending.
+            val pendingCategory = newCategoryName.trim()
+            if (pendingCategory.isNotEmpty() &&
+                projects.none { it.title.equals(pendingCategory, ignoreCase = true) }
+            ) {
+                FilterChip(
+                    selected = selectedProjectId == null,
+                    onClick = {
+                        haptic.tick()
+                        showNewCategory = true
+                    },
+                    label = { Text(pendingCategory) },
+                )
+            }
+            AssistChip(
+                onClick = { showNewCategory = true },
+                label = { Text(stringResource(R.string.category_new)) },
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -420,15 +480,7 @@ fun QuickAddTaskSheet(
                             haptic.tick()
                             routineTime = time
                         },
-                        label = {
-                            Text(
-                                when (time) {
-                                    RoutineTime.MORNING -> "${time.emoji} ${stringResource(R.string.habits_morning)}"
-                                    RoutineTime.AFTERNOON -> "${time.emoji} ${stringResource(R.string.habits_anytime)}"
-                                    RoutineTime.EVENING -> "${time.emoji} ${stringResource(R.string.habits_evening)}"
-                                },
-                            )
-                        },
+                        label = { Text(time.localizedLabel()) },
                     )
                 }
             }
@@ -450,6 +502,40 @@ fun QuickAddTaskSheet(
             ) {
                 RecurrenceHelpSheet()
             }
+        }
+
+        if (showNewCategory) {
+            AlertDialog(
+                onDismissRequest = { showNewCategory = false },
+                title = { Text(stringResource(R.string.category_new)) },
+                text = {
+                    OutlinedTextField(
+                        value = newCategoryName,
+                        onValueChange = { newCategoryName = it },
+                        label = { Text(stringResource(R.string.category_name_hint)) },
+                        singleLine = true,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            haptic.confirm()
+                            selectedProjectId = null
+                            showNewCategory = false
+                        },
+                    ) {
+                        Text(stringResource(R.string.category_create))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        newCategoryName = ""
+                        showNewCategory = false
+                    }) {
+                        Text(stringResource(R.string.task_detail_cancel))
+                    }
+                },
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -480,6 +566,8 @@ fun QuickAddTaskSheet(
                         detectedProjectName,
                         if (recurrenceRule != null) routineTime else null,
                         tinyVersion.takeIf { it.isNotBlank() && recurrenceRule != null },
+                        selectedProjectId,
+                        newCategoryName.trim().takeIf { it.isNotBlank() },
                     )
                     onDismiss()
                 } else {

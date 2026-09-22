@@ -3,6 +3,7 @@ package app.tsosu.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Loop
 import androidx.compose.material.icons.filled.Settings
@@ -14,6 +15,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     data object Today : Screen("today", "Today", Icons.Default.Today)
     data object Habits : Screen("habits", "Habits", Icons.Default.Loop)
     data object Calendar : Screen("calendar", "Calendar", Icons.Default.CalendarMonth)
+    data object Categories : Screen("categories", "Categories", Icons.Default.Folder)
     data object Upcoming : Screen("upcoming", "Upcoming", Icons.Default.DateRange)
     data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
 
@@ -23,7 +25,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
         }
 
         val viewModes: List<Screen> by lazy {
-            listOf(Calendar)
+            listOf(Calendar, Categories)
         }
     }
 }

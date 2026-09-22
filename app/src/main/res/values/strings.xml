@@ -25,6 +25,7 @@
     <string name="habits_evening">Evening</string>
     <string name="habits_other">Other</string>
     <string name="habits_create_failed">Failed to create habit</string>
+    <string name="habits_shield_used">❄ Shield used — the gap is bridged, streak kept.</string>
 
     <!-- Inbox -->
     <string name="inbox_title">Inbox</string>
@@ -92,7 +93,7 @@
     <string name="settings_digest_desc">Morning plan and evening celebration at 8am/8pm</string>
     <string name="quick_add_voice">Voice input</string>
     <string name="search_result_count">%d results</string>
-    <string name="habits_buy_freeze">Buy freeze ⚡30</string>
+    <string name="habits_buy_freeze">Buy freeze</string>
     <string name="habits_not_enough_energy">Not enough ⚡ yet — complete tasks and habits to earn energy</string>
 
     <!-- Habit Editor -->
@@ -344,4 +345,13 @@
     <string name="task_detail_scheduled_date">Scheduled</string>
     <string name="task_detail_start_date">Start</string>
     <string name="task_detail_depends_on">Depends on</string>
+    <string name="nav_categories">Categories</string>
+    <string name="task_detail_category">Category</string>
+    <string name="quick_add_category">Category</string>
+    <string name="category_none">None</string>
+    <string name="category_new">＋ New</string>
+    <string name="category_name_hint">Category name</string>
+    <string name="category_create">Create</string>
+    <string name="category_uncategorized">Uncategorized</string>
+    <string name="categories_empty">No open tasks yet.</string>
 </resources>

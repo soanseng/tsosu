@@ -5,6 +5,7 @@ import androidx.compose.ui.res.stringResource
 import app.tsosu.R
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.ui.components.RecurrencePreset
 import app.tsosu.ui.components.labelRes
@@ -30,6 +31,16 @@ fun Priority.localizedName(): String = stringResource(
         Priority.MEDIUM -> R.string.priority_medium
         Priority.HIGH -> R.string.priority_high
         Priority.URGENT -> R.string.priority_urgent
+    },
+)
+
+/** Localized routine slot with emoji prefix, e.g. "🌅 早上". */
+@Composable
+fun RoutineTime.localizedLabel(): String = "$emoji " + stringResource(
+    when (this) {
+        RoutineTime.MORNING -> R.string.habits_morning
+        RoutineTime.AFTERNOON -> R.string.habits_anytime
+        RoutineTime.EVENING -> R.string.habits_evening
     },
 )
 

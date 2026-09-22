@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.tsosu.ui.screens.calendar.CalendarScreen
+import app.tsosu.ui.screens.categories.CategoriesScreen
 import app.tsosu.ui.screens.habits.HabitsScreen
 import app.tsosu.ui.screens.inbox.InboxScreen
 import app.tsosu.ui.screens.settings.SettingsScreen
@@ -88,6 +89,11 @@ fun TsosuNavHost(
                 onGoToday = { navigateTo(Screen.Today.route) },
             )
         }
+        composable(
+            Screen.Categories.route,
+            enterTransition = { fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 0.92f) },
+        ) { CategoriesScreen(onTaskClick = onTaskClick) }
         composable(
             Screen.Settings.route,
             enterTransition = { slideInHorizontally(tween(300)) { it } },

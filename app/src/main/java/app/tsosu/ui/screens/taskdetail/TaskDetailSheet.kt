@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -53,6 +54,7 @@ import app.tsosu.R
 import app.tsosu.ui.components.RecurrencePicker
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.TaskStatus
 import app.tsosu.ui.components.displayName
 import app.tsosu.ui.components.icon
@@ -95,6 +97,8 @@ fun TaskDetailSheet(
     var datePickerTarget by remember { mutableStateOf<DatePickerTarget?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showNewCategory by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -124,6 +128,38 @@ fun TaskDetailSheet(
             minLines = 2,
             maxLines = 4,
         )
+
+        Spacer(Modifier.height(12.dp))
+
+        // Category (backed by projects — one per task)
+        Text(stringResource(R.string.task_detail_category), style = MaterialTheme.typography.labelLarge)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            FilterChip(
+                selected = state.projectId == null,
+                onClick = {
+                    haptic.tick()
+                    viewModel.onCategoryChange(null)
+                },
+                label = { Text(stringResource(R.string.category_none)) },
+            )
+            state.projects.forEach { project ->
+                FilterChip(
+                    selected = state.projectId == project.id,
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onCategoryChange(project.id)
+                    },
+                    label = { Text(project.title) },
+                )
+            }
+            AssistChip(
+                onClick = { showNewCategory = true },
+                label = { Text(stringResource(R.string.category_new)) },
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -286,6 +322,35 @@ fun TaskDetailSheet(
             onRruleChange = viewModel::onRecurrenceRuleChange,
         )
 
+        // Routine time: which Habits-tab group this repeating task belongs to.
+        if (state.recurrenceRule != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.quick_add_routine), style = MaterialTheme.typography.labelLarge)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                RoutineTime.entries.forEach { time ->
+                    FilterChip(
+                        selected = state.routineTime == time,
+                        onClick = {
+                            haptic.tick()
+                            viewModel.onRoutineTimeChange(time)
+                        },
+                        label = { Text(time.localizedLabel()) },
+                    )
+                }
+                FilterChip(
+                    selected = state.routineTime == null,
+                    onClick = {
+                        haptic.tick()
+                        viewModel.onRoutineTimeChange(null)
+                    },
+                    label = { Text(stringResource(R.string.habits_other)) },
+                )
+            }
+        }
+
         // Completion history: how many times and when (compact past 5).
         if (state.completions.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
@@ -372,6 +437,41 @@ fun TaskDetailSheet(
         }
 
         Spacer(Modifier.height(16.dp))
+    }
+
+    if (showNewCategory) {
+        AlertDialog(
+            onDismissRequest = { showNewCategory = false },
+            title = { Text(stringResource(R.string.category_new)) },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text(stringResource(R.string.category_name_hint)) },
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        haptic.confirm()
+                        viewModel.createCategory(newCategoryName)
+                        newCategoryName = ""
+                        showNewCategory = false
+                    },
+                ) {
+                    Text(stringResource(R.string.category_create))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    newCategoryName = ""
+                    showNewCategory = false
+                }) {
+                    Text(stringResource(R.string.task_detail_cancel))
+                }
+            },
+        )
     }
 
     if (showDeleteConfirm) {

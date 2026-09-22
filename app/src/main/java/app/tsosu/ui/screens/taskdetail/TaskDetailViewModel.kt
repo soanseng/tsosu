@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tsosu.domain.model.EnergyLevel
 import app.tsosu.domain.model.Priority
+import app.tsosu.domain.model.Project
+import app.tsosu.domain.model.RoutineTime
 import app.tsosu.domain.model.Task
 import app.tsosu.domain.model.TaskStatus
+import app.tsosu.domain.repository.ProjectRepository
 import app.tsosu.domain.repository.TaskRepository
 import app.tsosu.domain.usecase.DeleteTaskUseCase
 import app.tsosu.domain.usecase.UpdateTaskUseCase
@@ -41,6 +44,9 @@ data class TaskDetailState(
     val dependsOn: List<String> = emptyList(),
     val completions: List<LocalDate> = emptyList(),
     val reminderTime: LocalTime? = null,
+    val routineTime: RoutineTime? = null,
+    val projectId: String? = null,
+    val projects: List<Project> = emptyList(),
     val saved: Boolean = false,
     val deleted: Boolean = false,
 )
@@ -51,11 +57,20 @@ class TaskDetailViewModel @Inject constructor(
     private val updateTaskUseCase: UpdateTaskUseCase,
     private val deleteTaskUseCase: DeleteTaskUseCase,
     private val reminderScheduler: ReminderScheduler,
+    private val projectRepository: ProjectRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TaskDetailState())
     val state: StateFlow<TaskDetailState> = _state.asStateFlow()
     private var loadJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            projectRepository.getAllProjects().collect { projects ->
+                _state.value = _state.value.copy(projects = projects)
+            }
+        }
+    }
 
     fun loadTask(taskId: String) {
         loadJob?.cancel()
@@ -64,6 +79,7 @@ class TaskDetailViewModel @Inject constructor(
             taskRepository.getTask(taskId).filterNotNull().collect { task ->
                 if (!_state.value.saved && !_state.value.deleted) {
                     _state.value = TaskDetailState(
+                        projects = _state.value.projects,
                         task = task,
                         title = task.title,
                         description = task.description,
@@ -78,6 +94,8 @@ class TaskDetailViewModel @Inject constructor(
                         completions = task.completions,
                         dependsOn = task.dependsOn,
                         reminderTime = task.reminderTime,
+                        routineTime = task.routineTime,
+                        projectId = task.projectId,
                     )
                 }
             }
@@ -128,6 +146,29 @@ class TaskDetailViewModel @Inject constructor(
         _state.value = _state.value.copy(reminderTime = value)
     }
 
+    fun onRoutineTimeChange(value: RoutineTime?) {
+        _state.value = _state.value.copy(routineTime = value)
+    }
+
+    fun onCategoryChange(projectId: String?) {
+        _state.value = _state.value.copy(projectId = projectId)
+    }
+
+    /** Creates a category and selects it; a duplicate name reuses the existing one. */
+    fun createCategory(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            val existing = _state.value.projects
+                .firstOrNull { it.title.equals(trimmed, ignoreCase = true) }
+            val project = existing
+                ?: projectRepository.createProject(Project(title = trimmed)).getOrNull()
+            if (project != null) {
+                _state.value = _state.value.copy(projectId = project.id)
+            }
+        }
+    }
+
     fun save() {
         val task = _state.value.task ?: return
         viewModelScope.launch {
@@ -161,6 +202,8 @@ class TaskDetailViewModel @Inject constructor(
                 startDate = _state.value.startDate,
                 dependsOn = _state.value.dependsOn,
                 reminderTime = _state.value.reminderTime,
+                routineTime = _state.value.routineTime.takeIf { _state.value.recurrenceRule != null },
+                projectId = _state.value.projectId,
                 completedDate = completedDate,
                 cancelledDate = cancelledDate,
             )

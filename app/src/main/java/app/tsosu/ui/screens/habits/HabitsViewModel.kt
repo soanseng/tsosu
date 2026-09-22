@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -86,9 +87,15 @@ class HabitsViewModel @Inject constructor(
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val task = uiState.value.tasks.find { it.id == taskId } ?: return@launch
             if (today in task.completions) return@launch
+            // A check-in can consume a bought shield to bridge a gap; say so,
+            // otherwise the streak silently repairs itself.
+            val freezesBefore = gamification.freezes().first()
             toggleTaskDone(taskId)
                 .onSuccess { updated ->
                     reminderScheduler.schedule(updated)
+                    if (gamification.freezes().first() < freezesBefore) {
+                        _messageEvent.emit(R.string.habits_shield_used)
+                    }
                     _celebrateEvent.emit(Unit)
                 }
                 .onFailure { e ->

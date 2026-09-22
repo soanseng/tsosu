@@ -25,12 +25,14 @@ Tsosu is different. It's built on clinical understanding of ADHD and the princip
 
 ## What's New in 1.3
 
-- **🗂 A calmer home** — Inbox is the start screen; the app is four tabs (Inbox / Today / Habits / Upcoming) plus Calendar tucked into the top-bar menu. Focus timers, kanban boards, weekly review and saved filters are gone — deliberately.
+- **🗂 A calmer home** — Inbox is the start screen; the app is four tabs (Inbox / Today / Habits / Upcoming) plus Calendar and Categories tucked into the top-bar menu. Focus timers, kanban boards, weekly review and saved filters are gone — deliberately.
 - **🤝 Obsidian Tasks compatibility** — `tasks.md` lines are now written and parsed in the plugin's native emoji format (`🆔` ids, `🔁 every week on Tuesday`, `⛔` dependencies, full date set). Complete a recurring task in Obsidian and Tsosu folds the done line into your streak history on the next sync — and vice versa.
 - **☑️ Tick-box recurrence builder** — "Custom" recurrence is now chips: every N days / weeks / months, weekday multi-select, day-of-month. Natural language (`every 2 days`, `每週一二三`) still works.
 - **📜 Completion history** — open any task to see how many times and when it was completed (compact past 5).
 - **❓ Gamification, explained** — the ⚡ in the top bar is tappable, the Habits tab has an ⓘ, and Settings has an entry; all three explain how energy, shields and streaks work.
 - **⛔ Dependencies & ⏳/🛫 dates** — Obsidian's `dependsOn`, scheduled and start dates are read, stored and shown.
+- **🗂 Categories** — give a task a category (papers, self-growth, …) from the quick-add row, the `@category` token, or the chips in the detail sheet; the top-bar ⌄ menu has a **Categories** view that groups open tasks by category.
+- **✏️ Editable routine slot** — the 🌅/☀️/🌙 slot is now editable after creation, not only when adding.
 
 ## Install
 
@@ -57,6 +59,7 @@ Four tabs, one mental model:
 - **Today** — overdue and due-today in two gentle sections. A task due today is never labelled "overdue".
 - **Habits** — every recurring task, grouped by 🌅 morning / ☀️ anytime / 🌙 evening, with 🔥 streaks. **A habit in Tsosu is just a task with a recurrence rule** — one unified model, no separate habit database.
 - **Upcoming** — what's ahead. Calendar lives in the top-bar ⌄ menu.
+- **Categories** — also in the ⌄ menu: every open task grouped by its category, with an "uncategorized" bucket at the end. Categories are projects in the vault, so they round-trip to Obsidian like everything else.
 
 ### ⚡ Energy, ❄ Shields, 🔥 Streaks — momentum without guilt
 

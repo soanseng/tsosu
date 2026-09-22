@@ -43,10 +43,12 @@ import app.tsosu.R
 import app.tsosu.domain.model.Task
 import app.tsosu.ui.util.recurrenceDisplayLabel
 import app.tsosu.domain.model.RoutineTime
+import app.tsosu.domain.repository.GamificationRepository
 import app.tsosu.domain.recurrence.RecurrenceParser
 import app.tsosu.ui.components.KonfettiOverlay
 import app.tsosu.ui.components.GamificationHelpDialog
 import app.tsosu.ui.util.rememberHaptic
+import app.tsosu.ui.util.localizedLabel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -113,7 +115,9 @@ fun HabitsScreen(
                         onClick = { viewModel.buyFreeze() },
                         label = {
                             Text(
-                                "❄$freezes · " + stringResource(R.string.habits_buy_freeze),
+                                "❄$freezes/${GamificationRepository.MAX_FREEZES} · " +
+                                    stringResource(R.string.habits_buy_freeze) +
+                                    " ${GamificationRepository.FREEZE_COST}⚡",
                             )
                         },
                     )
@@ -134,18 +138,13 @@ fun HabitsScreen(
             }
 
             val shieldedFor = state.shieldedByTask
-            val routineGroups = listOf(
-                RoutineTime.MORNING to R.string.habits_morning,
-                RoutineTime.AFTERNOON to R.string.habits_anytime,
-                RoutineTime.EVENING to R.string.habits_evening,
-            )
 
-            routineGroups.forEach { (time, labelRes) ->
+            RoutineTime.entries.forEach { time ->
                 val inGroup = state.tasks.filter { it.routineTime == time }
                 if (inGroup.isNotEmpty()) {
                     item(key = "group-${time.name}") {
                         Text(
-                            text = "${time.emoji} ${stringResource(labelRes)}",
+                            text = time.localizedLabel(),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }

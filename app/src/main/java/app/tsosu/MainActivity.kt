@@ -195,6 +195,7 @@ class MainActivity : AppCompatActivity() {
                                             Screen.Habits.route -> R.string.nav_habits
                                             Screen.Upcoming.route -> R.string.nav_upcoming
                                             Screen.Calendar.route -> R.string.nav_calendar
+                                            Screen.Categories.route -> R.string.nav_categories
                                             else -> R.string.app_name
                                         },
                                     ),
@@ -225,7 +226,17 @@ class MainActivity : AppCompatActivity() {
                                 ) {
                                     Screen.viewModes.forEach { screen ->
                                         DropdownMenuItem(
-                                            text = { Text(stringResource(R.string.nav_calendar)) },
+                                            text = {
+                                                Text(
+                                                    stringResource(
+                                                        when (screen) {
+                                                            Screen.Calendar -> R.string.nav_calendar
+                                                            Screen.Categories -> R.string.nav_categories
+                                                            else -> R.string.view_switcher
+                                                        },
+                                                    ),
+                                                )
+                                            },
                                             leadingIcon = { Icon(screen.icon, contentDescription = null) },
                                             onClick = {
                                                 showViewMenu = false
@@ -301,6 +312,8 @@ class MainActivity : AppCompatActivity() {
 
                 if (showAddTask) {
                     val quickAddViewModel: QuickAddViewModel = hiltViewModel()
+                    val quickAddProjects by quickAddViewModel.projects
+                        .collectAsState(initial = emptyList())
                     ModalBottomSheet(
                         onDismissRequest = { showAddTask = false },
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -315,10 +328,12 @@ class MainActivity : AppCompatActivity() {
                             initialDueDate = quickAddInitialDate,
                             initialTitle = sharedCaptureText,
                             initialRecurrenceRule = quickAddInitialRecurrence,
-                            onAdd = { title, priority, dueDate, reminderTime, recurrenceRule, projectName, routineTime, tinyVersion ->
+                            projects = quickAddProjects,
+                            onAdd = { title, priority, dueDate, reminderTime, recurrenceRule, projectName, routineTime, tinyVersion, projectId, newCategoryName ->
                                 quickAddViewModel.createTask(
                                     title, priority, dueDate, reminderTime,
                                     recurrenceRule, projectName, routineTime, tinyVersion,
+                                    projectId, newCategoryName,
                                 )
                                 showAddTask = false
                                 sharedCaptureText = null

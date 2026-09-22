@@ -25,6 +25,7 @@
     <string name="habits_evening">晚間</string>
     <string name="habits_other">其他</string>
     <string name="habits_create_failed">建立習慣失敗</string>
+    <string name="habits_shield_used">❄ 護盾已使用，缺口補上，🔥 連續紀錄保住了。</string>
 
     <!-- Inbox -->
     <string name="inbox_title">收件匣</string>
@@ -159,7 +160,7 @@
     <string name="settings_digest_desc">早 8 點晨間計畫、晚 8 點慶祝回顧</string>
     <string name="quick_add_voice">語音輸入</string>
     <string name="search_result_count">%d 筆結果</string>
-    <string name="habits_buy_freeze">買護盾 ⚡30</string>
+    <string name="habits_buy_freeze">買護盾</string>
     <string name="habits_not_enough_energy">⚡ 還不夠——完成任務與習慣來賺能量</string>
 
     <!-- Habit Editor -->
@@ -324,4 +325,13 @@
     <string name="task_detail_scheduled_date">排程</string>
     <string name="task_detail_start_date">開始</string>
     <string name="task_detail_depends_on">等待任務</string>
+    <string name="nav_categories">分類</string>
+    <string name="task_detail_category">分類</string>
+    <string name="quick_add_category">分類</string>
+    <string name="category_none">無</string>
+    <string name="category_new">＋ 新分類</string>
+    <string name="category_name_hint">分類名稱</string>
+    <string name="category_create">建立</string>
+    <string name="category_uncategorized">未分類</string>
+    <string name="categories_empty">還沒有未完成的任務。</string>
 </resources>
