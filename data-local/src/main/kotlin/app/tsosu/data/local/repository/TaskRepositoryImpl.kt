@@ -234,6 +234,9 @@ class TaskRepositoryImpl(
             completedOccurrences = task.completions.size,
         ) ?: return null
         val nextTime = task.dueDate?.time ?: task.scheduledDate?.time ?: LocalTime(0, 0)
+        // Energy is per completed day: re-tapping a day already recorded from
+        // another surface (Inbox/Today) must not mint a second +2.
+        val firstCompletionToday = completedOn !in task.completions
         val updated = entity.copy(
             status = TaskStatus.TODO.ordinal,
             done = false,
@@ -245,7 +248,7 @@ class TaskRepositoryImpl(
             updatedAt = now,
         )
         taskDao.update(updated)
-        gamification?.awardEnergy(ENERGY_PER_TASK)
+        if (firstCompletionToday) gamification?.awardEnergy(ENERGY_PER_TASK)
         autoShieldGap(entity.id, (task.completions + completedOn).toSet())
         onTaskChanged?.invoke(entity.id, "UPDATE", null)
         return updated.toDomain()

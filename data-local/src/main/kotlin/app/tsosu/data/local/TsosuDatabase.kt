@@ -168,8 +168,21 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
+/**
+ * Fresh installs create `gamification` from the entity schema — which has no
+ * seed row — so the `WHERE id = 1` updates (award, buy, spend) silently
+ * no-op'd until the first ensureRow(). Heal every existing database: insert
+ * the singleton row so energy/shields work immediately after upgrade.
+ */
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("INSERT OR IGNORE INTO gamification (id, energy, freezes) VALUES (1, 0, 0)")
+    }
+}
 
-@Database(entities = [TaskEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 14)
+
+
+@Database(entities = [TaskEntity::class, ProjectEntity::class, GamificationEntity::class, StreakShieldEntity::class, LabelEntity::class], version = 15)
 abstract class TsosuDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun projectDao(): ProjectDao

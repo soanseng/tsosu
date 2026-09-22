@@ -40,7 +40,13 @@ interface GamificationDao {
     @Query("UPDATE gamification SET energy = energy - :points WHERE id = 1 AND energy >= :points")
     suspend fun spendEnergy(points: Int): Int
 
-    @Query("INSERT OR IGNORE INTO gamification (id, energy) VALUES (1, 0)")
+    /**
+     * Creates the singleton row if missing. Every NOT NULL column must be
+     * listed: `INSERT OR IGNORE` also swallows NOT NULL violations, so an
+     * incomplete column list leaves no row at all and every later
+     * `WHERE id = 1` update silently does nothing.
+     */
+    @Query("INSERT OR IGNORE INTO gamification (id, energy, freezes) VALUES (1, 0, 0)")
     suspend fun ensureRow()
 
     @Query("SELECT * FROM gamification WHERE id = 1")

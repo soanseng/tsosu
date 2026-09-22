@@ -38,6 +38,9 @@ dependencies {
 
     testImplementation(libs.junit5.api)
     testRuntimeOnly(libs.junit5.engine)
+    // Robolectric-based tests are JUnit 4; without the vintage engine they are
+    // silently not discovered on a JUnit Platform test task.
+    testRuntimeOnly(libs.junit5.vintage.engine)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
